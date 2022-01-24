@@ -39,23 +39,23 @@ void Model::MakeCube() {
     Vertex *v6 = MakeVertex(0, 1, 1);
     Vertex *v7 = MakeVertex(1, 1, 1);
     
-    faces.push_back(MakeFace(v0, v1, v2, {1, 1, 1, 1}));
-    faces.push_back(MakeFace(v1, v2, v3, {1, 1, 1, 1}));
+    faces.push_back(MakeFace(v1, v0, v2, {1, 1, 1, 1}));
+    faces.push_back(MakeFace(v2, v3, v1, {1, 1, 1, 1}));
     
-    faces.push_back(MakeFace(v0, v4, v1, {1, 1, 1, 1}));
-    faces.push_back(MakeFace(v4, v1, v5, {1, 1, 1, 1}));
+    faces.push_back(MakeFace(v1, v0, v4, {1, 1, 1, 1}));
+    faces.push_back(MakeFace(v4, v5, v1, {1, 1, 1, 1}));
     
-    faces.push_back(MakeFace(v0, v4, v2, {1, 1, 1, 1}));
+    faces.push_back(MakeFace(v2, v0, v4, {1, 1, 1, 1}));
     faces.push_back(MakeFace(v2, v6, v4, {1, 1, 1, 1}));
     
-    faces.push_back(MakeFace(v2, v6, v3, {1, 1, 1, 1}));
-    faces.push_back(MakeFace(v6, v3, v7, {1, 1, 1, 1}));
+    faces.push_back(MakeFace(v3, v2, v6, {1, 1, 1, 1}));
+    faces.push_back(MakeFace(v3, v7, v6, {1, 1, 1, 1}));
     
-    faces.push_back(MakeFace(v1, v5, v3, {1, 1, 1, 1}));
-    faces.push_back(MakeFace(v5, v3, v7, {1, 1, 1, 1}));
+    faces.push_back(MakeFace(v3, v1, v5, {1, 1, 1, 1}));
+    faces.push_back(MakeFace(v5, v7, v3, {1, 1, 1, 1}));
     
-    faces.push_back(MakeFace(v4, v5, v6, {1, 1, 1, 1}));
-    faces.push_back(MakeFace(v5, v6, v7, {1, 1, 1, 1}));
+    faces.push_back(MakeFace(v5, v4, v6, {1, 1, 1, 1}));
+    faces.push_back(MakeFace(v5, v7, v6, {1, 1, 1, 1}));
     
     vertices.push_back(v0);
     vertices.push_back(v1);

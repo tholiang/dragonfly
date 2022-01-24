@@ -88,44 +88,39 @@ vector_float3 PointToPixel (vector_float3 point, Camera camera)  {
     return vector_float3(screenX, screenY, proj.w/render_dist);
 }
 
-vertex VertexOut vertest (const constant vector_float3 *vertexArray [[buffer(0)]], unsigned int vid [[vertex_id]]) {
-    vector_float3 currentVertex = vertexArray[vid];
+kernel void CalculateProjectedVertices(device vector_float3 *vertices [[buffer(0)]], unsigned int vid [[thread_position_in_grid]], constant Camera &camera [[buffer(1)]]) {
+    vertices[vid] = PointToPixel(vertices[vid], camera);
+}
+
+vertex VertexOut DefaultVertexShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant vector_float4 *color_array, unsigned int vid [[vertex_id]]) {
+    vector_float3 currentVertex = vertex_array[vid];
     VertexOut output;
-    output.pos = vector_float4(currentVertex.x, currentVertex.y, 0, 1);
-    output.color = vector_float4(1, 0, 0, 1);
+    output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z, 1);
+    output.color = color_array[vid/4];
     return output;
 }
 
-vertex VertexOut vertexShader (const constant vector_float3 *vertexArray [[buffer(0)]], unsigned int vid [[vertex_id]], const constant vector_float4 *colorArray [[buffer(1)]], constant Camera &camera [[buffer(2)]]/*, constant Uniforms &uniforms [[buffer(3)]]*/) {
-    vector_float3 currentVertex = vertexArray[vid];
+vertex VertexOut ProjectionCalculationVertexShader (const constant vector_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant vector_float4 *color_array [[buffer(1)]], constant Camera &camera [[buffer(2)]]/*, constant Uniforms &uniforms [[buffer(3)]]*/) {
+    vector_float3 currentVertex = vertex_array[vid];
     VertexOut output;
     
     vector_float3 pixel = PointToPixel(currentVertex, camera);
     
     output.pos = vector_float4(pixel.x, pixel.y, pixel.z, 1.0);
     
-    /*if (vid < uniforms.numFaces*4) {
-        if (vid/4 == uniforms.selectedFace) {
-            //output.color = vector_float4(0.7,0.4,0,1);
-            vector_float4 curr_color = colorArray[vid/4];
-            float r = curr_color.x+0.3*(1-curr_color.x);
-            float g = curr_color.x+0.3*(0.6-curr_color.x);
-            float b = curr_color.x+0.3*(-curr_color.x);
-            output.color = vector_float4(r, g, b, curr_color.w);
-        } else {*/
-            output.color = colorArray[vid/4];
-        /*}
-    } else {
-        if (vid/4 - uniforms.numFaces == uniforms.selectedFace) {
-            output.color = vector_float4(1,0.6,0,1);
-        } else {
-            output.color = vector_float4(0,1,0,1);
-        }
-    }*/
+    output.color = color_array[vid/4];
     
     return output;
 }
 
-fragment vector_float4 fragmentShader(VertexOut interpolated [[stage_in]]){
+vertex VertexOut VertexEdgeShader (const constant vector_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]]) {
+    vector_float3 currentVertex = vertex_array[vid];
+    VertexOut output;
+    output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z, 1);
+    output.color = vector_float4(0, 0, 1, 1);
+    return output;
+}
+
+fragment vector_float4 FragmentShader(VertexOut interpolated [[stage_in]]){
     return interpolated.color;
 }
