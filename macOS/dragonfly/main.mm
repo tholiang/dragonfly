@@ -433,7 +433,7 @@ int main(int, char**) {
             window_width = ImGui::GetIO().DisplaySize.x;
             window_height = ImGui::GetIO().DisplaySize.y;
             
-            camera->FOV = {2*(atanf((float)window_height/(float)window_width)), M_PI_2};
+            camera->FOV = {M_PI_2, 2*(atanf((float)window_height/(float)window_width))};
             
             // Rendering UI
             RenderUI();

@@ -65,8 +65,8 @@ vector_float3 PointToPixel (vector_float3 point, Camera camera)  {
     
     //find dimensions of the "screen rectangle" at the location of the object
     //FOV is the angle of the field of view - the whole screen
-    float halfWidth = abs(proj.w/sin(camera.FOV.x/2));
-    float halfHeight = abs(proj.w/sin(camera.FOV.y/2));
+    float halfWidth = abs(proj.w*tan(camera.FOV.x/2));
+    float halfHeight = abs(proj.w*tan(camera.FOV.y/2));
     
     //screen location of object
     float xLoc = -distTo.w*sin(angleBetween);
