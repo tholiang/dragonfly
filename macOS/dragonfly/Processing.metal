@@ -18,9 +18,20 @@ struct Camera {
     vector_float2 FOV;
 };
 
+struct Face {
+    unsigned int vertices[3];
+    vector_float4 color;
+};
+
 struct VertexOut {
     vector_float4 pos [[position]];
     vector_float4 color;
+};
+
+struct ModelUniforms {
+    vector_float3 position;
+    vector_float3 rotate_origin;
+    vector_float3 angle;
 };
 
 struct Uniforms {
@@ -29,7 +40,7 @@ struct Uniforms {
 };
 
 //convert a 3d point to a pixel (vertex) value
-vector_float3 PointToPixel (vector_float3 point, Camera camera)  {
+vector_float3 PointToPixel (vector_float3 point, constant Camera &camera)  {
     //vector from camera position to object position
     vector_float4 toObject;
     toObject.x = (point.x-camera.pos.x);
@@ -88,19 +99,121 @@ vector_float3 PointToPixel (vector_float3 point, Camera camera)  {
     return vector_float3(screenX, screenY, proj.w/render_dist);
 }
 
+vector_float3 RotateAround (vector_float3 point, vector_float3 origin, vector_float3 angle) {
+    vector_float3 vec;
+    vec.x = point.x-origin.x;
+    vec.y = point.y-origin.y;
+    vec.z = point.z-origin.z;
+    
+    vector_float3 newvec;
+    
+    // gimbal locked
+    
+    // around z axis
+    newvec.x = vec.x*cos(angle.z)-vec.y*sin(angle.z);
+    newvec.y = vec.x*sin(angle.z)+vec.y*cos(angle.z);
+    
+    vec.x = newvec.x;
+    vec.y = newvec.y;
+    
+    // around y axis
+    newvec.x = vec.x*cos(angle.y)+vec.z*sin(angle.y);
+    newvec.z = -vec.x*sin(angle.y)+vec.z*cos(angle.y);
+    
+    vec.x = newvec.x;
+    vec.z = newvec.z;
+    
+    // around x axis
+    newvec.y = vec.y*cos(angle.x)-vec.z*sin(angle.x);
+    newvec.z = vec.y*sin(angle.x)+vec.z*cos(angle.x);
+    
+    vec.y = newvec.y;
+    vec.z = newvec.z;
+    
+    point.x = origin.x+vec.x;
+    point.y = origin.y+vec.y;
+    point.z = origin.z+vec.z;
+    
+    return point;
+}
+
+kernel void CalculateRotatedVertices(device vector_float3 *vertices [[buffer(0)]], unsigned int vid [[thread_position_in_grid]], const constant unsigned int *modelIDs [[buffer(1)]], const constant ModelUniforms *uniforms [[buffer(2)]]) {
+    ModelUniforms uniform = uniforms[modelIDs[vid]];
+    vector_float3 offset_vertex = vertices[vid];
+    offset_vertex.x += uniform.position.x;
+    offset_vertex.y += uniform.position.y;
+    offset_vertex.z += uniform.position.z;
+    vertices[vid] = RotateAround(offset_vertex, uniform.rotate_origin, uniform.angle);
+}
+
 kernel void CalculateProjectedVertices(device vector_float3 *vertices [[buffer(0)]], unsigned int vid [[thread_position_in_grid]], constant Camera &camera [[buffer(1)]]) {
     vertices[vid] = PointToPixel(vertices[vid], camera);
 }
 
-vertex VertexOut DefaultVertexShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant vector_float4 *color_array, unsigned int vid [[vertex_id]]) {
-    vector_float3 currentVertex = vertex_array[vid];
+float sign (vector_float2 p1, vector_float3 p2, vector_float3 p3) {
+    return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+}
+
+kernel void FaceClicked(device unsigned int &clickedIdx [[buffer(0)]], unsigned int fid [[thread_position_in_grid]], constant vector_float2 &clickLoc [[buffer(1)]], const constant vector_float3 *vertices [[buffer(2)]], const constant Face *face_array[[buffer(3)]]) {
+    float d1, d2, d3;
+    bool has_neg, has_pos;
+    
+    Face face = face_array[fid];
+    vector_float3 v1 = vertices[face.vertices[0]];
+    vector_float3 v2 = vertices[face.vertices[1]];
+    vector_float3 v3 = vertices[face.vertices[2]];
+
+    d1 = sign(clickLoc, v1, v2);
+    d2 = sign(clickLoc, v2, v3);
+    d3 = sign(clickLoc, v3, v1);
+
+    has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+    has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+    if (!(has_neg && has_pos)) {
+        clickedIdx = fid;
+    }
+}
+
+vertex VertexOut DefaultVertexShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant Face *face_array[[buffer(1)]], unsigned int vid [[vertex_id]]) {
+    Face currentFace = face_array[vid/3];
+    vector_float3 currentVertex = vertex_array[currentFace.vertices[vid%3]];
     VertexOut output;
     output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z, 1);
-    output.color = color_array[vid/4];
+    output.color = currentFace.color;
     return output;
 }
 
-vertex VertexOut ProjectionCalculationVertexShader (const constant vector_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant vector_float4 *color_array [[buffer(1)]], constant Camera &camera [[buffer(2)]]/*, constant Uniforms &uniforms [[buffer(3)]]*/) {
+vertex VertexOut VertexEdgeShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant Face *face_array[[buffer(1)]], unsigned int vid [[vertex_id]]) {
+    Face currentFace = face_array[vid/4];
+    vector_float3 currentVertex = vertex_array[currentFace.vertices[vid%4]];
+    VertexOut output;
+    output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z-0.0001, 1);
+    output.color = vector_float4(0, 0, 1, 1);
+    return output;
+}
+
+vertex VertexOut VertexPointShader (const constant vector_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]]) {
+    vector_float3 currentVertex = vertex_array[vid/4];
+    VertexOut output;
+    if (vid % 4 == 0) {
+        output.pos = vector_float4(currentVertex.x-0.007, currentVertex.y-0.007, currentVertex.z-0.001, 1);
+    } else if (vid % 4 == 1) {
+        output.pos = vector_float4(currentVertex.x-0.007, currentVertex.y+0.007, currentVertex.z-0.001, 1);
+    } else if (vid % 4 == 2) {
+        output.pos = vector_float4(currentVertex.x+0.007, currentVertex.y-0.007, currentVertex.z-0.001, 1);
+    } else {
+        output.pos = vector_float4(currentVertex.x+0.007, currentVertex.y+0.007, currentVertex.z-0.001, 1);
+    }
+    output.color = vector_float4(0, 1, 0, 1);
+    return output;
+}
+
+fragment vector_float4 FragmentShader(VertexOut interpolated [[stage_in]]){
+    return interpolated.color;
+}
+
+/*vertex VertexOut ProjectionCalculationVertexShader (const constant vector_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant vector_float4 *color_array [[buffer(1)]], constant Camera &camera [[buffer(2)]]) {
     vector_float3 currentVertex = vertex_array[vid];
     VertexOut output;
     
@@ -111,16 +224,4 @@ vertex VertexOut ProjectionCalculationVertexShader (const constant vector_float3
     output.color = color_array[vid/4];
     
     return output;
-}
-
-vertex VertexOut VertexEdgeShader (const constant vector_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]]) {
-    vector_float3 currentVertex = vertex_array[vid];
-    VertexOut output;
-    output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z, 1);
-    output.color = vector_float4(0, 0, 1, 1);
-    return output;
-}
-
-fragment vector_float4 FragmentShader(VertexOut interpolated [[stage_in]]){
-    return interpolated.color;
-}
+}*/

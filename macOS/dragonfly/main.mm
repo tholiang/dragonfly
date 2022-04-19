@@ -21,6 +21,7 @@
 #import <QuartzCore/QuartzCore.h>
 
 #include "Model.h"
+#include "Arrow.h"
 
 struct Camera {
     simd_float3 pos;
@@ -34,14 +35,23 @@ struct Pixel {
     int y;
 };
 
+struct ModelUniforms {
+    simd_float3 position;
+    simd_float3 rotate_origin;
+    simd_float3 angle;
+};
+
 struct Uniforms {
+    uint32 modelID;
     uint32 num_faces;
     uint32 selected_face;
+    simd_float3 selected_vertex;
 };
 
 // screen variables
 int window_width = 1280;
 int window_height = 720;
+float aspect_ratio = 1280.0/720.0;
 
 float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
 bool show_main_window = true;
@@ -58,25 +68,36 @@ CAMetalLayer *layer;
 id <MTLDevice> device;
 id <MTLCommandQueue> command_queue;
 
-std::vector<simd_float3> *scene_vertices;
-std::vector<simd_float4> *scene_colors;
+std::vector<simd_float3> scene_vertices;
+std::vector<Face> scene_faces;
+std::vector<uint32> modelIDs;
+unsigned arrows_vertex_end = 0;
+unsigned arrows_face_end = 0;
 
-id <MTLComputePipelineState> scene_compute_pipeline_state;
+id <MTLComputePipelineState> scene_compute_rotated_pipeline_state;
+id <MTLComputePipelineState> scene_compute_projected_pipeline_state;
 
 id <MTLRenderPipelineState> scene_render_pipeline_state;
 id <MTLRenderPipelineState> scene_edge_render_pipeline_state;
+id <MTLRenderPipelineState> scene_point_render_pipeline_state;
 
 id <MTLDepthStencilState> depth_state;
 
 id <MTLBuffer> scene_vertex_buffer;
-id <MTLBuffer> scene_color_buffer;
+id <MTLBuffer> scene_face_buffer;
+id <MTLBuffer> scene_model_id_buffer;
 id <MTLBuffer> scene_camera_buffer;
+id <MTLBuffer> rotate_uniforms_buffer;
 
 id <MTLTexture> depth_texture;
 
 // scene variables
 Camera *camera;
 Model *cube;
+Arrow *z_arrow;
+Arrow *x_arrow;
+Arrow *y_arrow;
+std::vector<ModelUniforms> model_uniforms;
 
 // input variables
 bool left_clicked = false;
@@ -110,9 +131,18 @@ void CreateScenePipelineStates () {
     edge_render_pipeline_descriptor.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
     edge_render_pipeline_descriptor.colorAttachments[0].pixelFormat = layer.pixelFormat;
     
-    scene_compute_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateProjectedVertices"] error:nil];
+    MTLRenderPipelineDescriptor *scene_point_render_pipeline_descriptor = [[MTLRenderPipelineDescriptor alloc] init];
+    
+    scene_point_render_pipeline_descriptor.vertexFunction = [library newFunctionWithName:@"VertexPointShader"];
+    scene_point_render_pipeline_descriptor.fragmentFunction = [library newFunctionWithName:@"FragmentShader"];
+    scene_point_render_pipeline_descriptor.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
+    scene_point_render_pipeline_descriptor.colorAttachments[0].pixelFormat = layer.pixelFormat;
+    
+    scene_compute_rotated_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateRotatedVertices"] error:nil];
+    scene_compute_projected_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateProjectedVertices"] error:nil];
     scene_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:render_pipeline_descriptor error:nil];
     scene_edge_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:edge_render_pipeline_descriptor error:nil];
+    scene_point_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:scene_point_render_pipeline_descriptor error:nil];
     
     MTLDepthStencilDescriptor *depth_descriptor = [[MTLDepthStencilDescriptor alloc] init];
     [depth_descriptor setDepthCompareFunction: MTLCompareFunctionLessEqual];
@@ -121,12 +151,20 @@ void CreateScenePipelineStates () {
 }
 
 void CreateBuffers() {
-    scene_vertices = cube->GetRenderVertices();
-    scene_colors = cube->GetRenderColors();
+    z_arrow->AddToBuffers(scene_vertices, scene_faces, modelIDs, 0);
+    x_arrow->AddToBuffers(scene_vertices, scene_faces, modelIDs, scene_vertices.size());
+    y_arrow->AddToBuffers(scene_vertices, scene_faces, modelIDs, scene_vertices.size());
+    arrows_vertex_end = scene_vertices.size();
+    arrows_face_end = scene_faces.size();
+    cube->AddToBuffers(scene_vertices, scene_faces, modelIDs, scene_vertices.size());
+    //scene_vertices = up_arrow->GetVertices();//cube->GetVertices();
+    //scene_faces = up_arrow->GetFaces();//cube->GetFaces();
     
-    scene_vertex_buffer = [device newBufferWithBytes:scene_vertices->data() length:(scene_vertices->size() * sizeof(simd_float3)) options:MTLResourceStorageModeShared];
-    scene_color_buffer = [device newBufferWithBytes:scene_colors->data() length:(scene_colors->size() * sizeof(simd_float4)) options:MTLResourceStorageModeShared];
+    scene_vertex_buffer = [device newBufferWithBytes:scene_vertices.data() length:(scene_vertices.size() * sizeof(simd_float3)) options:MTLResourceStorageModeShared];
+    scene_face_buffer = [device newBufferWithBytes:scene_faces.data() length:(scene_faces.size() * sizeof(Face)) options:MTLResourceStorageModeShared];
+    scene_model_id_buffer = [device newBufferWithBytes:modelIDs.data() length:(modelIDs.size() * sizeof(uint32)) options:MTLResourceStorageModeShared];
     scene_camera_buffer = [device newBufferWithBytes:camera length:sizeof(Camera) options:{}];
+    rotate_uniforms_buffer = [device newBufferWithBytes: model_uniforms.data() length:(model_uniforms.size() * sizeof(ModelUniforms)) options:{}];
 }
 
 int SetupImGui () {
@@ -255,6 +293,22 @@ void HandleKeyboardEvents(SDL_Event event) {
     }
 }
 
+/*void SetSelectedVertex(int click_x, int click_y) {
+    for (int i = 0; i < scene_point_vertices.size(); i+=4) {
+        float normal_x = ((float) click_x)/((float) window_width);
+        float normal_y = ((float) click_y)/((float) window_height);
+        
+        float min_x = scene_point_vertices.at(i).x;
+        float min_y = scene_point_vertices.at(i).y;
+        float max_x = scene_point_vertices.at(i+3).x;
+        float max_y = scene_point_vertices.at(i+3).y;
+        
+        if (normal_x > min_x && normal_x < max_x && normal_y > min_y && normal_y < max_y) {
+            
+        }
+    }
+}*/
+
 void HandleMouseEvents(SDL_Event event) {
     if (event.type == SDL_MOUSEBUTTONDOWN) {
         switch (event.button.button) {
@@ -306,21 +360,26 @@ void HandleMouseEvents(SDL_Event event) {
 }
 
 void HandleCameraInput() {
+    // find unit vector of xy camera vector
+    float magnitude = sqrt(pow(camera->vector.x, 2)+pow(camera->vector.y, 2));
+    float unit_x = camera->vector.x/magnitude;
+    float unit_y = camera->vector.y/magnitude;
+    
     if (key_presses[0]) {
-        camera->pos.x += (1.0/fps)*camera->vector.x;
-        camera->pos.y += (1.0/fps)*camera->vector.y;
+        camera->pos.x += (3.0/fps)*unit_x;
+        camera->pos.y += (3.0/fps)*unit_y;
     }
     if (key_presses[1]) {
-        camera->pos.y -= (3.0/fps)*camera->vector.x;
-        camera->pos.x += (3.0/fps)*camera->vector.y;
+        camera->pos.y -= (3.0/fps)*unit_x;
+        camera->pos.x += (3.0/fps)*unit_y;
     }
     if (key_presses[2]) {
-        camera->pos.x -= (1.0/fps)*camera->vector.x;
-        camera->pos.y -= (1.0/fps)*camera->vector.y;
+        camera->pos.x -= (3.0/fps)*unit_x;
+        camera->pos.y -= (3.0/fps)*unit_y;
     }
     if (key_presses[3]) {
-        camera->pos.y += (3.0/fps)*camera->vector.x;
-        camera->pos.x -= (3.0/fps)*camera->vector.y;
+        camera->pos.y += (3.0/fps)*unit_x;
+        camera->pos.x -= (3.0/fps)*unit_y;
     }
     if (key_presses[4]) {
         camera->pos.z += (3.0/fps);
@@ -335,15 +394,49 @@ int main(int, char**) {
         return -1;
     }
     
-    cube = new Model();
+    z_arrow = new Arrow(0);
+    
+    ModelUniforms z_arrow_uniform;
+    z_arrow_uniform.position = simd_make_float3(0, 0, 1);
+    z_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 1);
+    z_arrow_uniform.angle = simd_make_float3(0, 0, 0);
+    
+    model_uniforms.push_back(z_arrow_uniform);
+    
+    x_arrow = new Arrow(1, simd_make_float4(0, 1, 0, 1));
+    
+    ModelUniforms x_arrow_uniform;
+    x_arrow_uniform.position = simd_make_float3(0, 0, 1);
+    x_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 1);
+    x_arrow_uniform.angle = simd_make_float3(M_PI_2, 0, 0);
+    
+    model_uniforms.push_back(x_arrow_uniform);
+    
+    y_arrow = new Arrow(2, simd_make_float4(0, 0, 1, 1));
+    
+    ModelUniforms y_arrow_uniform;
+    y_arrow_uniform.position = simd_make_float3(0, 0, 1);
+    y_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 1);
+    y_arrow_uniform.angle = simd_make_float3(0, -M_PI_2, 0);
+    
+    model_uniforms.push_back(y_arrow_uniform);
+    
+    cube = new Model(3);
     cube->MakeCube();
+    
+    ModelUniforms cube_uniform;
+    cube_uniform.position = simd_make_float3(0, 0, 0);
+    cube_uniform.rotate_origin = simd_make_float3(0, 0, 0);
+    cube_uniform.angle = simd_make_float3(0, 0, 0);
+    
+    model_uniforms.push_back(cube_uniform);
     
     camera = new Camera();
     camera->pos = {-2, 0, 0};
     camera->vector = {1, 0, 0};
     camera->up_vector = {0, 0, 1};
     camera->FOV = {M_PI_2, M_PI_2};
-    
+
     CreateScenePipelineStates();
     
     // workaround for weird resizing bug
@@ -371,6 +464,7 @@ int main(int, char**) {
             CreateBuffers();
             
             SDL_GetRendererOutputSize(renderer, &window_width, &window_height);
+            aspect_ratio = ((float) window_width)/((float) window_height);
             //SDL_GetWindowSize(window, &window_width, &window_height);
             
             layer.drawableSize = CGSizeMake(window_width, window_height);
@@ -378,16 +472,24 @@ int main(int, char**) {
 
             id<MTLCommandBuffer> compute_command_buffer = [command_queue commandBuffer];
             
-            // calculate projected vertex in kernel function
+            // calculate rotated vertices
             id<MTLComputeCommandEncoder> compute_encoder = [compute_command_buffer computeCommandEncoder];
-            [compute_encoder setComputePipelineState: scene_compute_pipeline_state];
+            [compute_encoder setComputePipelineState: scene_compute_rotated_pipeline_state];
             [compute_encoder setBuffer: scene_vertex_buffer offset:0 atIndex:0];
-            [compute_encoder setBuffer: scene_camera_buffer offset:0 atIndex:1];
-            int vertices_length = (int) scene_vertices->size();
+            [compute_encoder setBuffer: scene_model_id_buffer offset:0 atIndex:1];
+            [compute_encoder setBuffer: rotate_uniforms_buffer offset:0 atIndex:2];
+            int vertices_length = (int) scene_vertices.size();
             MTLSize gridSize = MTLSizeMake(vertices_length, 1, 1);
-            NSUInteger threadGroupSize = scene_compute_pipeline_state.maxTotalThreadsPerThreadgroup;
+            NSUInteger threadGroupSize = scene_compute_projected_pipeline_state.maxTotalThreadsPerThreadgroup;
             if (threadGroupSize > vertices_length) threadGroupSize = vertices_length;
             MTLSize threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
+            [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+            
+            // calculate projected vertex in kernel function
+            [compute_encoder setComputePipelineState: scene_compute_projected_pipeline_state];
+            [compute_encoder setBuffer: scene_vertex_buffer offset:0 atIndex:0];
+            [compute_encoder setBuffer: scene_camera_buffer offset:0 atIndex:1];
+            if (threadGroupSize > vertices_length) threadGroupSize = vertices_length;
             [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
             [compute_encoder endEncoding];
             [compute_command_buffer commit];
@@ -410,19 +512,28 @@ int main(int, char**) {
             [render_encoder pushDebugGroup:@"dragonfly"];
             
             
-            // Rendering Scene - the faces
+            // rendering scene - the faces
             [render_encoder setRenderPipelineState:scene_render_pipeline_state];
             [render_encoder setDepthStencilState: depth_state];
             [render_encoder setVertexBuffer:scene_vertex_buffer offset:0 atIndex:0];
-            [render_encoder setVertexBuffer:scene_color_buffer offset:0 atIndex:1];
-            [render_encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:scene_vertices->size()];
+            [render_encoder setVertexBuffer:scene_face_buffer offset:0 atIndex:1];
+            [render_encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:scene_faces.size()*3];
             
             // rendering the edges
             [render_encoder setRenderPipelineState:scene_edge_render_pipeline_state];
             [render_encoder setVertexBuffer:scene_vertex_buffer offset:0 atIndex:0];
+            [render_encoder setVertexBuffer:scene_face_buffer offset:0 atIndex:1];
+            for (int i = arrows_face_end*4; i < scene_faces.size()*4; i+=4) {
+                [render_encoder drawPrimitives:MTLPrimitiveTypeLineStrip vertexStart:i vertexCount:4];
+            }
             
-            for (int i = 0; i < scene_vertices->size(); i+=3) {
-                [render_encoder drawPrimitives:MTLPrimitiveTypeLineStrip vertexStart:i vertexCount:3];
+            // rendering the vertex points
+            [render_encoder setRenderPipelineState:scene_point_render_pipeline_state];
+            [render_encoder setVertexBuffer:scene_vertex_buffer offset:0 atIndex:0];
+            [render_encoder setVertexBuffer:scene_face_buffer offset:0 atIndex:1];
+            [render_encoder setVertexBuffer:scene_vertex_buffer offset:0 atIndex:0];
+            for (int i = arrows_vertex_end*4; i < scene_vertices.size()*4; i+=4) {
+                [render_encoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:i vertexCount:4];
             }
             
             // Start the Dear ImGui frame
@@ -432,6 +543,7 @@ int main(int, char**) {
             
             window_width = ImGui::GetIO().DisplaySize.x;
             window_height = ImGui::GetIO().DisplaySize.y;
+            aspect_ratio = ((float) window_width)/((float) window_height);
             
             camera->FOV = {M_PI_2, 2*(atanf((float)window_height/(float)window_width))};
             
@@ -440,6 +552,7 @@ int main(int, char**) {
             
             ImGui::Render();
             ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), render_command_buffer, render_encoder); // ImGui changes the encoders pipeline here to use its shaders and buffers
+             
             // End rendering and display
             [render_encoder popDebugGroup];
             [render_encoder endEncoding];
@@ -448,6 +561,10 @@ int main(int, char**) {
             [render_command_buffer commit];
             
             fps = ImGui::GetIO().Framerate;
+            
+            scene_vertices.clear();
+            scene_faces.clear();
+            modelIDs.clear();
         }
     }
 
@@ -462,8 +579,9 @@ int main(int, char**) {
     
     delete camera;
     delete cube;
-    delete scene_vertices;
-    delete scene_colors;
+    delete z_arrow;
+    delete x_arrow;
+    delete y_arrow;
 
     return 0;
 }

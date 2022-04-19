@@ -10,90 +10,82 @@
 #include <cstddef>
 #include <iostream>
 
-Model::Model() {
+Model::Model(uint32 mid) : modelID(mid) {
     
 }
 
-Vertex* Model::MakeVertex(float x, float y, float z) {
-    Vertex *v = new Vertex();
-    v->position = {x, y, z};
-    return v;
+unsigned Model::MakeVertex(float x, float y, float z) {
+    vertices.push_back(simd_make_float3(x, y, z));
+    return vertices.size()-1;
 }
 
-Face* Model::MakeFace(Vertex* v0, Vertex* v1, Vertex* v2, simd_float4 color) {
-    Face *f = new Face();
-    f->vertices[0] = v0;
-    f->vertices[1] = v1;
-    f->vertices[2] = v2;
-    f->color = color;
-    return f;
+unsigned Model::MakeFace(unsigned v0, unsigned v1, unsigned v2, simd_float4 color) {
+    Face f = Face();
+    f.vertices[0] = v0;
+    f.vertices[1] = v1;
+    f.vertices[2] = v2;
+    f.color = color;
+    faces.push_back(f);
+    return faces.size()-1;
 }
 
 void Model::MakeCube() {
-    Vertex *v0 = MakeVertex(0, 0, 0);
-    Vertex *v1 = MakeVertex(1, 0, 0);
-    Vertex *v2 = MakeVertex(0, 1, 0);
-    Vertex *v3 = MakeVertex(1, 1, 0);
-    Vertex *v4 = MakeVertex(0, 0, 1);
-    Vertex *v5 = MakeVertex(1, 0, 1);
-    Vertex *v6 = MakeVertex(0, 1, 1);
-    Vertex *v7 = MakeVertex(1, 1, 1);
+    MakeVertex(0, 0, 0);
+    MakeVertex(1, 0, 0);
+    MakeVertex(0, 1, 0);
+    MakeVertex(1, 1, 0);
+    MakeVertex(0, 0, 1);
+    MakeVertex(1, 0, 1);
+    MakeVertex(0, 1, 1);
+    MakeVertex(1, 1, 1);
     
-    faces.push_back(MakeFace(v1, v0, v2, {1, 1, 1, 1}));
-    faces.push_back(MakeFace(v2, v3, v1, {1, 1, 1, 1}));
+    MakeFace(1, 0, 2, {1, 1, 1, 1});
+    MakeFace(2, 3, 1, {1, 1, 1, 1});
     
-    faces.push_back(MakeFace(v1, v0, v4, {1, 1, 1, 1}));
-    faces.push_back(MakeFace(v4, v5, v1, {1, 1, 1, 1}));
+    MakeFace(1, 0, 4, {1, 1, 1, 1});
+    MakeFace(4, 5, 1, {1, 1, 1, 1});
     
-    faces.push_back(MakeFace(v2, v0, v4, {1, 1, 1, 1}));
-    faces.push_back(MakeFace(v2, v6, v4, {1, 1, 1, 1}));
+    MakeFace(2, 0, 4, {1, 1, 1, 1});
+    MakeFace(2, 6, 4, {1, 1, 1, 1});
     
-    faces.push_back(MakeFace(v3, v2, v6, {1, 1, 1, 1}));
-    faces.push_back(MakeFace(v3, v7, v6, {1, 1, 1, 1}));
+    MakeFace(3, 2, 6, {1, 1, 1, 1});
+    MakeFace(3, 7, 6, {1, 1, 1, 1});
     
-    faces.push_back(MakeFace(v3, v1, v5, {1, 1, 1, 1}));
-    faces.push_back(MakeFace(v5, v7, v3, {1, 1, 1, 1}));
+    MakeFace(3, 1, 5, {1, 1, 1, 1});
+    MakeFace(5, 7, 3, {1, 1, 1, 1});
     
-    faces.push_back(MakeFace(v5, v4, v6, {1, 1, 1, 1}));
-    faces.push_back(MakeFace(v5, v7, v6, {1, 1, 1, 1}));
-    
-    vertices.push_back(v0);
-    vertices.push_back(v1);
-    vertices.push_back(v2);
-    vertices.push_back(v3);
-    vertices.push_back(v4);
-    vertices.push_back(v5);
-    vertices.push_back(v6);
-    vertices.push_back(v7);
+    MakeFace(5, 4, 6, {1, 1, 1, 1});
+    MakeFace(5, 7, 6, {1, 1, 1, 1});
 }
 
-std::vector<simd_float3> *Model::GetRenderVertices() {
-    std::vector<simd_float3> *render_vertices = new std::vector<simd_float3>();
-    
-    for (std::size_t i = 0; i < faces.size(); i++) {
-        render_vertices->push_back(faces.at(i)->vertices[0]->position);
-        render_vertices->push_back(faces.at(i)->vertices[1]->position);
-        render_vertices->push_back(faces.at(i)->vertices[2]->position);
-    }
-    return render_vertices;
+std::vector<simd_float3> &Model::GetVertices() {
+    return vertices;
 }
 
-std::vector<simd_float4> *Model::GetRenderColors() {
-    std::vector<simd_float4> *color_vertices = new std::vector<simd_float4>();
-    
-    for (std::size_t i = 0; i < faces.size(); i++) {
-        color_vertices->push_back(faces.at(i)->color);
+std::vector<Face> &Model::GetFaces() {
+    return faces;
+}
+
+void Model::AddToBuffers(std::vector<simd_float3> &vertexBuffer, std::vector<Face> &faceBuffer, std::vector<uint32> &modelIDs, int vertexStart) {
+    for (int i = 0; i < vertices.size(); i++) {
+        vertexBuffer.push_back(vertices[i]);
+        modelIDs.push_back(modelID);
     }
     
-    return color_vertices;
+    for (int i = 0; i < faces.size(); i++) {
+        Face og = faces[i];
+        Face face;
+        face.color = og.color;
+        face.vertices[0] = og.vertices[0]+vertexStart;
+        face.vertices[1] = og.vertices[1]+vertexStart;
+        face.vertices[2] = og.vertices[2]+vertexStart;
+        faceBuffer.push_back(face);
+    }
+}
+
+uint32 Model::ModelID() {
+    return modelID;
 }
 
 Model::~Model() {
-    for (std::size_t i = 0; i < faces.size(); i++) {
-        delete faces.at(i);
-    }
-    
-    for (std::size_t i = 0; i < vertices.size(); i++) {
-        delete vertices.at(i);
-    }
 }

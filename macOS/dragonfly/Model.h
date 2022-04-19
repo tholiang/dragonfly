@@ -12,29 +12,29 @@
 
 #include <simd/SIMD.h>
 
-struct Vertex {
-    simd_float3 position;
-    std::vector<Vertex*> connected;
-};
 
 struct Face {
-    Vertex *vertices[3];
+    uint32 vertices[3];
     simd_float4 color;
 };
 
 class Model {
-    std::vector<Face*> faces;
-    std::vector<Vertex*> vertices;
-    //std::vector<Vertex*> render_vertices;
+private:
+    std::vector<Face> faces;
+    std::vector<simd_float3> vertices;
+    uint32 modelID;
     
 public:
-    Model();
-    Vertex* MakeVertex(float x, float y, float z);
-    Face* MakeFace(Vertex* v0, Vertex* v1, Vertex* v2, simd_float4 color);
+    Model(uint32 mid);
+    unsigned MakeVertex(float x, float y, float z);
+    unsigned MakeFace(unsigned v0, unsigned v1, unsigned v2, simd_float4 color);
     void MakeCube();
     
-    std::vector<simd_float3> *GetRenderVertices();
-    std::vector<simd_float4> *GetRenderColors();
+    std::vector<simd_float3> &GetVertices();
+    std::vector<Face> &GetFaces();
+    
+    void AddToBuffers(std::vector<simd_float3> &vertexBuffer, std::vector<Face> &faceBuffer, std::vector<uint32> &modelIDs, int vertexStart);
+    uint32 ModelID();
     
     ~Model();
 };

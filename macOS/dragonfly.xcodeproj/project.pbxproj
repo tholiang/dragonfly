@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D203035127D4670E006667BA /* Arrow.mm in Sources */ = {isa = PBXBuildFile; fileRef = D203035027D4670E006667BA /* Arrow.mm */; };
 		D2047B4E2793B1A000B4B442 /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2047A592793B19F00B4B442 /* imgui_widgets.cpp */; };
 		D2047B522793B1A000B4B442 /* imgui_impl_metal.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2047A6B2793B19F00B4B442 /* imgui_impl_metal.mm */; };
 		D2047B622793B1A000B4B442 /* imgui_impl_sdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2047A822793B19F00B4B442 /* imgui_impl_sdl.cpp */; };
@@ -70,6 +71,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D203034F27D466F4006667BA /* Arrow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Arrow.h; sourceTree = "<group>"; };
+		D203035027D4670E006667BA /* Arrow.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Arrow.mm; sourceTree = "<group>"; };
 		D2047A562793B19F00B4B442 /* imgui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imgui.h; sourceTree = "<group>"; };
 		D2047A572793B19F00B4B442 /* imstb_textedit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imstb_textedit.h; sourceTree = "<group>"; };
 		D2047A582793B19F00B4B442 /* imconfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imconfig.h; sourceTree = "<group>"; };
@@ -232,6 +235,8 @@
 				D2EAF75727914119002DE553 /* Assets.xcassets */,
 				D2A99F7C2792BCF100E85036 /* Model.h */,
 				D2A99F7D2792BF7D00E85036 /* Model.mm */,
+				D203034F27D466F4006667BA /* Arrow.h */,
+				D203035027D4670E006667BA /* Arrow.mm */,
 				D2EAF75C27914119002DE553 /* main.mm */,
 				D224A4652791464D0099CF9D /* Processing.metal */,
 			);
@@ -413,6 +418,7 @@
 				D224A4662791464D0099CF9D /* Processing.metal in Sources */,
 				D2047BDC2793B1A000B4B442 /* imgui_tables.cpp in Sources */,
 				D2047B4E2793B1A000B4B442 /* imgui_widgets.cpp in Sources */,
+				D203035127D4670E006667BA /* Arrow.mm in Sources */,
 				D2047BDD2793B1A000B4B442 /* imgui_demo.cpp in Sources */,
 				D2EAF75327914118002DE553 /* AppDelegate.m in Sources */,
 			);
