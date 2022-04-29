@@ -77,6 +77,8 @@ unsigned arrows_face_end = 0;
 id <MTLComputePipelineState> scene_compute_rotated_pipeline_state;
 id <MTLComputePipelineState> scene_compute_projected_pipeline_state;
 
+id <MTLComputePipelineState> scene_compute_mouse_click_state;
+
 id <MTLRenderPipelineState> scene_render_pipeline_state;
 id <MTLRenderPipelineState> scene_edge_render_pipeline_state;
 id <MTLRenderPipelineState> scene_point_render_pipeline_state;
@@ -88,6 +90,10 @@ id <MTLBuffer> scene_face_buffer;
 id <MTLBuffer> scene_model_id_buffer;
 id <MTLBuffer> scene_camera_buffer;
 id <MTLBuffer> rotate_uniforms_buffer;
+
+//id <MTLBuffer> selected_model_buffer;
+//id <MTLBuffer> click_loc_buffer;
+//id <MTLBuffer> click_z_buffer;
 
 id <MTLTexture> depth_texture;
 
@@ -102,10 +108,26 @@ std::vector<ModelUniforms> model_uniforms;
 // input variables
 bool left_clicked = false;
 bool right_clicked = false;
+
+int selected_face = -1;
+int ARROW_FACE_SIZE = 18;
+// z, x, y
+int selected_arrow = -1;
+simd_float2 click_loc;
+//float click_z = -1;
+
 // w a s d space shift
 bool key_presses[6] = { 0 };
 float x_sens = 0.1;
 float y_sens = 0.1;
+
+simd_float3 TriAvg (simd_float3 p1, simd_float3 p2, simd_float3 p3) {
+    float x = (p1.x + p2.x + p3.x)/3;
+    float y = (p1.y + p2.y + p3.y)/3;
+    float z = (p1.z + p2.z + p3.z)/3;
+    
+    return simd_make_float3(x, y, z);
+}
 
 void CreateScenePipelineStates () {
     CGSize drawableSize = layer.drawableSize;
@@ -140,6 +162,7 @@ void CreateScenePipelineStates () {
     
     scene_compute_rotated_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateRotatedVertices"] error:nil];
     scene_compute_projected_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateProjectedVertices"] error:nil];
+    //scene_compute_mouse_click_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"FaceClicked"] error:nil];
     scene_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:render_pipeline_descriptor error:nil];
     scene_edge_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:edge_render_pipeline_descriptor error:nil];
     scene_point_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:scene_point_render_pipeline_descriptor error:nil];
@@ -157,14 +180,29 @@ void CreateBuffers() {
     arrows_vertex_end = scene_vertices.size();
     arrows_face_end = scene_faces.size();
     cube->AddToBuffers(scene_vertices, scene_faces, modelIDs, scene_vertices.size());
-    //scene_vertices = up_arrow->GetVertices();//cube->GetVertices();
-    //scene_faces = up_arrow->GetFaces();//cube->GetFaces();
+    
+    if (selected_face != -1) {
+        simd_float3 triavg = TriAvg(scene_vertices[scene_faces[selected_face].vertices[0]], scene_vertices[scene_faces[selected_face].vertices[1]], scene_vertices[scene_faces[selected_face].vertices[2]]);
+        model_uniforms[0].position = triavg;
+        model_uniforms[1].position = triavg;
+        model_uniforms[2].position = triavg;
+        model_uniforms[0].rotate_origin = triavg;
+        model_uniforms[1].rotate_origin = triavg;
+        model_uniforms[2].rotate_origin = triavg;
+        scene_faces.at(selected_face).color = simd_make_float4(1, 0.5, 0, 1);
+    }
     
     scene_vertex_buffer = [device newBufferWithBytes:scene_vertices.data() length:(scene_vertices.size() * sizeof(simd_float3)) options:MTLResourceStorageModeShared];
     scene_face_buffer = [device newBufferWithBytes:scene_faces.data() length:(scene_faces.size() * sizeof(Face)) options:MTLResourceStorageModeShared];
     scene_model_id_buffer = [device newBufferWithBytes:modelIDs.data() length:(modelIDs.size() * sizeof(uint32)) options:MTLResourceStorageModeShared];
     scene_camera_buffer = [device newBufferWithBytes:camera length:sizeof(Camera) options:{}];
     rotate_uniforms_buffer = [device newBufferWithBytes: model_uniforms.data() length:(model_uniforms.size() * sizeof(ModelUniforms)) options:{}];
+    
+    //selected_face = -1;
+    //click_z = -1;
+    //selected_model_buffer = [device newBufferWithBytes:&selected_face length:sizeof(int) options:MTLResourceStorageModeShared];
+    //click_loc_buffer = [device newBufferWithBytes:&click_loc length:sizeof(simd_float2) options:{}];
+    //click_z_buffer = [device newBufferWithBytes:&click_z length:sizeof(float) options:{}];
 }
 
 int SetupImGui () {
@@ -293,22 +331,6 @@ void HandleKeyboardEvents(SDL_Event event) {
     }
 }
 
-/*void SetSelectedVertex(int click_x, int click_y) {
-    for (int i = 0; i < scene_point_vertices.size(); i+=4) {
-        float normal_x = ((float) click_x)/((float) window_width);
-        float normal_y = ((float) click_y)/((float) window_height);
-        
-        float min_x = scene_point_vertices.at(i).x;
-        float min_y = scene_point_vertices.at(i).y;
-        float max_x = scene_point_vertices.at(i+3).x;
-        float max_y = scene_point_vertices.at(i+3).y;
-        
-        if (normal_x > min_x && normal_x < max_x && normal_y > min_y && normal_y < max_y) {
-            
-        }
-    }
-}*/
-
 void HandleMouseEvents(SDL_Event event) {
     if (event.type == SDL_MOUSEBUTTONDOWN) {
         switch (event.button.button) {
@@ -317,6 +339,11 @@ void HandleMouseEvents(SDL_Event event) {
                 break;
             case SDL_BUTTON_RIGHT:
                 right_clicked = true;
+                int x;
+                int y;
+                SDL_GetMouseState(&x, &y);
+                click_loc.x = ((float) x / (float) window_width)*2 - 1;
+                click_loc.y = -(((float) y / (float) window_height)*2 - 1);
                 break;
             default:
                 break;
@@ -356,6 +383,10 @@ void HandleMouseEvents(SDL_Event event) {
             camera->up_vector.y = sin(new_theta-M_PI_2)*sin(new_phi);
             camera->up_vector.z = cos(new_theta-M_PI_2);
         }
+        
+        if (right_clicked) {
+            
+        }
     }
 }
 
@@ -387,6 +418,64 @@ void HandleCameraInput() {
     if (key_presses[5]) {
         camera->pos.z -= (3.0/fps);
     }
+}
+
+float sign (simd_float2 &p1, simd_float3 &p2, simd_float3 &p3) {
+    return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+}
+
+float dist (simd_float2 &p1, simd_float3 &p2) {
+    return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
+}
+
+float WeightedZ (simd_float2 &click, simd_float3 &p1, simd_float3 &p2, simd_float3 &p3) {
+    float dist1 = dist(click, p1);
+    float dist2 = dist(click, p2);
+    float dist3 = dist(click, p3);
+    
+    float total_dist = dist1 + dist2 + dist3;
+    float weightedZ = p1.z*(dist1/total_dist);
+    weightedZ += p2.z*(dist2/total_dist);
+    weightedZ += p3.z*(dist3/total_dist);
+    return weightedZ;
+}
+
+int FaceClicked() {
+    float d1, d2, d3;
+    bool has_neg, has_pos;
+    
+    simd_float3 *vertices = (simd_float3 *) scene_vertex_buffer.contents;
+    Face *face_array = (Face *) scene_face_buffer.contents;
+    
+    float minZ = -1;
+    int clickedIdx = -1;
+    
+    for (int fid = 0; fid < scene_faces.size(); fid++) {
+        Face face = face_array[fid];
+        vector_float3 v1 = vertices[face.vertices[0]];
+        vector_float3 v2 = vertices[face.vertices[1]];
+        vector_float3 v3 = vertices[face.vertices[2]];
+
+        d1 = sign(click_loc, v1, v2);
+        d2 = sign(click_loc, v2, v3);
+        d3 = sign(click_loc, v3, v1);
+
+        has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+        has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+        if (!(has_neg && has_pos)) {
+            float z = WeightedZ(click_loc, v1, v2, v3);
+            if (minZ == -1) {
+                minZ = z;
+                clickedIdx = fid;
+            } else if (z < minZ) {
+                minZ = z;
+                clickedIdx = fid;
+            }
+        }
+    }
+    
+    return clickedIdx;
 }
 
 int main(int, char**) {
@@ -491,9 +580,19 @@ int main(int, char**) {
             [compute_encoder setBuffer: scene_camera_buffer offset:0 atIndex:1];
             if (threadGroupSize > vertices_length) threadGroupSize = vertices_length;
             [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+            
             [compute_encoder endEncoding];
             [compute_command_buffer commit];
             [compute_command_buffer waitUntilCompleted];
+            
+            if (right_clicked) {
+                int sf = FaceClicked();
+                if (sf >= arrows_face_end) {
+                    selected_face = FaceClicked();
+                } else {
+                    selected_arrow = sf/ARROW_FACE_SIZE;
+                }
+            }
             
             id<MTLCommandBuffer> render_command_buffer = [command_queue commandBuffer];
             render_pass_descriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.6, 0.6, 0.6, 1);

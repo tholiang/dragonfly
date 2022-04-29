@@ -150,11 +150,29 @@ kernel void CalculateProjectedVertices(device vector_float3 *vertices [[buffer(0
     vertices[vid] = PointToPixel(vertices[vid], camera);
 }
 
-float sign (vector_float2 p1, vector_float3 p2, vector_float3 p3) {
+
+// UNUSED
+/*float sign (vector_float2 p1, vector_float3 p2, vector_float3 p3) {
     return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
 }
 
-kernel void FaceClicked(device unsigned int &clickedIdx [[buffer(0)]], unsigned int fid [[thread_position_in_grid]], constant vector_float2 &clickLoc [[buffer(1)]], const constant vector_float3 *vertices [[buffer(2)]], const constant Face *face_array[[buffer(3)]]) {
+float dist (vector_float2 p1, vector_float3 p2) {
+    return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
+}
+
+float WeightedZ (vector_float2 click, vector_float3 p1, vector_float3 p2, vector_float3 p3) {
+    float dist1 = dist(click, p1);
+    float dist2 = dist(click, p2);
+    float dist3 = dist(click, p3);
+    
+    float total_dist = dist1 + dist2 + dist3;
+    float weightedZ = p1.z*(dist1/total_dist);
+    weightedZ += p2.z*(dist2/total_dist);
+    weightedZ += p3.z*(dist3/total_dist);
+    return weightedZ;
+}
+
+kernel void FaceClicked(device int &clickedIdx [[buffer(0)]], device float &minZ [[buffer(1)]], unsigned int fid [[thread_position_in_grid]], constant vector_float2 &clickLoc [[buffer(2)]], const constant vector_float3 *vertices [[buffer(3)]], device Face *face_array[[buffer(4)]]) {
     float d1, d2, d3;
     bool has_neg, has_pos;
     
@@ -171,9 +189,16 @@ kernel void FaceClicked(device unsigned int &clickedIdx [[buffer(0)]], unsigned 
     has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
 
     if (!(has_neg && has_pos)) {
-        clickedIdx = fid;
+        float z = WeightedZ(clickLoc, v1, v2, v3);
+        if (minZ == -1) {
+            minZ = z;
+            clickedIdx = fid;
+        } else if (z < minZ) {
+            minZ = z;
+            clickedIdx = fid;
+        }
     }
-}
+}*/
 
 vertex VertexOut DefaultVertexShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant Face *face_array[[buffer(1)]], unsigned int vid [[vertex_id]]) {
     Face currentFace = face_array[vid/3];

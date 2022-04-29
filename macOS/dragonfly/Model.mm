@@ -39,8 +39,8 @@ void Model::MakeCube() {
     MakeVertex(0, 1, 1);
     MakeVertex(1, 1, 1);
     
-    MakeFace(1, 0, 2, {1, 1, 1, 1});
-    MakeFace(2, 3, 1, {1, 1, 1, 1});
+    MakeFace(1, 0, 2, {0, 0, 1, 1});
+    MakeFace(2, 3, 1, {1, 0, 0, 1});
     
     MakeFace(1, 0, 4, {1, 1, 1, 1});
     MakeFace(4, 5, 1, {1, 1, 1, 1});
