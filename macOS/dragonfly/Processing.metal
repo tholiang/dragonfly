@@ -31,7 +31,7 @@ struct VertexOut {
 struct ModelUniforms {
     vector_float3 position;
     vector_float3 rotate_origin;
-    vector_float3 angle;
+    vector_float3 angle; // euler angles
 };
 
 struct Uniforms {
@@ -211,7 +211,7 @@ vertex VertexOut DefaultVertexShader (const constant vector_float3 *vertex_array
 
 vertex VertexOut VertexEdgeShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant Face *face_array[[buffer(1)]], unsigned int vid [[vertex_id]]) {
     Face currentFace = face_array[vid/4];
-    vector_float3 currentVertex = vertex_array[currentFace.vertices[vid%4]];
+    vector_float3 currentVertex = vertex_array[currentFace.vertices[vid%3]];
     VertexOut output;
     output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z-0.0001, 1);
     output.color = vector_float4(0, 0, 1, 1);

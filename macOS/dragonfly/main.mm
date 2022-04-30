@@ -38,7 +38,7 @@ struct Pixel {
 struct ModelUniforms {
     simd_float3 position;
     simd_float3 rotate_origin;
-    simd_float3 angle;
+    simd_float3 angle; // euler angles zyx
 };
 
 struct Uniforms {
@@ -103,14 +103,20 @@ Model *cube;
 Arrow *z_arrow;
 Arrow *x_arrow;
 Arrow *y_arrow;
+std::vector<Model *> models;
 std::vector<ModelUniforms> model_uniforms;
 
 // input variables
 bool left_clicked = false;
 bool right_clicked = false;
+bool left_mouse_down = false;
+bool right_mouse_down = false;
 
 int selected_face = -1;
+int ARROW_VERTEX_SIZE = 13;
 int ARROW_FACE_SIZE = 18;
+// z base, z tip, x base, x tip, y base, y tip
+simd_float2 arrow_projections [6];
 // z, x, y
 int selected_arrow = -1;
 simd_float2 click_loc;
@@ -127,6 +133,64 @@ simd_float3 TriAvg (simd_float3 p1, simd_float3 p2, simd_float3 p3) {
     float z = (p1.z + p2.z + p3.z)/3;
     
     return simd_make_float3(x, y, z);
+}
+
+float sign (simd_float2 &p1, simd_float3 &p2, simd_float3 &p3) {
+    return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+}
+
+float dist (simd_float2 &p1, simd_float3 &p2) {
+    return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
+}
+
+float WeightedZ (simd_float2 &click, simd_float3 &p1, simd_float3 &p2, simd_float3 &p3) {
+    float dist1 = dist(click, p1);
+    float dist2 = dist(click, p2);
+    float dist3 = dist(click, p3);
+    
+    float total_dist = dist1 + dist2 + dist3;
+    float weightedZ = p1.z*(dist1/total_dist);
+    weightedZ += p2.z*(dist2/total_dist);
+    weightedZ += p3.z*(dist3/total_dist);
+    return weightedZ;
+}
+
+int FaceClicked() {
+    float d1, d2, d3;
+    bool has_neg, has_pos;
+    
+    simd_float3 *vertices = (simd_float3 *) scene_vertex_buffer.contents;
+    Face *face_array = (Face *) scene_face_buffer.contents;
+    
+    float minZ = -1;
+    int clickedIdx = -1;
+    
+    for (int fid = 0; fid < scene_faces.size(); fid++) {
+        Face face = face_array[fid];
+        vector_float3 v1 = vertices[face.vertices[0]];
+        vector_float3 v2 = vertices[face.vertices[1]];
+        vector_float3 v3 = vertices[face.vertices[2]];
+
+        d1 = sign(click_loc, v1, v2);
+        d2 = sign(click_loc, v2, v3);
+        d3 = sign(click_loc, v3, v1);
+
+        has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+        has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+        if (!(has_neg && has_pos)) {
+            float z = WeightedZ(click_loc, v1, v2, v3);
+            if (minZ == -1) {
+                minZ = z;
+                clickedIdx = fid;
+            } else if (z < minZ) {
+                minZ = z;
+                clickedIdx = fid;
+            }
+        }
+    }
+    
+    return clickedIdx;
 }
 
 void CreateScenePipelineStates () {
@@ -179,7 +243,10 @@ void CreateBuffers() {
     y_arrow->AddToBuffers(scene_vertices, scene_faces, modelIDs, scene_vertices.size());
     arrows_vertex_end = scene_vertices.size();
     arrows_face_end = scene_faces.size();
-    cube->AddToBuffers(scene_vertices, scene_faces, modelIDs, scene_vertices.size());
+    
+    for (std::size_t i = 3; i < models.size(); i++) {
+        models[i]->AddToBuffers(scene_vertices, scene_faces, modelIDs, scene_vertices.size());
+    }
     
     if (selected_face != -1) {
         simd_float3 triavg = TriAvg(scene_vertices[scene_faces[selected_face].vertices[0]], scene_vertices[scene_faces[selected_face].vertices[1]], scene_vertices[scene_faces[selected_face].vertices[2]]);
@@ -332,13 +399,17 @@ void HandleKeyboardEvents(SDL_Event event) {
 }
 
 void HandleMouseEvents(SDL_Event event) {
+    left_clicked = false;
+    right_clicked = false;
     if (event.type == SDL_MOUSEBUTTONDOWN) {
         switch (event.button.button) {
             case SDL_BUTTON_LEFT:
                 left_clicked = true;
+                left_mouse_down = true;
                 break;
             case SDL_BUTTON_RIGHT:
                 right_clicked = true;
+                right_mouse_down = true;
                 int x;
                 int y;
                 SDL_GetMouseState(&x, &y);
@@ -351,10 +422,11 @@ void HandleMouseEvents(SDL_Event event) {
     } else if (event.type == SDL_MOUSEBUTTONUP) {
         switch (event.button.button) {
             case SDL_BUTTON_LEFT:
-                left_clicked = false;
+                left_mouse_down = false;
                 break;
             case SDL_BUTTON_RIGHT:
-                right_clicked = false;
+                right_mouse_down = false;
+                selected_arrow = -1;
                 break;
             default:
                 break;
@@ -362,7 +434,7 @@ void HandleMouseEvents(SDL_Event event) {
     }
     
     if (event.type == SDL_MOUSEMOTION) {
-        if (left_clicked) {
+        if (left_mouse_down) {
             //get current camera angles (phi is vertical and theta is horizontal)
             //get the new change based on the amount the mouse moved
             float curr_phi = atan2(camera->vector.y, camera->vector.x);
@@ -384,8 +456,63 @@ void HandleMouseEvents(SDL_Event event) {
             camera->up_vector.z = cos(new_theta-M_PI_2);
         }
         
-        if (right_clicked) {
+        if (right_mouse_down && selected_arrow != -1) {
+            // find the projected location of the tip and the base
+            simd_float2 base = arrow_projections[selected_arrow*2];
+            simd_float2 tip = arrow_projections[selected_arrow*2+1];
             
+            // find direction to move
+            float xDiff = tip.x-base.x;
+            float yDiff = tip.y-base.y;
+            
+            float mvmt = xDiff * event.motion.xrel + yDiff * (-event.motion.yrel);
+            
+            // move
+            ModelUniforms arrow_uniform = model_uniforms[selected_arrow];
+            float x_vec = 0;
+            float y_vec = 0;
+            float z_vec = 1;
+            // gimbal locked
+            
+            // around z axis
+            //x_vec = x_vec*cos(arrow_uniform.angle.z)-y_vec*sin(arrow_uniform.angle.z);
+            //y_vec = x_vec*sin(arrow_uniform.angle.z)+y_vec*cos(arrow_uniform.angle.z);
+            
+            // around y axis
+            float newx = x_vec*cos(arrow_uniform.angle.y)+z_vec*sin(arrow_uniform.angle.y);
+            z_vec = -x_vec*sin(arrow_uniform.angle.y)+z_vec*cos(arrow_uniform.angle.y);
+            x_vec = newx;
+            
+            // around x axis
+            float newy = y_vec*cos(arrow_uniform.angle.x)-z_vec*sin(arrow_uniform.angle.x);
+            z_vec = y_vec*sin(arrow_uniform.angle.x)+z_vec*cos(arrow_uniform.angle.x);
+            y_vec = newy;
+            
+            x_vec *= 0.01*mvmt;
+            y_vec *= 0.01*mvmt;
+            z_vec *= 0.01*mvmt;
+            
+            if (selected_face != -1) {
+                int modelID = modelIDs[scene_faces[selected_face].vertices[0]];
+                Model *model = models[modelID];
+                unsigned long modelFaceID = selected_face - model->FaceStart();
+                Face *selected = model->GetFace(modelFaceID);
+                simd_float3 *v1 = model->GetVertex(selected->vertices[0]);
+                simd_float3 *v2 = model->GetVertex(selected->vertices[1]);
+                simd_float3 *v3 = model->GetVertex(selected->vertices[2]);
+                
+                v1->x += x_vec;
+                v1->y += y_vec;
+                v1->z += z_vec;
+                
+                v2->x += x_vec;
+                v2->y += y_vec;
+                v2->z += z_vec;
+                
+                v3->x += x_vec;
+                v3->y += y_vec;
+                v3->z += z_vec;
+            }
         }
     }
 }
@@ -420,62 +547,22 @@ void HandleCameraInput() {
     }
 }
 
-float sign (simd_float2 &p1, simd_float3 &p2, simd_float3 &p3) {
-    return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
-}
-
-float dist (simd_float2 &p1, simd_float3 &p2) {
-    return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
-}
-
-float WeightedZ (simd_float2 &click, simd_float3 &p1, simd_float3 &p2, simd_float3 &p3) {
-    float dist1 = dist(click, p1);
-    float dist2 = dist(click, p2);
-    float dist3 = dist(click, p3);
+void SetArrowProjections() {
+    simd_float3 * contents = (simd_float3 *) scene_vertex_buffer.contents;
+    arrow_projections[0].x = contents[0].x;
+    arrow_projections[0].y = contents[0].y;
+    arrow_projections[1].x = contents[12].x;
+    arrow_projections[1].y = contents[12].y;
     
-    float total_dist = dist1 + dist2 + dist3;
-    float weightedZ = p1.z*(dist1/total_dist);
-    weightedZ += p2.z*(dist2/total_dist);
-    weightedZ += p3.z*(dist3/total_dist);
-    return weightedZ;
-}
-
-int FaceClicked() {
-    float d1, d2, d3;
-    bool has_neg, has_pos;
+    arrow_projections[2].x = contents[ARROW_VERTEX_SIZE].x;
+    arrow_projections[2].y = contents[ARROW_VERTEX_SIZE].y;
+    arrow_projections[3].x = contents[ARROW_VERTEX_SIZE+12].x;
+    arrow_projections[3].y = contents[ARROW_VERTEX_SIZE+12].y;
     
-    simd_float3 *vertices = (simd_float3 *) scene_vertex_buffer.contents;
-    Face *face_array = (Face *) scene_face_buffer.contents;
-    
-    float minZ = -1;
-    int clickedIdx = -1;
-    
-    for (int fid = 0; fid < scene_faces.size(); fid++) {
-        Face face = face_array[fid];
-        vector_float3 v1 = vertices[face.vertices[0]];
-        vector_float3 v2 = vertices[face.vertices[1]];
-        vector_float3 v3 = vertices[face.vertices[2]];
-
-        d1 = sign(click_loc, v1, v2);
-        d2 = sign(click_loc, v2, v3);
-        d3 = sign(click_loc, v3, v1);
-
-        has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-        has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-
-        if (!(has_neg && has_pos)) {
-            float z = WeightedZ(click_loc, v1, v2, v3);
-            if (minZ == -1) {
-                minZ = z;
-                clickedIdx = fid;
-            } else if (z < minZ) {
-                minZ = z;
-                clickedIdx = fid;
-            }
-        }
-    }
-    
-    return clickedIdx;
+    arrow_projections[4].x = contents[ARROW_VERTEX_SIZE*2].x;
+    arrow_projections[4].y = contents[ARROW_VERTEX_SIZE*2].y;
+    arrow_projections[5].x = contents[ARROW_VERTEX_SIZE*2+12].x;
+    arrow_projections[5].y = contents[ARROW_VERTEX_SIZE*2+12].y;
 }
 
 int main(int, char**) {
@@ -491,6 +578,10 @@ int main(int, char**) {
     z_arrow_uniform.angle = simd_make_float3(0, 0, 0);
     
     model_uniforms.push_back(z_arrow_uniform);
+    arrow_projections[0] = simd_make_float2(0,0);
+    arrow_projections[1] = simd_make_float2(0,1);
+    
+    models.push_back(z_arrow);
     
     x_arrow = new Arrow(1, simd_make_float4(0, 1, 0, 1));
     
@@ -500,6 +591,10 @@ int main(int, char**) {
     x_arrow_uniform.angle = simd_make_float3(M_PI_2, 0, 0);
     
     model_uniforms.push_back(x_arrow_uniform);
+    arrow_projections[2] = simd_make_float2(0,0);
+    arrow_projections[3] = simd_make_float2(0,0);
+    
+    models.push_back(x_arrow);
     
     y_arrow = new Arrow(2, simd_make_float4(0, 0, 1, 1));
     
@@ -509,6 +604,10 @@ int main(int, char**) {
     y_arrow_uniform.angle = simd_make_float3(0, -M_PI_2, 0);
     
     model_uniforms.push_back(y_arrow_uniform);
+    arrow_projections[4] = simd_make_float2(0,0);
+    arrow_projections[5] = simd_make_float2(1,0);
+    
+    models.push_back(y_arrow);
     
     cube = new Model(3);
     cube->MakeCube();
@@ -519,6 +618,8 @@ int main(int, char**) {
     cube_uniform.angle = simd_make_float3(0, 0, 0);
     
     model_uniforms.push_back(cube_uniform);
+    
+    models.push_back(cube);
     
     camera = new Camera();
     camera->pos = {-2, 0, 0};
@@ -593,6 +694,8 @@ int main(int, char**) {
                     selected_arrow = sf/ARROW_FACE_SIZE;
                 }
             }
+            
+            SetArrowProjections();
             
             id<MTLCommandBuffer> render_command_buffer = [command_queue commandBuffer];
             render_pass_descriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.6, 0.6, 0.6, 1);

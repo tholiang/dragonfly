@@ -23,6 +23,7 @@ private:
     std::vector<Face> faces;
     std::vector<simd_float3> vertices;
     uint32 modelID;
+    unsigned long face_start;
     
 public:
     Model(uint32 mid);
@@ -30,11 +31,15 @@ public:
     unsigned MakeFace(unsigned v0, unsigned v1, unsigned v2, simd_float4 color);
     void MakeCube();
     
+    Face *GetFace(unsigned long fid);
+    simd_float3 *GetVertex(unsigned long vid);
+    
     std::vector<simd_float3> &GetVertices();
     std::vector<Face> &GetFaces();
     
     void AddToBuffers(std::vector<simd_float3> &vertexBuffer, std::vector<Face> &faceBuffer, std::vector<uint32> &modelIDs, int vertexStart);
     uint32 ModelID();
+    unsigned long FaceStart();
     
     ~Model();
 };

@@ -58,6 +58,14 @@ void Model::MakeCube() {
     MakeFace(5, 7, 6, {1, 1, 1, 1});
 }
 
+Face *Model::GetFace(unsigned long fid) {
+    return &faces.at(fid);
+}
+
+simd_float3 *Model::GetVertex(unsigned long vid) {
+    return &vertices.at(vid);
+}
+
 std::vector<simd_float3> &Model::GetVertices() {
     return vertices;
 }
@@ -67,6 +75,8 @@ std::vector<Face> &Model::GetFaces() {
 }
 
 void Model::AddToBuffers(std::vector<simd_float3> &vertexBuffer, std::vector<Face> &faceBuffer, std::vector<uint32> &modelIDs, int vertexStart) {
+    face_start = faceBuffer.size();
+    
     for (int i = 0; i < vertices.size(); i++) {
         vertexBuffer.push_back(vertices[i]);
         modelIDs.push_back(modelID);
@@ -85,6 +95,10 @@ void Model::AddToBuffers(std::vector<simd_float3> &vertexBuffer, std::vector<Fac
 
 uint32 Model::ModelID() {
     return modelID;
+}
+
+unsigned long Model::FaceStart() {
+    return face_start;
 }
 
 Model::~Model() {
