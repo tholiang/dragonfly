@@ -48,6 +48,11 @@ struct Uniforms {
     simd_float3 selected_vertex;
 };
 
+struct VertexRenderUniforms {
+    float screen_ratio = 1280.0/720.0;
+    uint32 selected_vertex = -1;
+};
+
 // screen variables
 int window_width = 1280;
 int window_height = 720;
@@ -90,6 +95,7 @@ id <MTLBuffer> scene_face_buffer;
 id <MTLBuffer> scene_model_id_buffer;
 id <MTLBuffer> scene_camera_buffer;
 id <MTLBuffer> rotate_uniforms_buffer;
+id <MTLBuffer> vertex_render_uniforms_buffer;
 
 //id <MTLBuffer> selected_model_buffer;
 //id <MTLBuffer> click_loc_buffer;
@@ -105,6 +111,7 @@ Arrow *x_arrow;
 Arrow *y_arrow;
 std::vector<Model *> models;
 std::vector<ModelUniforms> model_uniforms;
+VertexRenderUniforms vertex_render_uniforms;
 
 // input variables
 bool left_clicked = false;
@@ -193,6 +200,33 @@ int FaceClicked() {
     return clickedIdx;
 }
 
+int VertexClicked() {
+    simd_float3 *vertices = (simd_float3 *) scene_vertex_buffer.contents;
+    
+    float minZ = -1;
+    int clickedIdx = -1;
+    
+    for (int vid = arrows_vertex_end; vid < scene_vertices.size(); vid++) {
+        simd_float3 vertex = vertices[vid];
+        float x_min = vertex.x-0.007;
+        float x_max = vertex.x+0.007;
+        float y_min = vertex.y-0.007 * aspect_ratio;
+        float y_max = vertex.y+0.007 * aspect_ratio;
+        
+        if (click_loc.x <= x_max && click_loc.x >= x_min && click_loc.y <= y_max && click_loc.y >= y_min) {
+            if (minZ == -1) {
+                minZ = vertex.z;
+                clickedIdx = vid;
+            } else if (vertex.z < minZ) {
+                minZ = vertex.z;
+                clickedIdx = vid;
+            }
+        }
+    }
+    
+    return clickedIdx;
+}
+
 void CreateScenePipelineStates () {
     CGSize drawableSize = layer.drawableSize;
     MTLTextureDescriptor *descriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth32Float width:drawableSize.width height:drawableSize.height mipmapped:NO];
@@ -238,14 +272,14 @@ void CreateScenePipelineStates () {
 }
 
 void CreateBuffers() {
-    z_arrow->AddToBuffers(scene_vertices, scene_faces, modelIDs, 0);
-    x_arrow->AddToBuffers(scene_vertices, scene_faces, modelIDs, scene_vertices.size());
-    y_arrow->AddToBuffers(scene_vertices, scene_faces, modelIDs, scene_vertices.size());
+    z_arrow->AddToBuffers(scene_vertices, scene_faces, modelIDs);
+    x_arrow->AddToBuffers(scene_vertices, scene_faces, modelIDs);
+    y_arrow->AddToBuffers(scene_vertices, scene_faces, modelIDs);
     arrows_vertex_end = scene_vertices.size();
     arrows_face_end = scene_faces.size();
     
     for (std::size_t i = 3; i < models.size(); i++) {
-        models[i]->AddToBuffers(scene_vertices, scene_faces, modelIDs, scene_vertices.size());
+        models[i]->AddToBuffers(scene_vertices, scene_faces, modelIDs);
     }
     
     if (selected_face != -1) {
@@ -259,11 +293,22 @@ void CreateBuffers() {
         scene_faces.at(selected_face).color = simd_make_float4(1, 0.5, 0, 1);
     }
     
+    if (vertex_render_uniforms.selected_vertex != -1) {
+        simd_float3 vertex_loc = scene_vertices[vertex_render_uniforms.selected_vertex];
+        model_uniforms[0].position = vertex_loc;
+        model_uniforms[1].position = vertex_loc;
+        model_uniforms[2].position = vertex_loc;
+        model_uniforms[0].rotate_origin = vertex_loc;
+        model_uniforms[1].rotate_origin = vertex_loc;
+        model_uniforms[2].rotate_origin = vertex_loc;
+    }
+    
     scene_vertex_buffer = [device newBufferWithBytes:scene_vertices.data() length:(scene_vertices.size() * sizeof(simd_float3)) options:MTLResourceStorageModeShared];
     scene_face_buffer = [device newBufferWithBytes:scene_faces.data() length:(scene_faces.size() * sizeof(Face)) options:MTLResourceStorageModeShared];
     scene_model_id_buffer = [device newBufferWithBytes:modelIDs.data() length:(modelIDs.size() * sizeof(uint32)) options:MTLResourceStorageModeShared];
     scene_camera_buffer = [device newBufferWithBytes:camera length:sizeof(Camera) options:{}];
     rotate_uniforms_buffer = [device newBufferWithBytes: model_uniforms.data() length:(model_uniforms.size() * sizeof(ModelUniforms)) options:{}];
+    vertex_render_uniforms_buffer = [device newBufferWithBytes: &vertex_render_uniforms length:(sizeof(VertexRenderUniforms)) options:{}];
     
     //selected_face = -1;
     //click_z = -1;
@@ -512,6 +557,14 @@ void HandleMouseEvents(SDL_Event event) {
                 v3->x += x_vec;
                 v3->y += y_vec;
                 v3->z += z_vec;
+            } else if (vertex_render_uniforms.selected_vertex != -1) {
+                int modelID = modelIDs[vertex_render_uniforms.selected_vertex];
+                Model *model = models[modelID];
+                unsigned long modelVertexID = vertex_render_uniforms.selected_vertex - model->VertexStart();
+                simd_float3 *v = model->GetVertex(modelVertexID);
+                v->x += x_vec;
+                v->y += y_vec;
+                v->z += z_vec;
             }
         }
     }
@@ -655,6 +708,7 @@ int main(int, char**) {
             
             SDL_GetRendererOutputSize(renderer, &window_width, &window_height);
             aspect_ratio = ((float) window_width)/((float) window_height);
+            vertex_render_uniforms.screen_ratio = aspect_ratio;
             //SDL_GetWindowSize(window, &window_width, &window_height);
             
             layer.drawableSize = CGSizeMake(window_width, window_height);
@@ -688,10 +742,17 @@ int main(int, char**) {
             
             if (right_clicked) {
                 int sf = FaceClicked();
-                if (sf >= arrows_face_end) {
-                    selected_face = FaceClicked();
+                int sv = VertexClicked();
+                if (sv == -1) {
+                    if (sf >= arrows_face_end) {
+                        selected_face = FaceClicked();
+                        vertex_render_uniforms.selected_vertex = -1;
+                    } else {
+                        selected_arrow = sf/ARROW_FACE_SIZE;
+                    }
                 } else {
-                    selected_arrow = sf/ARROW_FACE_SIZE;
+                    vertex_render_uniforms.selected_vertex = sv;
+                    selected_face = -1;
                 }
             }
             
@@ -732,8 +793,7 @@ int main(int, char**) {
             // rendering the vertex points
             [render_encoder setRenderPipelineState:scene_point_render_pipeline_state];
             [render_encoder setVertexBuffer:scene_vertex_buffer offset:0 atIndex:0];
-            [render_encoder setVertexBuffer:scene_face_buffer offset:0 atIndex:1];
-            [render_encoder setVertexBuffer:scene_vertex_buffer offset:0 atIndex:0];
+            [render_encoder setVertexBuffer:vertex_render_uniforms_buffer offset:0 atIndex:1];
             for (int i = arrows_vertex_end*4; i < scene_vertices.size()*4; i+=4) {
                 [render_encoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:i vertexCount:4];
             }

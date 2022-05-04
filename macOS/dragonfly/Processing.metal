@@ -39,6 +39,11 @@ struct Uniforms {
     unsigned int selectedFace;
 };
 
+struct VertexRenderUniforms {
+    float screen_ratio;
+    unsigned int selected_vertex;
+};
+
 //convert a 3d point to a pixel (vertex) value
 vector_float3 PointToPixel (vector_float3 point, constant Camera &camera)  {
     //vector from camera position to object position
@@ -218,19 +223,24 @@ vertex VertexOut VertexEdgeShader (const constant vector_float3 *vertex_array [[
     return output;
 }
 
-vertex VertexOut VertexPointShader (const constant vector_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]]) {
+vertex VertexOut VertexPointShader (const constant vector_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant VertexRenderUniforms *uniforms [[buffer(1)]]) {
     vector_float3 currentVertex = vertex_array[vid/4];
     VertexOut output;
     if (vid % 4 == 0) {
-        output.pos = vector_float4(currentVertex.x-0.007, currentVertex.y-0.007, currentVertex.z-0.001, 1);
+        output.pos = vector_float4(currentVertex.x-0.007, currentVertex.y-0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
     } else if (vid % 4 == 1) {
-        output.pos = vector_float4(currentVertex.x-0.007, currentVertex.y+0.007, currentVertex.z-0.001, 1);
+        output.pos = vector_float4(currentVertex.x-0.007, currentVertex.y+0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
     } else if (vid % 4 == 2) {
-        output.pos = vector_float4(currentVertex.x+0.007, currentVertex.y-0.007, currentVertex.z-0.001, 1);
+        output.pos = vector_float4(currentVertex.x+0.007, currentVertex.y-0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
     } else {
-        output.pos = vector_float4(currentVertex.x+0.007, currentVertex.y+0.007, currentVertex.z-0.001, 1);
+        output.pos = vector_float4(currentVertex.x+0.007, currentVertex.y+0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
     }
-    output.color = vector_float4(0, 1, 0, 1);
+    
+    if (vid/4 == uniforms->selected_vertex) {
+        output.color = vector_float4(1, 0.5, 0, 1);
+    } else {
+        output.color = vector_float4(0, 1, 0, 1);
+    }
     return output;
 }
 

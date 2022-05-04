@@ -74,8 +74,9 @@ std::vector<Face> &Model::GetFaces() {
     return faces;
 }
 
-void Model::AddToBuffers(std::vector<simd_float3> &vertexBuffer, std::vector<Face> &faceBuffer, std::vector<uint32> &modelIDs, int vertexStart) {
+void Model::AddToBuffers(std::vector<simd_float3> &vertexBuffer, std::vector<Face> &faceBuffer, std::vector<uint32> &modelIDs) {
     face_start = faceBuffer.size();
+    vertex_start = vertexBuffer.size();
     
     for (int i = 0; i < vertices.size(); i++) {
         vertexBuffer.push_back(vertices[i]);
@@ -86,9 +87,9 @@ void Model::AddToBuffers(std::vector<simd_float3> &vertexBuffer, std::vector<Fac
         Face og = faces[i];
         Face face;
         face.color = og.color;
-        face.vertices[0] = og.vertices[0]+vertexStart;
-        face.vertices[1] = og.vertices[1]+vertexStart;
-        face.vertices[2] = og.vertices[2]+vertexStart;
+        face.vertices[0] = og.vertices[0]+vertex_start;
+        face.vertices[1] = og.vertices[1]+vertex_start;
+        face.vertices[2] = og.vertices[2]+vertex_start;
         faceBuffer.push_back(face);
     }
 }
@@ -99,6 +100,10 @@ uint32 Model::ModelID() {
 
 unsigned long Model::FaceStart() {
     return face_start;
+}
+
+unsigned long Model::VertexStart() {
+    return vertex_start;
 }
 
 Model::~Model() {

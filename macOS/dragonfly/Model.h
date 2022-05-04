@@ -24,6 +24,7 @@ private:
     std::vector<simd_float3> vertices;
     uint32 modelID;
     unsigned long face_start;
+    unsigned long vertex_start;
     
 public:
     Model(uint32 mid);
@@ -37,9 +38,10 @@ public:
     std::vector<simd_float3> &GetVertices();
     std::vector<Face> &GetFaces();
     
-    void AddToBuffers(std::vector<simd_float3> &vertexBuffer, std::vector<Face> &faceBuffer, std::vector<uint32> &modelIDs, int vertexStart);
+    void AddToBuffers(std::vector<simd_float3> &vertexBuffer, std::vector<Face> &faceBuffer, std::vector<uint32> &modelIDs);
     uint32 ModelID();
     unsigned long FaceStart();
+    unsigned long VertexStart();
     
     ~Model();
 };
