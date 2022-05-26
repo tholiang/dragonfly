@@ -50,8 +50,12 @@ struct Uniforms {
 
 struct VertexRenderUniforms {
     float screen_ratio = 1280.0/720.0;
-    uint32 selected_vertex = -1;
+    vector_int3 selected_vertices;
 };
+
+/*struct EdgeRenderUniforms {
+    vector_int2 selected_edge = -1;
+};*/
 
 // screen variables
 int window_width = 1280;
@@ -96,6 +100,7 @@ id <MTLBuffer> scene_model_id_buffer;
 id <MTLBuffer> scene_camera_buffer;
 id <MTLBuffer> rotate_uniforms_buffer;
 id <MTLBuffer> vertex_render_uniforms_buffer;
+//id <MTLBuffer> edge_render_uniforms_buffer;
 
 //id <MTLBuffer> selected_model_buffer;
 //id <MTLBuffer> click_loc_buffer;
@@ -112,22 +117,41 @@ Arrow *y_arrow;
 std::vector<Model *> models;
 std::vector<ModelUniforms> model_uniforms;
 VertexRenderUniforms vertex_render_uniforms;
+//EdgeRenderUniforms edge_render_uniforms;
 
 // input variables
 bool left_clicked = false;
 bool right_clicked = false;
+bool ctrl_down = false;
 bool left_mouse_down = false;
 bool right_mouse_down = false;
 
+bool render_rightclick_popup = false;
+simd_float2 rightclick_popup_loc;
+
+enum SelectionMode { SM_ALL, SM_NONE };
+SelectionMode selection_mode = SM_ALL;
+
+enum EditMode { EM_DEFAULT, EM_ADD_VERTEX };
+EditMode edit_mode = EM_DEFAULT;
+
+//bool potential_vertex_included = false;
+
 int selected_face = -1;
-int ARROW_VERTEX_SIZE = 13;
-int ARROW_FACE_SIZE = 18;
+vector_int2 selected_edge;
+int selected_vertex = -1;
+
+bool show_arrows = false;
+int ARROW_VERTEX_SIZE = 18;
+int ARROW_FACE_SIZE = 22;
 // z base, z tip, x base, x tip, y base, y tip
 simd_float2 arrow_projections [6];
 // z, x, y
 int selected_arrow = -1;
+
 simd_float2 click_loc;
-//float click_z = -1;
+simd_float2 mouse_loc;
+float click_z = 50; // render dist
 
 // w a s d space shift
 bool key_presses[6] = { 0 };
@@ -138,6 +162,14 @@ simd_float3 TriAvg (simd_float3 p1, simd_float3 p2, simd_float3 p3) {
     float x = (p1.x + p2.x + p3.x)/3;
     float y = (p1.y + p2.y + p3.y)/3;
     float z = (p1.z + p2.z + p3.z)/3;
+    
+    return simd_make_float3(x, y, z);
+}
+
+simd_float3 BiAvg (simd_float3 p1, simd_float3 p2) {
+    float x = (p1.x + p2.x)/2;
+    float y = (p1.y + p2.y)/2;
+    float z = (p1.z + p2.z)/2;
     
     return simd_make_float3(x, y, z);
 }
@@ -162,11 +194,81 @@ float WeightedZ (simd_float2 &click, simd_float3 &p1, simd_float3 &p2, simd_floa
     return weightedZ;
 }
 
-int FaceClicked() {
+simd_float3 CrossProduct (simd_float3 p1, simd_float3 p2) {
+    simd_float3 cross;
+    cross.x = p1.y*p2.z - p1.z*p2.y;
+    cross.y = -(p1.x*p2.z - p1.z*p2.x);
+    cross.z = p1.x*p2.y - p1.y*p2.x;
+    return cross;
+}
+
+/*simd_float3 LinePlaneIntersect (simd_float3 line_origin, simd_float3 line_vector, simd_float3 plane1, simd_float3 plane2, simd_float3 plane3) {
+    simd_float3 plane_vec1 = simd_make_float3(plane1.x-plane2.x, plane1.y-plane2.y, plane1.z-plane2.z);
+    simd_float3 plane_vec2 = simd_make_float3(plane1.x-plane3.x, plane1.y-plane3.y, plane1.z-plane3.z);
+    simd_float3 plane_norm = CrossProduct(plane_vec1, plane_vec2);
+    
+    float k = -(plane_norm.x*plane1.x + plane_norm.y*plane1.y + plane_norm.z*plane1.z);
+    
+    //std::cout<<plane_norm.x<<"x + "<<plane_norm.y<<"y + "<<plane_norm.z<<"z + "<<k<<" = 0"<<std::endl;
+    
+    float intersect_const = k + plane_norm.x*line_origin.x + plane_norm.y*line_origin.y + plane_norm.z*line_origin.z;
+    float intersect_coeff = plane_norm.x*line_vector.x + plane_norm.y*line_vector.y + plane_norm.z*line_vector.z;
+    
+    float distto = -intersect_const/intersect_coeff;
+    
+    //std::cout<<"t = "<<distto<<std::endl;
+    
+    simd_float3 intersect = simd_make_float3(distto*line_vector.x + line_origin.x, distto*line_vector.y + line_origin.y, distto*line_vector.z + line_origin.z);
+    
+    //std::cout<<intersect.x<<" "<<intersect.y<<" "<<intersect.z<<std::endl;
+    //std::cout<<distto<<std::endl;
+    return intersect;
+}*/
+
+/*simd_float3 MouseFaceIntercept (simd_float2 &mouse, int fid) {
+    Face face = scene_faces.at(fid);
+    simd_float3 mouse_angle = simd_make_float3(atan(mouse.x*tan(camera->FOV.x/2)), -atan(mouse.y*tan(camera->FOV.y/2)), 1);
+    
+    std::cout<<mouse_angle.x<<" "<<mouse_angle.y<<std::endl;
+    
+    //get current camera angles (phi is vertical and theta is horizontal)
+    //get the new change based on the amount the mouse moved
+    float cam_phi = atan2(camera->vector.y, camera->vector.x);
+    
+    float cam_theta = acos(camera->vector.z);
+    
+    //get mouse phi and theta angles
+    float new_phi = cam_phi + mouse_angle.x;
+    float new_theta = cam_theta + mouse_angle.y;
+    
+    //find vector
+    simd_float3 mouse_vec = simd_make_float3(sin(new_theta)*cos(new_phi), sin(new_theta)*sin(new_phi), cos(new_theta));
+    
+    //std::cout<<mouse_vec.x<<" "<<mouse_vec.y<<" "<<mouse_vec.z<<std::endl;
+    
+    //std::cout<<"x: "<<mouse_vec.x<<"t + "<<camera->pos.x<<std::endl;
+    //std::cout<<"y: "<<mouse_vec.y<<"t + "<<camera->pos.y<<std::endl;
+    //std::cout<<"z: "<<mouse_vec.z<<"t + "<<camera->pos.z<<std::endl;
+    
+    return LinePlaneIntersect(camera->pos, mouse_vec, scene_vertices.at(face.vertices[0]), scene_vertices.at(face.vertices[1]), scene_vertices.at(face.vertices[2]));
+}*/
+
+bool InTriangle(vector_float2 &point, vector_float3 v1, vector_float3 v2, vector_float3 v3) {
+    float d1 = sign(point, v1, v2);
+    float d2 = sign(point, v2, v3);
+    float d3 = sign(point, v3, v1);
+
+    bool has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+    bool has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+    return (!(has_neg && has_pos));
+}
+
+void FaceClicked() {
     float d1, d2, d3;
     bool has_neg, has_pos;
     
-    simd_float3 *vertices = (simd_float3 *) scene_vertex_buffer.contents;
+    vector_float3 *vertices = (vector_float3 *) scene_vertex_buffer.contents;
     Face *face_array = (Face *) scene_face_buffer.contents;
     
     float minZ = -1;
@@ -178,29 +280,31 @@ int FaceClicked() {
         vector_float3 v2 = vertices[face.vertices[1]];
         vector_float3 v3 = vertices[face.vertices[2]];
 
-        d1 = sign(click_loc, v1, v2);
-        d2 = sign(click_loc, v2, v3);
-        d3 = sign(click_loc, v3, v1);
-
-        has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-        has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-
-        if (!(has_neg && has_pos)) {
+        if (InTriangle(click_loc, v1, v2, v3)) {
             float z = WeightedZ(click_loc, v1, v2, v3);
-            if (minZ == -1) {
-                minZ = z;
-                clickedIdx = fid;
-            } else if (z < minZ) {
+            if (minZ == -1 || z < minZ) {
                 minZ = z;
                 clickedIdx = fid;
             }
         }
     }
     
-    return clickedIdx;
+    if (clickedIdx != -1 && minZ < click_z) {
+        if (clickedIdx >= arrows_face_end) {
+            selected_face = clickedIdx;
+            selected_vertex = -1;
+            selected_edge.x = -1;
+            selected_edge.y = -1;
+        } else {
+            selected_arrow = clickedIdx/ARROW_FACE_SIZE;
+        }
+        click_z = minZ;
+    } else {
+        selected_face = -1;
+    }
 }
 
-int VertexClicked() {
+void VertexClicked() {
     simd_float3 *vertices = (simd_float3 *) scene_vertex_buffer.contents;
     
     float minZ = -1;
@@ -214,17 +318,124 @@ int VertexClicked() {
         float y_max = vertex.y+0.007 * aspect_ratio;
         
         if (click_loc.x <= x_max && click_loc.x >= x_min && click_loc.y <= y_max && click_loc.y >= y_min) {
-            if (minZ == -1) {
-                minZ = vertex.z;
-                clickedIdx = vid;
-            } else if (vertex.z < minZ) {
+            if (minZ == -1 || vertex.z < minZ) {
                 minZ = vertex.z;
                 clickedIdx = vid;
             }
         }
     }
     
-    return clickedIdx;
+    if (clickedIdx != -1 && minZ < click_z) {
+        selected_vertex = clickedIdx;
+        selected_face = -1;
+        selected_edge.x = -1;
+        selected_edge.y = -1;
+        click_z = minZ;
+    } else if (selected_arrow == -1) {
+        selected_vertex = -1;
+    }
+}
+
+void EdgeClicked() {
+    float d1, d2, d3;
+    bool has_neg, has_pos;
+    
+    simd_float3 *vertices = (simd_float3 *) scene_vertex_buffer.contents;
+    Face *face_array = (Face *) scene_face_buffer.contents;
+    
+    float minZ = -1;
+    int clickedv1 = -1;
+    int clickedv2 = -1;
+    
+    for (int fid = arrows_face_end; fid < scene_faces.size(); fid++) {
+        Face face = face_array[fid];
+        
+        for (int vid = 0; vid < 3; vid++) {
+            vector_float3 v1 = vertices[face.vertices[vid]];
+            vector_float3 v2 = vertices[face.vertices[(vid+1) % 3]];
+            
+            vector_float2 edgeVec = simd_make_float2(v1.x-v2.x, v1.y-v2.y);
+            float mag = sqrt(pow(edgeVec.x, 2) + pow(edgeVec.y, 2));
+            if (mag == 0) {
+                continue;
+            }
+            edgeVec.x /= mag;
+            edgeVec.y /= mag;
+            
+            edgeVec.x *= 0.01;
+            edgeVec.y *= 0.01;
+            
+            vector_float3 v1plus = simd_make_float3(v1.x+edgeVec.y, v1.y-edgeVec.x, v1.z);
+            vector_float3 v1sub = simd_make_float3(v1.x-edgeVec.y, v1.y+edgeVec.x, v1.z);
+            vector_float3 v2plus = simd_make_float3(v2.x+edgeVec.y, v2.y-edgeVec.x, v2.z);
+            vector_float3 v2sub = simd_make_float3(v2.x-edgeVec.y, v2.y+edgeVec.x, v2.z);
+            
+            if (InTriangle(click_loc, v1plus, v1sub, v2plus) || InTriangle(click_loc, v1sub, v2sub, v2plus)) {
+                float dist1 = dist(click_loc, v1);
+                float dist2 = dist(click_loc, v2);
+                
+                float total_dist = dist1 + dist2;
+                float weightedZ = v1.z*(dist1/total_dist);
+                weightedZ += v2.z*(dist2/total_dist);
+                float z = weightedZ;
+                
+                if (minZ == -1 || z < minZ) {
+                    minZ = z;
+                    clickedv1 = face.vertices[vid];
+                    clickedv2 = face.vertices[(vid+1) % 3];
+                }
+            }
+        }
+    }
+    
+    if (clickedv1 != -1 && minZ < click_z) {
+        selected_edge = simd_make_int2(clickedv1, clickedv2);
+        selected_face = -1;
+        selected_vertex = -1;
+        click_z = minZ;
+    } else if (selected_arrow == -1) {
+        selected_edge = simd_make_int2(-1, -1);
+    }
+}
+
+/*void HandlePotentialVertex() {
+    Face f = scene_faces.at(selected_face);
+    vector_float3 *vertices = (vector_float3 *) scene_vertex_buffer.contents;
+    
+    if (InTriangle(mouse_loc, vertices[f.vertices[0]], vertices[f.vertices[1]], vertices[f.vertices[2]])) {
+        simd_float3 new_vertex = MouseFaceIntercept(mouse_loc, selected_face);
+        
+        //std::cout<<new_vertex.x<<" "<<new_vertex.y<<" "<<new_vertex.z<<std::endl;
+        scene_vertices.push_back(new_vertex);
+        
+        potential_vertex_included = true;
+    }
+}*/
+
+void AddVertexToFace (int fid) {
+    int modelID = modelIDs[scene_faces[fid].vertices[0]];
+    Model *model = models[modelID];
+    unsigned long modelFaceID = fid - model->FaceStart();
+    
+    Face *selected = model->GetFace(modelFaceID);
+    unsigned vid1 = selected->vertices[0];
+    unsigned vid2 = selected->vertices[1];
+    unsigned vid3 = selected->vertices[2];
+    simd_float3 *v1 = model->GetVertex(vid1);
+    simd_float3 *v2 = model->GetVertex(vid2);
+    simd_float3 *v3 = model->GetVertex(vid3);
+    
+    simd_float3 new_v = TriAvg(*v1, *v2, *v3);
+    unsigned new_vid = model->MakeVertex(new_v.x, new_v.y, new_v.z);
+    
+    //1,2,new
+    selected->vertices[2] = new_vid;
+    
+    //2,3,new
+    model->MakeFace(vid2, vid3, new_vid, selected->color);
+    
+    //1,3,new
+    model->MakeFace(vid1, vid3, new_vid, selected->color);
 }
 
 void CreateScenePipelineStates () {
@@ -272,15 +483,20 @@ void CreateScenePipelineStates () {
 }
 
 void CreateBuffers() {
-    z_arrow->AddToBuffers(scene_vertices, scene_faces, modelIDs);
-    x_arrow->AddToBuffers(scene_vertices, scene_faces, modelIDs);
-    y_arrow->AddToBuffers(scene_vertices, scene_faces, modelIDs);
+    if (show_arrows) {
+        z_arrow->AddToBuffers(scene_vertices, scene_faces, modelIDs);
+        x_arrow->AddToBuffers(scene_vertices, scene_faces, modelIDs);
+        y_arrow->AddToBuffers(scene_vertices, scene_faces, modelIDs);
+    }
+    
     arrows_vertex_end = scene_vertices.size();
     arrows_face_end = scene_faces.size();
     
     for (std::size_t i = 3; i < models.size(); i++) {
         models[i]->AddToBuffers(scene_vertices, scene_faces, modelIDs);
     }
+    
+    vertex_render_uniforms.selected_vertices = simd_make_int3(-1, -1, -1);
     
     if (selected_face != -1) {
         simd_float3 triavg = TriAvg(scene_vertices[scene_faces[selected_face].vertices[0]], scene_vertices[scene_faces[selected_face].vertices[1]], scene_vertices[scene_faces[selected_face].vertices[2]]);
@@ -290,18 +506,42 @@ void CreateBuffers() {
         model_uniforms[0].rotate_origin = triavg;
         model_uniforms[1].rotate_origin = triavg;
         model_uniforms[2].rotate_origin = triavg;
-        scene_faces.at(selected_face).color = simd_make_float4(1, 0.5, 0, 1);
+        //scene_faces.at(selected_face).color = simd_make_float4(1, 0.5, 0, 1);
+        
+        vertex_render_uniforms.selected_vertices.x = scene_faces[selected_face].vertices[0];
+        vertex_render_uniforms.selected_vertices.y = scene_faces[selected_face].vertices[1];
+        vertex_render_uniforms.selected_vertices.z = scene_faces[selected_face].vertices[2];
     }
     
-    if (vertex_render_uniforms.selected_vertex != -1) {
-        simd_float3 vertex_loc = scene_vertices[vertex_render_uniforms.selected_vertex];
+    if (selected_edge.x != -1) {
+        simd_float3 biavg = BiAvg(scene_vertices[selected_edge.x], scene_vertices[selected_edge.y]);
+        model_uniforms[0].position = biavg;
+        model_uniforms[1].position = biavg;
+        model_uniforms[2].position = biavg;
+        model_uniforms[0].rotate_origin = biavg;
+        model_uniforms[1].rotate_origin = biavg;
+        model_uniforms[2].rotate_origin = biavg;
+        
+        vertex_render_uniforms.selected_vertices.x = selected_edge.x;
+        vertex_render_uniforms.selected_vertices.y = selected_edge.y;
+    }
+    
+    if (selected_vertex != -1) {
+        simd_float3 vertex_loc = scene_vertices[selected_vertex];
         model_uniforms[0].position = vertex_loc;
         model_uniforms[1].position = vertex_loc;
         model_uniforms[2].position = vertex_loc;
         model_uniforms[0].rotate_origin = vertex_loc;
         model_uniforms[1].rotate_origin = vertex_loc;
         model_uniforms[2].rotate_origin = vertex_loc;
+        
+        vertex_render_uniforms.selected_vertices.x = selected_vertex;
     }
+    
+    /*potential_vertex_included = false;
+    if (edit_mode == EM_ADD_VERTEX) {
+        HandlePotentialVertex();
+    }*/
     
     scene_vertex_buffer = [device newBufferWithBytes:scene_vertices.data() length:(scene_vertices.size() * sizeof(simd_float3)) options:MTLResourceStorageModeShared];
     scene_face_buffer = [device newBufferWithBytes:scene_faces.data() length:(scene_faces.size() * sizeof(Face)) options:MTLResourceStorageModeShared];
@@ -309,6 +549,7 @@ void CreateBuffers() {
     scene_camera_buffer = [device newBufferWithBytes:camera length:sizeof(Camera) options:{}];
     rotate_uniforms_buffer = [device newBufferWithBytes: model_uniforms.data() length:(model_uniforms.size() * sizeof(ModelUniforms)) options:{}];
     vertex_render_uniforms_buffer = [device newBufferWithBytes: &vertex_render_uniforms length:(sizeof(VertexRenderUniforms)) options:{}];
+    //edge_render_uniforms_buffer = [device newBufferWithBytes: &edge_render_uniforms length:(sizeof(EdgeRenderUniforms)) options:{}];
     
     //selected_face = -1;
     //click_z = -1;
@@ -373,6 +614,49 @@ int SetupImGui () {
     return 0;
 }
 
+void RightClickPopup() {
+    ImGui::SetCursorPos(ImVec2(window_width * (rightclick_popup_loc.x+1)/2, window_height * (2-(rightclick_popup_loc.y+1))/2));
+    
+    if (edit_mode == EM_DEFAULT) {
+        if (ImGui::Button("Add Vertex")) {
+            /*selection_mode = SM_NONE;
+            edit_mode = EM_ADD_VERTEX;
+            
+            if (selected_face != -1) {
+                selected_face -= ARROW_FACE_SIZE*3;
+            }
+            if (selected_vertex != -1) {
+                selected_vertex -= ARROW_VERTEX_SIZE*3;
+            }
+            if (selected_edge.x != -1) {
+                selected_edge.x -= ARROW_VERTEX_SIZE*3;
+                selected_edge.y -= ARROW_VERTEX_SIZE*3;
+            }
+            show_arrows = false;*/
+            render_rightclick_popup = false;
+            AddVertexToFace(selected_face);
+        }
+    } else if (edit_mode == EM_ADD_VERTEX) {
+        if (ImGui::Button("Cancel")) {
+            selection_mode = SM_ALL;
+            edit_mode = EM_DEFAULT;
+            render_rightclick_popup = false;
+            
+            if (selected_face != -1) {
+                selected_face += ARROW_FACE_SIZE*3;
+            }
+            if (selected_vertex != -1) {
+                selected_vertex += ARROW_VERTEX_SIZE*3;
+            }
+            if (selected_edge.x != -1) {
+                selected_edge.x += ARROW_VERTEX_SIZE*3;
+                selected_edge.y += ARROW_VERTEX_SIZE*3;
+            }
+            show_arrows = true;
+        }
+    }
+}
+
 void RenderUI() {
     // scene window
     ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -384,6 +668,11 @@ void RenderUI() {
     ImGui::SetCursorPos(ImVec2(window_width - 80, 10));
     ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
     ImGui::PopStyleColor();
+    
+    if (render_rightclick_popup) {
+        RightClickPopup();
+    }
+    
     ImGui::End();
 }
 
@@ -415,6 +704,9 @@ void HandleKeyboardEvents(SDL_Event event) {
                 // shift
                 key_presses[5] = true;
                 break;
+            case 1073742048:
+                // control
+                ctrl_down = true;
         }
     } else if (event.type == SDL_KEYUP) {
         SDL_Keysym keysym = event.key.keysym;
@@ -437,6 +729,8 @@ void HandleKeyboardEvents(SDL_Event event) {
             case 1073742049:
                 key_presses[5] = false;
                 break;
+            case 1073742048:
+                ctrl_down = false;
             default:
                 break;
         }
@@ -444,9 +738,16 @@ void HandleKeyboardEvents(SDL_Event event) {
 }
 
 void HandleMouseEvents(SDL_Event event) {
+    int x;
+    int y;
+    SDL_GetMouseState(&x, &y);
+    mouse_loc.x = ((float) x / (float) window_width)*2 - 1;
+    mouse_loc.y = -(((float) y / (float) window_height)*2 - 1);
+    
     left_clicked = false;
     right_clicked = false;
     if (event.type == SDL_MOUSEBUTTONDOWN) {
+        click_loc = mouse_loc;
         switch (event.button.button) {
             case SDL_BUTTON_LEFT:
                 left_clicked = true;
@@ -455,11 +756,6 @@ void HandleMouseEvents(SDL_Event event) {
             case SDL_BUTTON_RIGHT:
                 right_clicked = true;
                 right_mouse_down = true;
-                int x;
-                int y;
-                SDL_GetMouseState(&x, &y);
-                click_loc.x = ((float) x / (float) window_width)*2 - 1;
-                click_loc.y = -(((float) y / (float) window_height)*2 - 1);
                 break;
             default:
                 break;
@@ -468,10 +764,10 @@ void HandleMouseEvents(SDL_Event event) {
         switch (event.button.button) {
             case SDL_BUTTON_LEFT:
                 left_mouse_down = false;
+                selected_arrow = -1;
                 break;
             case SDL_BUTTON_RIGHT:
                 right_mouse_down = false;
-                selected_arrow = -1;
                 break;
             default:
                 break;
@@ -479,7 +775,7 @@ void HandleMouseEvents(SDL_Event event) {
     }
     
     if (event.type == SDL_MOUSEMOTION) {
-        if (left_mouse_down) {
+        if (ctrl_down) {
             //get current camera angles (phi is vertical and theta is horizontal)
             //get the new change based on the amount the mouse moved
             float curr_phi = atan2(camera->vector.y, camera->vector.x);
@@ -501,70 +797,86 @@ void HandleMouseEvents(SDL_Event event) {
             camera->up_vector.z = cos(new_theta-M_PI_2);
         }
         
-        if (right_mouse_down && selected_arrow != -1) {
-            // find the projected location of the tip and the base
-            simd_float2 base = arrow_projections[selected_arrow*2];
-            simd_float2 tip = arrow_projections[selected_arrow*2+1];
-            
-            // find direction to move
-            float xDiff = tip.x-base.x;
-            float yDiff = tip.y-base.y;
-            
-            float mvmt = xDiff * event.motion.xrel + yDiff * (-event.motion.yrel);
-            
-            // move
-            ModelUniforms arrow_uniform = model_uniforms[selected_arrow];
-            float x_vec = 0;
-            float y_vec = 0;
-            float z_vec = 1;
-            // gimbal locked
-            
-            // around z axis
-            //x_vec = x_vec*cos(arrow_uniform.angle.z)-y_vec*sin(arrow_uniform.angle.z);
-            //y_vec = x_vec*sin(arrow_uniform.angle.z)+y_vec*cos(arrow_uniform.angle.z);
-            
-            // around y axis
-            float newx = x_vec*cos(arrow_uniform.angle.y)+z_vec*sin(arrow_uniform.angle.y);
-            z_vec = -x_vec*sin(arrow_uniform.angle.y)+z_vec*cos(arrow_uniform.angle.y);
-            x_vec = newx;
-            
-            // around x axis
-            float newy = y_vec*cos(arrow_uniform.angle.x)-z_vec*sin(arrow_uniform.angle.x);
-            z_vec = y_vec*sin(arrow_uniform.angle.x)+z_vec*cos(arrow_uniform.angle.x);
-            y_vec = newy;
-            
-            x_vec *= 0.01*mvmt;
-            y_vec *= 0.01*mvmt;
-            z_vec *= 0.01*mvmt;
-            
-            if (selected_face != -1) {
-                int modelID = modelIDs[scene_faces[selected_face].vertices[0]];
-                Model *model = models[modelID];
-                unsigned long modelFaceID = selected_face - model->FaceStart();
-                Face *selected = model->GetFace(modelFaceID);
-                simd_float3 *v1 = model->GetVertex(selected->vertices[0]);
-                simd_float3 *v2 = model->GetVertex(selected->vertices[1]);
-                simd_float3 *v3 = model->GetVertex(selected->vertices[2]);
+        if (edit_mode == EM_DEFAULT) {
+            if (left_mouse_down && selected_arrow != -1) {
+                // find the projected location of the tip and the base
+                simd_float2 base = arrow_projections[selected_arrow*2];
+                simd_float2 tip = arrow_projections[selected_arrow*2+1];
                 
-                v1->x += x_vec;
-                v1->y += y_vec;
-                v1->z += z_vec;
+                // find direction to move
+                float xDiff = tip.x-base.x;
+                float yDiff = tip.y-base.y;
                 
-                v2->x += x_vec;
-                v2->y += y_vec;
-                v2->z += z_vec;
+                float mvmt = xDiff * event.motion.xrel + yDiff * (-event.motion.yrel);
                 
-                v3->x += x_vec;
-                v3->y += y_vec;
-                v3->z += z_vec;
-            } else if (vertex_render_uniforms.selected_vertex != -1) {
-                int modelID = modelIDs[vertex_render_uniforms.selected_vertex];
-                Model *model = models[modelID];
-                unsigned long modelVertexID = vertex_render_uniforms.selected_vertex - model->VertexStart();
-                simd_float3 *v = model->GetVertex(modelVertexID);
-                v->x += x_vec;
-                v->y += y_vec;
-                v->z += z_vec;
+                // move
+                ModelUniforms arrow_uniform = model_uniforms[selected_arrow];
+                float x_vec = 0;
+                float y_vec = 0;
+                float z_vec = 1;
+                // gimbal locked
+                
+                // around z axis
+                //x_vec = x_vec*cos(arrow_uniform.angle.z)-y_vec*sin(arrow_uniform.angle.z);
+                //y_vec = x_vec*sin(arrow_uniform.angle.z)+y_vec*cos(arrow_uniform.angle.z);
+                
+                // around y axis
+                float newx = x_vec*cos(arrow_uniform.angle.y)+z_vec*sin(arrow_uniform.angle.y);
+                z_vec = -x_vec*sin(arrow_uniform.angle.y)+z_vec*cos(arrow_uniform.angle.y);
+                x_vec = newx;
+                
+                // around x axis
+                float newy = y_vec*cos(arrow_uniform.angle.x)-z_vec*sin(arrow_uniform.angle.x);
+                z_vec = y_vec*sin(arrow_uniform.angle.x)+z_vec*cos(arrow_uniform.angle.x);
+                y_vec = newy;
+                
+                x_vec *= 0.01*mvmt;
+                y_vec *= 0.01*mvmt;
+                z_vec *= 0.01*mvmt;
+                
+                if (selected_face != -1) {
+                    int modelID = modelIDs[scene_faces[selected_face].vertices[0]];
+                    Model *model = models[modelID];
+                    unsigned long modelFaceID = selected_face - model->FaceStart();
+                    Face *selected = model->GetFace(modelFaceID);
+                    simd_float3 *v1 = model->GetVertex(selected->vertices[0]);
+                    simd_float3 *v2 = model->GetVertex(selected->vertices[1]);
+                    simd_float3 *v3 = model->GetVertex(selected->vertices[2]);
+                    
+                    v1->x += x_vec;
+                    v1->y += y_vec;
+                    v1->z += z_vec;
+                    
+                    v2->x += x_vec;
+                    v2->y += y_vec;
+                    v2->z += z_vec;
+                    
+                    v3->x += x_vec;
+                    v3->y += y_vec;
+                    v3->z += z_vec;
+                } else if (selected_vertex != -1) {
+                    int modelID = modelIDs[selected_vertex];
+                    Model *model = models[modelID];
+                    unsigned long modelVertexID = selected_vertex - model->VertexStart();
+                    simd_float3 *v = model->GetVertex(modelVertexID);
+                    v->x += x_vec;
+                    v->y += y_vec;
+                    v->z += z_vec;
+                } else if (selected_edge.x != -1) {
+                    int modelID = modelIDs[selected_edge.x];
+                    Model *model = models[modelID];
+                    unsigned long modelVertex1ID = selected_edge.x - model->VertexStart();
+                    unsigned long modelVertex2ID = selected_edge.y - model->VertexStart();
+                    simd_float3 *v1 = model->GetVertex(modelVertex1ID);
+                    simd_float3 *v2 = model->GetVertex(modelVertex2ID);
+                    v1->x += x_vec;
+                    v1->y += y_vec;
+                    v1->z += z_vec;
+                    
+                    v2->x += x_vec;
+                    v2->y += y_vec;
+                    v2->z += z_vec;
+                }
             }
         }
     }
@@ -622,6 +934,8 @@ int main(int, char**) {
     if (SetupImGui() != 0) {
         return -1;
     }
+    
+    selected_edge = simd_make_int2(-1, -1);
     
     z_arrow = new Arrow(0);
     
@@ -723,8 +1037,11 @@ int main(int, char**) {
             [compute_encoder setBuffer: scene_model_id_buffer offset:0 atIndex:1];
             [compute_encoder setBuffer: rotate_uniforms_buffer offset:0 atIndex:2];
             int vertices_length = (int) scene_vertices.size();
+            /*if (potential_vertex_included) {
+                vertices_length -= 1;
+            }*/
             MTLSize gridSize = MTLSizeMake(vertices_length, 1, 1);
-            NSUInteger threadGroupSize = scene_compute_projected_pipeline_state.maxTotalThreadsPerThreadgroup;
+            NSUInteger threadGroupSize = scene_compute_rotated_pipeline_state.maxTotalThreadsPerThreadgroup;
             if (threadGroupSize > vertices_length) threadGroupSize = vertices_length;
             MTLSize threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
             [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
@@ -733,6 +1050,9 @@ int main(int, char**) {
             [compute_encoder setComputePipelineState: scene_compute_projected_pipeline_state];
             [compute_encoder setBuffer: scene_vertex_buffer offset:0 atIndex:0];
             [compute_encoder setBuffer: scene_camera_buffer offset:0 atIndex:1];
+            vertices_length = (int) scene_vertices.size();
+            gridSize = MTLSizeMake(vertices_length, 1, 1);
+            threadGroupSize = scene_compute_projected_pipeline_state.maxTotalThreadsPerThreadgroup;
             if (threadGroupSize > vertices_length) threadGroupSize = vertices_length;
             [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
             
@@ -740,20 +1060,21 @@ int main(int, char**) {
             [compute_command_buffer commit];
             [compute_command_buffer waitUntilCompleted];
             
-            if (right_clicked) {
-                int sf = FaceClicked();
-                int sv = VertexClicked();
-                if (sv == -1) {
-                    if (sf >= arrows_face_end) {
-                        selected_face = FaceClicked();
-                        vertex_render_uniforms.selected_vertex = -1;
-                    } else {
-                        selected_arrow = sf/ARROW_FACE_SIZE;
-                    }
-                } else {
-                    vertex_render_uniforms.selected_vertex = sv;
-                    selected_face = -1;
+            if (left_clicked || right_clicked) {
+                click_z = 50;
+                
+                if (selection_mode == SM_ALL) {
+                    FaceClicked();
+                    VertexClicked();
+                    EdgeClicked();
                 }
+                
+                if (right_clicked) {
+                    render_rightclick_popup = (selected_vertex != -1 || selected_edge.x != -1 || selected_face != -1);
+                    rightclick_popup_loc = click_loc;
+                }
+                
+                show_arrows = edit_mode == EM_DEFAULT && (selected_vertex != -1 || selected_edge.x != -1 || selected_face != -1);
             }
             
             SetArrowProjections();
@@ -786,6 +1107,7 @@ int main(int, char**) {
             [render_encoder setRenderPipelineState:scene_edge_render_pipeline_state];
             [render_encoder setVertexBuffer:scene_vertex_buffer offset:0 atIndex:0];
             [render_encoder setVertexBuffer:scene_face_buffer offset:0 atIndex:1];
+            //[render_encoder setVertexBuffer:edge_render_uniforms_buffer offset:0 atIndex:2];
             for (int i = arrows_face_end*4; i < scene_faces.size()*4; i+=4) {
                 [render_encoder drawPrimitives:MTLPrimitiveTypeLineStrip vertexStart:i vertexCount:4];
             }

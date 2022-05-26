@@ -41,8 +41,12 @@ struct Uniforms {
 
 struct VertexRenderUniforms {
     float screen_ratio;
-    unsigned int selected_vertex;
+    vector_int3 selected_vertices;
 };
+
+/*struct EdgeRenderUniforms {
+    vector_int2 selected_edge;
+};*/
 
 //convert a 3d point to a pixel (vertex) value
 vector_float3 PointToPixel (vector_float3 point, constant Camera &camera)  {
@@ -214,12 +218,20 @@ vertex VertexOut DefaultVertexShader (const constant vector_float3 *vertex_array
     return output;
 }
 
-vertex VertexOut VertexEdgeShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant Face *face_array[[buffer(1)]], unsigned int vid [[vertex_id]]) {
+vertex VertexOut VertexEdgeShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant Face *face_array[[buffer(1)]]/*, const constant EdgeRenderUniforms *uniforms [[buffer(2)]]*/, unsigned int vid [[vertex_id]]) {
     Face currentFace = face_array[vid/4];
     vector_float3 currentVertex = vertex_array[currentFace.vertices[vid%3]];
     VertexOut output;
     output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z-0.0001, 1);
     output.color = vector_float4(0, 0, 1, 1);
+    
+    /*if (uniforms->selected_edge.x == currentFace.vertices[vid%3] && uniforms->selected_edge.y == currentFace.vertices[(vid+1)%3]) {
+        output.color = vector_float4(1, 0.5, 0, 1);
+    }
+    
+    if (uniforms->selected_edge.y == currentFace.vertices[(vid)%3] && uniforms->selected_edge.x == currentFace.vertices[(vid-1)%3]) {
+        output.color = vector_float4(1, 0.5, 0, 1);
+    }*/
     return output;
 }
 
@@ -236,7 +248,7 @@ vertex VertexOut VertexPointShader (const constant vector_float3 *vertex_array [
         output.pos = vector_float4(currentVertex.x+0.007, currentVertex.y+0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
     }
     
-    if (vid/4 == uniforms->selected_vertex) {
+    if (vid/4 == uniforms->selected_vertices.x || vid/4 == uniforms->selected_vertices.y || vid/4 == uniforms->selected_vertices.z) {
         output.color = vector_float4(1, 0.5, 0, 1);
     } else {
         output.color = vector_float4(0, 1, 0, 1);
