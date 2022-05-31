@@ -25,6 +25,12 @@
 		D2047BDC2793B1A000B4B442 /* imgui_tables.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2047B322793B1A000B4B442 /* imgui_tables.cpp */; };
 		D2047BDD2793B1A000B4B442 /* imgui_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2047B332793B1A000B4B442 /* imgui_demo.cpp */; };
 		D2047BDE2793B1A000B4B442 /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2047B342793B1A000B4B442 /* imgui_draw.cpp */; };
+		D20C0B30284538AD00F5DC08 /* UserAction.mm in Sources */ = {isa = PBXBuildFile; fileRef = D20C0B2F284538AD00F5DC08 /* UserAction.mm */; };
+		D20C0B3628453C2C00F5DC08 /* VertexMoveAction.mm in Sources */ = {isa = PBXBuildFile; fileRef = D20C0B3528453C2C00F5DC08 /* VertexMoveAction.mm */; };
+		D20C0B392845542C00F5DC08 /* FaceMoveAction.mm in Sources */ = {isa = PBXBuildFile; fileRef = D20C0B382845542C00F5DC08 /* FaceMoveAction.mm */; };
+		D20C0B3C2845618500F5DC08 /* EdgeMoveAction.mm in Sources */ = {isa = PBXBuildFile; fileRef = D20C0B3B2845618500F5DC08 /* EdgeMoveAction.mm */; };
+		D20C0B3F2845D68900F5DC08 /* FaceAddVertexAction.mm in Sources */ = {isa = PBXBuildFile; fileRef = D20C0B3E2845D68900F5DC08 /* FaceAddVertexAction.mm */; };
+		D20C0B422845E20400F5DC08 /* EdgeAddVertexAction.mm in Sources */ = {isa = PBXBuildFile; fileRef = D20C0B412845E20400F5DC08 /* EdgeAddVertexAction.mm */; };
 		D224A4662791464D0099CF9D /* Processing.metal in Sources */ = {isa = PBXBuildFile; fileRef = D224A4652791464D0099CF9D /* Processing.metal */; };
 		D28B7D852793B4AC00C0E47F /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D28B7D842793B4AC00C0E47F /* SDL2.framework */; };
 		D28B7D862793B4AC00C0E47F /* SDL2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D28B7D842793B4AC00C0E47F /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -98,6 +104,18 @@
 		D2047B322793B1A000B4B442 /* imgui_tables.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_tables.cpp; sourceTree = "<group>"; };
 		D2047B332793B1A000B4B442 /* imgui_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_demo.cpp; sourceTree = "<group>"; };
 		D2047B342793B1A000B4B442 /* imgui_draw.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_draw.cpp; sourceTree = "<group>"; };
+		D20C0B2F284538AD00F5DC08 /* UserAction.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = UserAction.mm; sourceTree = "<group>"; };
+		D20C0B31284538BE00F5DC08 /* UserAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UserAction.h; sourceTree = "<group>"; };
+		D20C0B32284539BE00F5DC08 /* VertexMoveAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VertexMoveAction.h; sourceTree = "<group>"; };
+		D20C0B3528453C2C00F5DC08 /* VertexMoveAction.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = VertexMoveAction.mm; sourceTree = "<group>"; };
+		D20C0B372845541E00F5DC08 /* FaceMoveAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FaceMoveAction.h; sourceTree = "<group>"; };
+		D20C0B382845542C00F5DC08 /* FaceMoveAction.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FaceMoveAction.mm; sourceTree = "<group>"; };
+		D20C0B3A2845617D00F5DC08 /* EdgeMoveAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EdgeMoveAction.h; sourceTree = "<group>"; };
+		D20C0B3B2845618500F5DC08 /* EdgeMoveAction.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = EdgeMoveAction.mm; sourceTree = "<group>"; };
+		D20C0B3D2845D66800F5DC08 /* FaceAddVertexAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FaceAddVertexAction.h; sourceTree = "<group>"; };
+		D20C0B3E2845D68900F5DC08 /* FaceAddVertexAction.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FaceAddVertexAction.mm; sourceTree = "<group>"; };
+		D20C0B402845E1FB00F5DC08 /* EdgeAddVertexAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EdgeAddVertexAction.h; sourceTree = "<group>"; };
+		D20C0B412845E20400F5DC08 /* EdgeAddVertexAction.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = EdgeAddVertexAction.mm; sourceTree = "<group>"; };
 		D224A4652791464D0099CF9D /* Processing.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Processing.metal; sourceTree = "<group>"; };
 		D28B7D832793B45500C0E47F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		D28B7D842793B4AC00C0E47F /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
@@ -203,6 +221,36 @@
 			path = workflows;
 			sourceTree = "<group>";
 		};
+		D20C0B33284539C700F5DC08 /* UserActions */ = {
+			isa = PBXGroup;
+			children = (
+				D20C0B31284538BE00F5DC08 /* UserAction.h */,
+				D20C0B2F284538AD00F5DC08 /* UserAction.mm */,
+				D20C0B32284539BE00F5DC08 /* VertexMoveAction.h */,
+				D20C0B3528453C2C00F5DC08 /* VertexMoveAction.mm */,
+				D20C0B3A2845617D00F5DC08 /* EdgeMoveAction.h */,
+				D20C0B3B2845618500F5DC08 /* EdgeMoveAction.mm */,
+				D20C0B372845541E00F5DC08 /* FaceMoveAction.h */,
+				D20C0B382845542C00F5DC08 /* FaceMoveAction.mm */,
+				D20C0B3D2845D66800F5DC08 /* FaceAddVertexAction.h */,
+				D20C0B3E2845D68900F5DC08 /* FaceAddVertexAction.mm */,
+				D20C0B402845E1FB00F5DC08 /* EdgeAddVertexAction.h */,
+				D20C0B412845E20400F5DC08 /* EdgeAddVertexAction.mm */,
+			);
+			path = UserActions;
+			sourceTree = "<group>";
+		};
+		D20C0B34284539D300F5DC08 /* Modeling */ = {
+			isa = PBXGroup;
+			children = (
+				D2A99F7C2792BCF100E85036 /* Model.h */,
+				D2A99F7D2792BF7D00E85036 /* Model.mm */,
+				D203034F27D466F4006667BA /* Arrow.h */,
+				D203035027D4670E006667BA /* Arrow.mm */,
+			);
+			path = Modeling;
+			sourceTree = "<group>";
+		};
 		D2EAF74527914118002DE553 = {
 			isa = PBXGroup;
 			children = (
@@ -210,7 +258,6 @@
 				D2EAF75027914118002DE553 /* dragonfly */,
 				D2EAF76627914119002DE553 /* dragonflyTests */,
 				D2EAF77027914119002DE553 /* dragonflyUITests */,
-				D2EAF74F27914118002DE553 /* Products */,
 				D2EAF92227914191002DE553 /* Frameworks */,
 			);
 			sourceTree = "<group>";
@@ -233,10 +280,8 @@
 				D2EAF75127914118002DE553 /* AppDelegate.h */,
 				D2EAF75227914118002DE553 /* AppDelegate.m */,
 				D2EAF75727914119002DE553 /* Assets.xcassets */,
-				D2A99F7C2792BCF100E85036 /* Model.h */,
-				D2A99F7D2792BF7D00E85036 /* Model.mm */,
-				D203034F27D466F4006667BA /* Arrow.h */,
-				D203035027D4670E006667BA /* Arrow.mm */,
+				D20C0B33284539C700F5DC08 /* UserActions */,
+				D20C0B34284539D300F5DC08 /* Modeling */,
 				D2EAF75C27914119002DE553 /* main.mm */,
 				D224A4652791464D0099CF9D /* Processing.metal */,
 			);
@@ -263,6 +308,7 @@
 		D2EAF92227914191002DE553 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D2EAF74F27914118002DE553 /* Products */,
 				D28B7D842793B4AC00C0E47F /* SDL2.framework */,
 				D2EAF92527914197002DE553 /* QuartzCore.framework */,
 				D2EAF92327914191002DE553 /* Metal.framework */,
@@ -411,15 +457,21 @@
 			files = (
 				D2A99F7E2792BF7D00E85036 /* Model.mm in Sources */,
 				D2047B6C2793B1A000B4B442 /* imgui.cpp in Sources */,
+				D20C0B422845E20400F5DC08 /* EdgeAddVertexAction.mm in Sources */,
 				D2EAF75D27914119002DE553 /* main.mm in Sources */,
 				D2047B522793B1A000B4B442 /* imgui_impl_metal.mm in Sources */,
 				D2047B622793B1A000B4B442 /* imgui_impl_sdl.cpp in Sources */,
+				D20C0B3C2845618500F5DC08 /* EdgeMoveAction.mm in Sources */,
 				D2047BDE2793B1A000B4B442 /* imgui_draw.cpp in Sources */,
+				D20C0B3F2845D68900F5DC08 /* FaceAddVertexAction.mm in Sources */,
 				D224A4662791464D0099CF9D /* Processing.metal in Sources */,
 				D2047BDC2793B1A000B4B442 /* imgui_tables.cpp in Sources */,
 				D2047B4E2793B1A000B4B442 /* imgui_widgets.cpp in Sources */,
+				D20C0B30284538AD00F5DC08 /* UserAction.mm in Sources */,
 				D203035127D4670E006667BA /* Arrow.mm in Sources */,
 				D2047BDD2793B1A000B4B442 /* imgui_demo.cpp in Sources */,
+				D20C0B392845542C00F5DC08 /* FaceMoveAction.mm in Sources */,
+				D20C0B3628453C2C00F5DC08 /* VertexMoveAction.mm in Sources */,
 				D2EAF75327914118002DE553 /* AppDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

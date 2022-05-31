@@ -58,12 +58,55 @@ void Model::MakeCube() {
     MakeFace(5, 7, 6, {1, 1, 1, 1});
 }
 
+void Model::InsertVertex(simd_float3 vertex, int vid) {
+    if (vid >= vertices.size()) {
+        vertices.push_back(vertex);
+    } else {
+        vertices.insert(vertices.begin()+vid, vertex);
+    }
+}
+
+void Model::InsertFace(Face face, int fid) {
+    if (fid >= faces.size()) {
+        faces.push_back(face);
+    } else {
+        faces.insert(faces.begin()+fid, face);
+    }
+}
+
+void Model::RemoveVertex(int vid) {
+    if (vid < vertices.size()) {
+        vertices.erase(vertices.begin() + vid);
+    }
+}
+
+void Model::RemoveFace(int fid) {
+    if (fid < faces.size()) {
+        faces.erase(faces.begin() + fid);
+    }
+}
+
 Face *Model::GetFace(unsigned long fid) {
     return &faces.at(fid);
 }
 
 simd_float3 *Model::GetVertex(unsigned long vid) {
     return &vertices.at(vid);
+}
+
+std::vector<unsigned long> Model::GetEdgeFaces(unsigned long vid1, unsigned long vid2) {
+    std::vector<unsigned long> ret;
+    
+    for (std::size_t fid = 0; fid < faces.size(); fid++) {
+        Face f = faces[fid];
+        if (f.vertices[0] == vid1 || f.vertices[1] == vid1 || f.vertices[2] == vid1) {
+            if (f.vertices[0] == vid2 || f.vertices[1] == vid2 || f.vertices[2] == vid2) {
+                ret.push_back(fid);
+            }
+        }
+    }
+    
+    return ret;
 }
 
 std::vector<simd_float3> &Model::GetVertices() {
@@ -104,6 +147,14 @@ unsigned long Model::FaceStart() {
 
 unsigned long Model::VertexStart() {
     return vertex_start;
+}
+
+unsigned long Model::NumFaces() {
+    return faces.size();
+}
+
+unsigned long Model::NumVertices() {
+    return vertices.size();
 }
 
 Model::~Model() {

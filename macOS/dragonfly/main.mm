@@ -20,8 +20,15 @@
 #import <Metal/Metal.h>
 #import <QuartzCore/QuartzCore.h>
 
-#include "Model.h"
-#include "Arrow.h"
+#include "Modeling/Model.h"
+#include "Modeling/Arrow.h"
+
+#include "UserActions/UserAction.h"
+#include "UserActions/FaceMoveAction.h"
+#include "UserActions/EdgeMoveAction.h"
+#include "UserActions/VertexMoveAction.h"
+#include "UserActions/FaceAddVertexAction.h"
+#include "UserActions/EdgeAddVertexAction.h"
 
 struct Camera {
     simd_float3 pos;
@@ -128,6 +135,8 @@ bool right_mouse_down = false;
 
 bool render_rightclick_popup = false;
 simd_float2 rightclick_popup_loc;
+simd_float2 rightclick_popup_size;
+bool rightclick_popup_clicked = false;
 
 enum SelectionMode { SM_ALL, SM_NONE };
 SelectionMode selection_mode = SM_ALL;
@@ -155,8 +164,13 @@ float click_z = 50; // render dist
 
 // w a s d space shift
 bool key_presses[6] = { 0 };
+bool cmd_modifier = false;
 float x_sens = 0.1;
 float y_sens = 0.1;
+
+// action variables
+UserAction *current_action = NULL;
+std::deque<UserAction *> past_actions;
 
 simd_float3 TriAvg (simd_float3 p1, simd_float3 p2, simd_float3 p3) {
     float x = (p1.x + p2.x + p3.x)/3;
@@ -319,7 +333,7 @@ void VertexClicked() {
         
         if (click_loc.x <= x_max && click_loc.x >= x_min && click_loc.y <= y_max && click_loc.y >= y_min) {
             if (minZ == -1 || vertex.z < minZ) {
-                minZ = vertex.z;
+                minZ = vertex.z-0.001;
                 clickedIdx = vid;
             }
         }
@@ -380,7 +394,7 @@ void EdgeClicked() {
                 float z = weightedZ;
                 
                 if (minZ == -1 || z < minZ) {
-                    minZ = z;
+                    minZ = z-0.0001;
                     clickedv1 = face.vertices[vid];
                     clickedv2 = face.vertices[(vid+1) % 3];
                 }
@@ -436,6 +450,59 @@ void AddVertexToFace (int fid) {
     
     //1,3,new
     model->MakeFace(vid1, vid3, new_vid, selected->color);
+}
+
+void AddVertexToEdge (int vid1, int vid2) {
+    int modelID = modelIDs[vid1];
+    Model *model = models[modelID];
+    
+    vid1 = vid1 - model->VertexStart();
+    vid2 = vid2 - model->VertexStart();
+    
+    std::vector<unsigned long> fids = model->GetEdgeFaces(vid1, vid2);
+    
+    simd_float3 *v1 = model->GetVertex(vid1);
+    simd_float3 *v2 = model->GetVertex(vid2);
+    simd_float3 new_v = BiAvg(*v1, *v2);
+    unsigned new_vid = model->MakeVertex(new_v.x, new_v.y, new_v.z);
+    
+    for (std::size_t i = 0; i < fids.size(); i++) {
+        unsigned long fid = fids[i];
+        Face *f = model->GetFace(fid);
+        unsigned long fvid1 = f->vertices[0];
+        unsigned long fvid2 = f->vertices[1];
+        unsigned long fvid3 = f->vertices[2];
+        
+        long long other_vid = -1;
+        
+        if (vid1 == fvid1) {
+            if (vid2 == fvid2) {
+                other_vid = fvid3;
+            } else if (vid2 == fvid3) {
+                other_vid = fvid2;
+            }
+        } else if (vid1 == fvid2) {
+            if (vid2 == fvid1) {
+                other_vid = fvid3;
+            } else if (vid2 == fvid3) {
+                other_vid = fvid1;
+            }
+        } else if (vid1 == fvid3) {
+            if (vid2 == fvid1) {
+                other_vid = fvid2;
+            } else if (vid2 == fvid2) {
+                other_vid = fvid1;
+            }
+        }
+        
+        if (other_vid != -1) {
+            f->vertices[0] = vid1;
+            f->vertices[1] = new_vid;
+            f->vertices[2] = other_vid;
+            
+            model->MakeFace(vid2, new_vid, other_vid, f->color);
+        }
+    }
 }
 
 void CreateScenePipelineStates () {
@@ -558,6 +625,15 @@ void CreateBuffers() {
     //click_z_buffer = [device newBufferWithBytes:&click_z length:sizeof(float) options:{}];
 }
 
+void Undo() {
+    if (!past_actions.empty()) {
+        UserAction *action = past_actions.front();
+        past_actions.pop_front();
+        action->Undo();
+        delete action;
+    }
+}
+
 int SetupImGui () {
     // Setup ImGui context
     IMGUI_CHECKVERSION();
@@ -614,29 +690,45 @@ int SetupImGui () {
     return 0;
 }
 
+bool InRightClickPopup(simd_float2 loc) {
+    return loc.x >= rightclick_popup_loc.x && loc.x < rightclick_popup_loc.x+rightclick_popup_size.x && loc.y >= rightclick_popup_loc.y-rightclick_popup_size.y && loc.y < rightclick_popup_loc.y;
+}
+
 void RightClickPopup() {
     ImGui::SetCursorPos(ImVec2(window_width * (rightclick_popup_loc.x+1)/2, window_height * (2-(rightclick_popup_loc.y+1))/2));
     
+    ImVec2 button_size = ImVec2(window_width * rightclick_popup_size.x/2, window_height * rightclick_popup_size.y/2);
+    
     if (edit_mode == EM_DEFAULT) {
-        if (ImGui::Button("Add Vertex")) {
-            /*selection_mode = SM_NONE;
-            edit_mode = EM_ADD_VERTEX;
-            
-            if (selected_face != -1) {
-                selected_face -= ARROW_FACE_SIZE*3;
+        if (selected_face != -1 || selected_edge.x != -1) {
+            if (ImGui::Button("Add Vertex", ImVec2(button_size.x, button_size.y))) {
+                render_rightclick_popup = false;
+                if (selected_face != -1) {
+                    Model* m = models.at(modelIDs.at(scene_faces.at(selected_face).vertices[0]));
+                    current_action = new FaceAddVertexAction(m, m->NumVertices(), selected_face - m->FaceStart());
+                    
+                    current_action->BeginRecording();
+                    AddVertexToFace(selected_face);
+                    current_action->EndRecording();
+                    
+                    past_actions.push_front(current_action);
+                    
+                    current_action = NULL;
+                } else if (selected_edge.x != -1) {
+                    Model* m = models.at(modelIDs.at(selected_edge.x));
+                    current_action = new EdgeAddVertexAction(m, m->NumVertices(), selected_edge.x - m->VertexStart(), selected_edge.y - m->VertexStart());
+                    
+                    current_action->BeginRecording();
+                    AddVertexToEdge(selected_edge.x, selected_edge.y);
+                    current_action->EndRecording();
+                    
+                    past_actions.push_front(current_action);
+                    
+                    current_action = NULL;
+                }
             }
-            if (selected_vertex != -1) {
-                selected_vertex -= ARROW_VERTEX_SIZE*3;
-            }
-            if (selected_edge.x != -1) {
-                selected_edge.x -= ARROW_VERTEX_SIZE*3;
-                selected_edge.y -= ARROW_VERTEX_SIZE*3;
-            }
-            show_arrows = false;*/
-            render_rightclick_popup = false;
-            AddVertexToFace(selected_face);
         }
-    } else if (edit_mode == EM_ADD_VERTEX) {
+    }/* else if (edit_mode == EM_ADD_VERTEX) {
         if (ImGui::Button("Cancel")) {
             selection_mode = SM_ALL;
             edit_mode = EM_DEFAULT;
@@ -654,7 +746,7 @@ void RightClickPopup() {
             }
             show_arrows = true;
         }
-    }
+    }*/
 }
 
 void RenderUI() {
@@ -679,6 +771,7 @@ void RenderUI() {
 void HandleKeyboardEvents(SDL_Event event) {
     if (event.type == SDL_KEYDOWN) {
         SDL_Keysym keysym = event.key.keysym;
+        //std::cout<<keysym.sym<<std::endl;
         switch (keysym.sym) {
             case 119:
                 // w
@@ -700,6 +793,12 @@ void HandleKeyboardEvents(SDL_Event event) {
                 // spacebar
                 key_presses[4] = true;
                 break;
+            case 122:
+                // z
+                if (cmd_modifier) {
+                    Undo();
+                }
+                break;
             case 1073742049:
                 // shift
                 key_presses[5] = true;
@@ -707,6 +806,13 @@ void HandleKeyboardEvents(SDL_Event event) {
             case 1073742048:
                 // control
                 ctrl_down = true;
+                break;
+            case 1073742055:
+                // command
+                cmd_modifier = true;
+                break;
+            default:
+                break;
         }
     } else if (event.type == SDL_KEYUP) {
         SDL_Keysym keysym = event.key.keysym;
@@ -731,6 +837,10 @@ void HandleKeyboardEvents(SDL_Event event) {
                 break;
             case 1073742048:
                 ctrl_down = false;
+                break;
+            case 1073742055:
+                cmd_modifier = false;
+                break;
             default:
                 break;
         }
@@ -750,8 +860,11 @@ void HandleMouseEvents(SDL_Event event) {
         click_loc = mouse_loc;
         switch (event.button.button) {
             case SDL_BUTTON_LEFT:
-                left_clicked = true;
-                left_mouse_down = true;
+                if (!(render_rightclick_popup && InRightClickPopup(click_loc))) {
+                    left_clicked = true;
+                    left_mouse_down = true;
+                    render_rightclick_popup = false;
+                }
                 break;
             case SDL_BUTTON_RIGHT:
                 right_clicked = true;
@@ -765,6 +878,13 @@ void HandleMouseEvents(SDL_Event event) {
             case SDL_BUTTON_LEFT:
                 left_mouse_down = false;
                 selected_arrow = -1;
+                
+                if (current_action != NULL && current_action->IsRecording()) {
+                    current_action->EndRecording();
+                    past_actions.push_front(current_action);
+                    current_action = NULL;
+                }
+                
                 break;
             case SDL_BUTTON_RIGHT:
                 right_mouse_down = false;
@@ -1069,9 +1189,44 @@ int main(int, char**) {
                     EdgeClicked();
                 }
                 
+                if (selected_arrow != -1) {
+                    if (selected_face != -1) {
+                        Model* m = models.at(modelIDs.at(scene_faces.at(selected_face).vertices[0]));
+                        current_action = new FaceMoveAction(m, selected_face - m->FaceStart());
+                        current_action->BeginRecording();
+                        
+                        if (past_actions.size() > 20) {
+                            UserAction *last_action = past_actions.back();
+                            past_actions.pop_back();
+                            delete last_action;
+                        }
+                    } else if (selected_edge.x != -1) {
+                        Model* m = models.at(modelIDs.at(selected_edge.x));
+                        current_action = new EdgeMoveAction(m, selected_edge.x - m->VertexStart(), selected_edge.y - m->VertexStart());
+                        current_action->BeginRecording();
+                        
+                        if (past_actions.size() > 20) {
+                            UserAction *last_action = past_actions.back();
+                            past_actions.pop_back();
+                            delete last_action;
+                        }
+                    } else if (selected_vertex != -1) {
+                        Model* m = models.at(modelIDs.at(selected_vertex));
+                        current_action = new VertexMoveAction(m, selected_vertex - m->VertexStart());
+                        current_action->BeginRecording();
+                        
+                        if (past_actions.size() > 20) {
+                            UserAction *last_action = past_actions.back();
+                            past_actions.pop_back();
+                            delete last_action;
+                        }
+                    }
+                }
+                
                 if (right_clicked) {
                     render_rightclick_popup = (selected_vertex != -1 || selected_edge.x != -1 || selected_face != -1);
                     rightclick_popup_loc = click_loc;
+                    rightclick_popup_size = simd_make_float2(90/(float)(window_width/2), 20/(float)(window_height/2));
                 }
                 
                 show_arrows = edit_mode == EM_DEFAULT && (selected_vertex != -1 || selected_edge.x != -1 || selected_face != -1);
