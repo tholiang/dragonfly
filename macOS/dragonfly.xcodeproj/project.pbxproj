@@ -35,6 +35,7 @@
 		D28B7D852793B4AC00C0E47F /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D28B7D842793B4AC00C0E47F /* SDL2.framework */; };
 		D28B7D862793B4AC00C0E47F /* SDL2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D28B7D842793B4AC00C0E47F /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D2A99F7E2792BF7D00E85036 /* Model.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2A99F7D2792BF7D00E85036 /* Model.mm */; };
+		D2D9BC612846FE8400D22480 /* ModelMoveAction.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2D9BC602846FE8400D22480 /* ModelMoveAction.mm */; };
 		D2EAF75327914118002DE553 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D2EAF75227914118002DE553 /* AppDelegate.m */; };
 		D2EAF75827914119002DE553 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D2EAF75727914119002DE553 /* Assets.xcassets */; };
 		D2EAF75D27914119002DE553 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2EAF75C27914119002DE553 /* main.mm */; };
@@ -116,11 +117,15 @@
 		D20C0B3E2845D68900F5DC08 /* FaceAddVertexAction.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FaceAddVertexAction.mm; sourceTree = "<group>"; };
 		D20C0B402845E1FB00F5DC08 /* EdgeAddVertexAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EdgeAddVertexAction.h; sourceTree = "<group>"; };
 		D20C0B412845E20400F5DC08 /* EdgeAddVertexAction.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = EdgeAddVertexAction.mm; sourceTree = "<group>"; };
+		D2145B3F284D71F100C25502 /* imfilebrowser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = imfilebrowser.h; path = dragonfly/imfilebrowser.h; sourceTree = "<group>"; };
+		D2145B40284D71F200C25502 /* imfilebrowser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imfilebrowser.h; sourceTree = "<group>"; };
 		D224A4652791464D0099CF9D /* Processing.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Processing.metal; sourceTree = "<group>"; };
 		D28B7D832793B45500C0E47F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		D28B7D842793B4AC00C0E47F /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
 		D2A99F7C2792BCF100E85036 /* Model.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; path = Model.h; sourceTree = "<group>"; };
 		D2A99F7D2792BF7D00E85036 /* Model.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = Model.mm; sourceTree = "<group>"; };
+		D2D9BC5F2846FE7900D22480 /* ModelMoveAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ModelMoveAction.h; sourceTree = "<group>"; };
+		D2D9BC602846FE8400D22480 /* ModelMoveAction.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ModelMoveAction.mm; sourceTree = "<group>"; };
 		D2EAF74E27914118002DE553 /* dragonfly.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = dragonfly.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2EAF75127914118002DE553 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		D2EAF75227914118002DE553 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -167,6 +172,7 @@
 		D2047A3C2793B19F00B4B442 /* imgui */ = {
 			isa = PBXGroup;
 			children = (
+				D2145B40284D71F200C25502 /* imfilebrowser.h */,
 				D2047A562793B19F00B4B442 /* imgui.h */,
 				D2047A572793B19F00B4B442 /* imstb_textedit.h */,
 				D2047A582793B19F00B4B442 /* imconfig.h */,
@@ -226,6 +232,8 @@
 			children = (
 				D20C0B31284538BE00F5DC08 /* UserAction.h */,
 				D20C0B2F284538AD00F5DC08 /* UserAction.mm */,
+				D2D9BC5F2846FE7900D22480 /* ModelMoveAction.h */,
+				D2D9BC602846FE8400D22480 /* ModelMoveAction.mm */,
 				D20C0B32284539BE00F5DC08 /* VertexMoveAction.h */,
 				D20C0B3528453C2C00F5DC08 /* VertexMoveAction.mm */,
 				D20C0B3A2845617D00F5DC08 /* EdgeMoveAction.h */,
@@ -254,6 +262,7 @@
 		D2EAF74527914118002DE553 = {
 			isa = PBXGroup;
 			children = (
+				D2145B3F284D71F100C25502 /* imfilebrowser.h */,
 				D2047A3C2793B19F00B4B442 /* imgui */,
 				D2EAF75027914118002DE553 /* dragonfly */,
 				D2EAF76627914119002DE553 /* dragonflyTests */,
@@ -469,6 +478,7 @@
 				D2047B4E2793B1A000B4B442 /* imgui_widgets.cpp in Sources */,
 				D20C0B30284538AD00F5DC08 /* UserAction.mm in Sources */,
 				D203035127D4670E006667BA /* Arrow.mm in Sources */,
+				D2D9BC612846FE8400D22480 /* ModelMoveAction.mm in Sources */,
 				D2047BDD2793B1A000B4B442 /* imgui_demo.cpp in Sources */,
 				D20C0B392845542C00F5DC08 /* FaceMoveAction.mm in Sources */,
 				D20C0B3628453C2C00F5DC08 /* VertexMoveAction.mm in Sources */,
@@ -640,6 +650,8 @@
 					/Users/thomasliang/Documents/frameworks/imgui,
 					/Users/thomasliang/Documents/frameworks/imgui/backends/,
 					/usr/local/include/SDL2/,
+					/Users/thomasliang/Documents/frameworks/nativefiledialog/src,
+					/Users/thomasliang/Documents/frameworks/nativefiledialog/src/include,
 				);
 				INFOPLIST_FILE = dragonfly/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -650,7 +662,7 @@
 					"@executable_path/../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = /usr/local/include/SDL2;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.thomasliang.dragonfly;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -677,6 +689,8 @@
 					/Users/thomasliang/Documents/frameworks/imgui,
 					/Users/thomasliang/Documents/frameworks/imgui/backends/,
 					/usr/local/include/SDL2/,
+					/Users/thomasliang/Documents/frameworks/nativefiledialog/src,
+					/Users/thomasliang/Documents/frameworks/nativefiledialog/src/include,
 				);
 				INFOPLIST_FILE = dragonfly/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -687,7 +701,8 @@
 					"@executable_path/../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = /usr/local/include/SDL2;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.2;
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.thomasliang.dragonfly;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

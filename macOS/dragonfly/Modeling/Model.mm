@@ -11,7 +11,7 @@
 #include <iostream>
 
 Model::Model(uint32 mid) : modelID(mid) {
-    
+    name = "model"+std::to_string(mid);
 }
 
 unsigned Model::MakeVertex(float x, float y, float z) {
@@ -39,8 +39,8 @@ void Model::MakeCube() {
     MakeVertex(0, 1, 1);
     MakeVertex(1, 1, 1);
     
-    MakeFace(1, 0, 2, {0, 0, 1, 1});
-    MakeFace(2, 3, 1, {1, 0, 0, 1});
+    MakeFace(1, 0, 2, {1, 1, 1, 1});
+    MakeFace(2, 3, 1, {1, 1, 1, 1});
     
     MakeFace(1, 0, 4, {1, 1, 1, 1});
     MakeFace(4, 5, 1, {1, 1, 1, 1});
@@ -155,6 +155,10 @@ unsigned long Model::NumFaces() {
 
 unsigned long Model::NumVertices() {
     return vertices.size();
+}
+
+std::string Model::GetName() {
+    return name;
 }
 
 Model::~Model() {

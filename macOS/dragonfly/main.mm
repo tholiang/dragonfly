@@ -9,6 +9,8 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <math.h>
 
 #include "imgui.h"
@@ -16,6 +18,7 @@
 #include "imgui_impl_metal.h"
 #include <SDL.h>
 #include <simd/SIMD.h>
+#include "imfilebrowser.h"
 
 #import <Metal/Metal.h>
 #import <QuartzCore/QuartzCore.h>
@@ -24,6 +27,7 @@
 #include "Modeling/Arrow.h"
 
 #include "UserActions/UserAction.h"
+#include "UserActions/ModelMoveAction.h"
 #include "UserActions/FaceMoveAction.h"
 #include "UserActions/EdgeMoveAction.h"
 #include "UserActions/VertexMoveAction.h"
@@ -40,12 +44,6 @@ struct Camera {
 struct Pixel {
     int x;
     int y;
-};
-
-struct ModelUniforms {
-    simd_float3 position;
-    simd_float3 rotate_origin;
-    simd_float3 angle; // euler angles zyx
 };
 
 struct Uniforms {
@@ -69,6 +67,9 @@ int window_width = 1280;
 int window_height = 720;
 float aspect_ratio = 1280.0/720.0;
 
+int menu_bar_height = 20;
+bool using_menu_bar = false;
+
 float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
 bool show_main_window = true;
 
@@ -76,6 +77,11 @@ bool show_main_window = true;
 SDL_Window* window;
 SDL_Renderer* renderer;
 float fps = 0;
+
+ImGui::FileBrowser fileDialog;
+bool importing_model = false;
+bool importing_scene = false;
+bool saving_model = false;
 
 // metal variables
 MTLRenderPassDescriptor* render_pass_descriptor;
@@ -138,13 +144,15 @@ simd_float2 rightclick_popup_loc;
 simd_float2 rightclick_popup_size;
 bool rightclick_popup_clicked = false;
 
-enum SelectionMode { SM_ALL, SM_NONE };
-SelectionMode selection_mode = SM_ALL;
+enum SelectionMode { SM_MODEL, SM_FEV, SM_NONE };
+SelectionMode selection_mode = SM_MODEL;
 
-enum EditMode { EM_DEFAULT, EM_ADD_VERTEX };
-EditMode edit_mode = EM_DEFAULT;
+enum EditMode { EM_MODEL, EM_FEV };
+EditMode edit_mode = EM_MODEL;
 
 //bool potential_vertex_included = false;
+
+int selected_model = -1;
 
 int selected_face = -1;
 vector_int2 selected_edge;
@@ -171,6 +179,24 @@ float y_sens = 0.1;
 // action variables
 UserAction *current_action = NULL;
 std::deque<UserAction *> past_actions;
+
+std::vector<float> splitStringToFloats (std::string str) {
+    std::vector<float> ret;
+    
+    std::string curr = "";
+    for (int i = 0; i < str.size(); i++) {
+        if (str[i] == ' ') {
+            ret.push_back(std::stof(curr));
+            curr = "";
+        } else {
+            curr += str[i];
+        }
+    }
+    
+    ret.push_back(std::stof(curr));
+    
+    return ret;
+}
 
 simd_float3 TriAvg (simd_float3 p1, simd_float3 p2, simd_float3 p3) {
     float x = (p1.x + p2.x + p3.x)/3;
@@ -565,8 +591,21 @@ void CreateBuffers() {
     
     vertex_render_uniforms.selected_vertices = simd_make_int3(-1, -1, -1);
     
+    if (selected_model != -1) {
+        model_uniforms[0].position = model_uniforms[selected_model].position;
+        model_uniforms[1].position = model_uniforms[selected_model].position;
+        model_uniforms[2].position = model_uniforms[selected_model].position;
+        model_uniforms[0].rotate_origin = model_uniforms[selected_model].position;
+        model_uniforms[1].rotate_origin = model_uniforms[selected_model].position;
+        model_uniforms[2].rotate_origin = model_uniforms[selected_model].position;
+    }
+    
     if (selected_face != -1) {
+        int mid = modelIDs.at(scene_faces.at(selected_face).vertices[0]);
         simd_float3 triavg = TriAvg(scene_vertices[scene_faces[selected_face].vertices[0]], scene_vertices[scene_faces[selected_face].vertices[1]], scene_vertices[scene_faces[selected_face].vertices[2]]);
+        triavg.x += model_uniforms[mid].rotate_origin.x;
+        triavg.y += model_uniforms[mid].rotate_origin.y;
+        triavg.z += model_uniforms[mid].rotate_origin.z;
         model_uniforms[0].position = triavg;
         model_uniforms[1].position = triavg;
         model_uniforms[2].position = triavg;
@@ -581,7 +620,11 @@ void CreateBuffers() {
     }
     
     if (selected_edge.x != -1) {
+        int mid = modelIDs.at(selected_edge.x);
         simd_float3 biavg = BiAvg(scene_vertices[selected_edge.x], scene_vertices[selected_edge.y]);
+        biavg.x += model_uniforms[mid].rotate_origin.x;
+        biavg.y += model_uniforms[mid].rotate_origin.y;
+        biavg.z += model_uniforms[mid].rotate_origin.z;
         model_uniforms[0].position = biavg;
         model_uniforms[1].position = biavg;
         model_uniforms[2].position = biavg;
@@ -594,7 +637,11 @@ void CreateBuffers() {
     }
     
     if (selected_vertex != -1) {
+        int mid = modelIDs.at(selected_vertex);
         simd_float3 vertex_loc = scene_vertices[selected_vertex];
+        vertex_loc.x += model_uniforms[mid].rotate_origin.x;
+        vertex_loc.y += model_uniforms[mid].rotate_origin.y;
+        vertex_loc.z += model_uniforms[mid].rotate_origin.z;
         model_uniforms[0].position = vertex_loc;
         model_uniforms[1].position = vertex_loc;
         model_uniforms[2].position = vertex_loc;
@@ -631,6 +678,133 @@ void Undo() {
         past_actions.pop_front();
         action->Undo();
         delete action;
+    }
+}
+
+void SaveModelToFile(int mid, std::string folder) {
+    std::ofstream myfile;
+    Model *m = models.at(mid);
+    myfile.open (folder + m->GetName()+".drgn");
+    for (int i = 0; i < m->NumVertices(); i++) {
+        simd_float3 *v = m->GetVertex(i);
+        myfile << v->x << " " << v->y << " " << v->z << std::endl;
+    }
+    
+    myfile << "f" << std::endl;
+    for (int i = 0; i < m->NumFaces(); i++) {
+        Face *f = m->GetFace(i);
+        myfile << f->vertices[0] << " " << f->vertices[1] << " " << f->vertices[2] << " ";
+        myfile << f->color.x << " " << f->color.y << " " << f->color.z << " " << f->color.w << std::endl;
+    }
+    
+    myfile.close();
+}
+
+void SaveSceneToFolder() {
+    if(mkdir("DragonflyScene", 0777) == -1) {
+        rmdir("DragonflyScene");
+        mkdir("DragonflyScene", 0777);
+    }
+    
+    if(mkdir("DragonflyScene/Models", 0777) == -1) {
+        rmdir("DragonflyScene/Models");
+        mkdir("DragonflyScene/Models", 0777);
+    }
+    
+    std::ofstream myfile;
+    myfile.open ("DragonflyScene/uniforms.lair");
+    
+    for (int i = 3; i < model_uniforms.size(); i++) {
+        SaveModelToFile(i, "DragonflyScene/Models/");
+        
+        ModelUniforms mu = model_uniforms.at(i);
+        myfile << models.at(i)->GetName() << ".drgn ";
+        myfile << mu.position.x << " " << mu.position.y << " " << mu.position.z << " ";
+        myfile << mu.rotate_origin.x << " " << mu.rotate_origin.y << " " << mu.rotate_origin.z << " ";
+        myfile << mu.angle.x << " " << mu.angle.y << " " << mu.angle.z << std::endl;
+    }
+    
+    myfile.close();
+}
+
+Model * GetModelFromFile(std::string path) {
+    std::string line;
+    std::ifstream myfile (path);
+    if (myfile.is_open()) {
+        Model *m = new Model(models.size());
+        
+        bool getting_vertices = true;
+        while ( getline (myfile,line) ) {
+            if (line == "f") {
+                getting_vertices = false;
+            } else {
+                std::vector<float> vals = splitStringToFloats(line);
+                
+                if (getting_vertices) {
+                    m->InsertVertex(simd_make_float3(vals[0], vals[1], vals[2]), m->NumVertices());
+                } else {
+                    Face f;
+                    f.vertices[0] = (int) vals[0];
+                    f.vertices[1] = (int) vals[1];
+                    f.vertices[2] = (int) vals[2];
+                    
+                    f.color = simd_make_float4(vals[3], vals[4], vals[5], vals[6]);
+                    m->InsertFace(f, m->NumFaces());
+                }
+            }
+        }
+        
+        myfile.close();
+        
+        return m;
+    } else {
+        std::cout<<"invalid path"<<std::endl;
+    }
+    
+    return NULL;
+}
+
+void GetSceneFromFolder(std::string path) {
+    for (int i = models.size()-1; i >= 3; i--) {
+        delete models.at(i);
+        models.erase(models.begin()+i);
+    }
+    
+    for (int i = model_uniforms.size()-1; i >= 3; i--) {
+        model_uniforms.erase(model_uniforms.begin()+i);
+    }
+    
+    std::string line;
+    std::ifstream myfile (path+"/uniforms.lair");
+    if (myfile.is_open()) {
+        while ( getline (myfile,line) ) {
+            std::string model_file = line.substr(0, line.find(' '));
+            line = line.substr(line.find(' ')+1);
+            
+            std::vector<float> vals = splitStringToFloats(line);
+            
+            ModelUniforms mu;
+            mu.position.x = vals[0];
+            mu.position.y = vals[1];
+            mu.position.z = vals[2];
+            
+            mu.rotate_origin.x = vals[3];
+            mu.rotate_origin.y = vals[4];
+            mu.rotate_origin.z = vals[5];
+            
+            mu.angle.x = vals[6];
+            mu.angle.y = vals[7];
+            mu.angle.z = vals[8];
+            
+            model_uniforms.push_back(mu);
+            
+            Model *m = GetModelFromFile(path+"/Models/"+model_file);
+            models.push_back(m);
+        }
+        
+        myfile.close();
+    } else {
+        std::cout<<"invalid path"<<std::endl;
     }
 }
 
@@ -695,11 +869,11 @@ bool InRightClickPopup(simd_float2 loc) {
 }
 
 void RightClickPopup() {
-    ImGui::SetCursorPos(ImVec2(window_width * (rightclick_popup_loc.x+1)/2, window_height * (2-(rightclick_popup_loc.y+1))/2));
+    ImGui::SetCursorPos(ImVec2(window_width * (rightclick_popup_loc.x+1)/2, window_height * (2-(rightclick_popup_loc.y+1))/2 - menu_bar_height));
     
     ImVec2 button_size = ImVec2(window_width * rightclick_popup_size.x/2, window_height * rightclick_popup_size.y/2);
     
-    if (edit_mode == EM_DEFAULT) {
+    if (edit_mode == EM_FEV) {
         if (selected_face != -1 || selected_edge.x != -1) {
             if (ImGui::Button("Add Vertex", ImVec2(button_size.x, button_size.y))) {
                 render_rightclick_popup = false;
@@ -750,12 +924,70 @@ void RightClickPopup() {
 }
 
 void RenderUI() {
+    // menu bar
+    if (ImGui::BeginMainMenuBar()) {
+        using_menu_bar = false;
+        
+        if (ImGui::BeginMenu("File")) {
+            using_menu_bar = true;
+            if (ImGui::MenuItem("New Model", "")) {
+                Model *m = new Model(models.size());
+                m->MakeCube();
+                models.push_back(m);
+                ModelUniforms new_uniform;
+                new_uniform.position = simd_make_float3(0, 0, 0);
+                new_uniform.rotate_origin = simd_make_float3(0, 0, 0);
+                new_uniform.angle = simd_make_float3(0, 0, 0);
+                
+                model_uniforms.push_back(new_uniform);
+            }
+            if (ImGui::MenuItem("Save Selected Model", "")) {
+                if (selected_model != -1) {
+                    SaveModelToFile(selected_model, "/");
+                }
+            }
+            if (ImGui::MenuItem("Save Scene", ""))   {
+                SaveSceneToFolder();
+            }
+            if (ImGui::MenuItem("Import Model", ""))   {
+                importing_model = true;
+                
+                fileDialog = ImGui::FileBrowser(ImGuiFileBrowserFlags_CloseOnEsc);
+                fileDialog.SetTitle("Importing Model");
+                fileDialog.SetTypeFilters({ ".drgn" });
+                fileDialog.Open();
+            }
+            if (ImGui::MenuItem("Import Scene", ""))   {
+                importing_scene = true;
+                
+                fileDialog = ImGui::FileBrowser(ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_CloseOnEsc);
+                fileDialog.SetTitle("Importing Scene");
+                fileDialog.Open();
+            }
+            ImGui::EndMenu();
+        }
+        
+        if (ImGui::BeginMenu("Edit")) {
+            using_menu_bar = true;
+            if (ImGui::MenuItem("Edit by Model", "")) {
+                selection_mode = SM_MODEL;
+                edit_mode = EM_MODEL;
+            }
+            if (ImGui::MenuItem("Edit by Face, Edge, and Vertex", ""))   {
+                selection_mode = SM_FEV;
+                edit_mode = EM_FEV;
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+    
     // scene window
-    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowPos(ImVec2(0, menu_bar_height));
     ImGui::SetNextWindowSize(ImVec2(window_width, window_height));
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
     ImGui::Begin("main", &show_main_window, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);
-
+    
     // Display FPS
     ImGui::SetCursorPos(ImVec2(window_width - 80, 10));
     ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
@@ -766,6 +998,39 @@ void RenderUI() {
     }
     
     ImGui::End();
+    
+    if (importing_model || importing_scene) {
+        fileDialog.Display();
+    }
+    
+    if(fileDialog.HasSelected()) {
+        if (importing_model) {
+            std::cout << "Selected filename" << fileDialog.GetSelected().string() << std::endl;
+            
+            Model *m = GetModelFromFile(fileDialog.GetSelected().string());
+            if (m != NULL) {
+                models.push_back(m);
+                ModelUniforms new_uniform;
+                new_uniform.position = simd_make_float3(0, 0, 0);
+                new_uniform.rotate_origin = simd_make_float3(0, 0, 0);
+                new_uniform.angle = simd_make_float3(0, 0, 0);
+                
+                model_uniforms.push_back(new_uniform);
+            }
+            
+            fileDialog.ClearSelected();
+            fileDialog.Close();
+            importing_model = false;
+        } else if (importing_scene) {
+            std::cout << "Selected scene" << fileDialog.GetSelected().string() << std::endl;
+            
+            GetSceneFromFolder(fileDialog.GetSelected().string());
+            
+            fileDialog.ClearSelected();
+            fileDialog.Close();
+            importing_scene = false;
+        }
+    }
 }
 
 void HandleKeyboardEvents(SDL_Event event) {
@@ -860,7 +1125,7 @@ void HandleMouseEvents(SDL_Event event) {
         click_loc = mouse_loc;
         switch (event.button.button) {
             case SDL_BUTTON_LEFT:
-                if (!(render_rightclick_popup && InRightClickPopup(click_loc))) {
+                if (!(importing_model || importing_scene) && !(using_menu_bar || click_loc.y > 1 - ((float) menu_bar_height/ (float) window_height)) && !(render_rightclick_popup && InRightClickPopup(click_loc))) {
                     left_clicked = true;
                     left_mouse_down = true;
                     render_rightclick_popup = false;
@@ -917,7 +1182,7 @@ void HandleMouseEvents(SDL_Event event) {
             camera->up_vector.z = cos(new_theta-M_PI_2);
         }
         
-        if (edit_mode == EM_DEFAULT) {
+        if (edit_mode == EM_MODEL || edit_mode == EM_FEV) {
             if (left_mouse_down && selected_arrow != -1) {
                 // find the projected location of the tip and the base
                 simd_float2 base = arrow_projections[selected_arrow*2];
@@ -954,7 +1219,19 @@ void HandleMouseEvents(SDL_Event event) {
                 y_vec *= 0.01*mvmt;
                 z_vec *= 0.01*mvmt;
                 
-                if (selected_face != -1) {
+                if (selected_model != -1) {
+                    simd_float3 loc = model_uniforms.at(selected_model).position;
+                    loc.x += x_vec;
+                    loc.y += y_vec;
+                    loc.z += z_vec;
+                    model_uniforms.at(selected_model).position = loc;
+                    
+                    simd_float3 rot = model_uniforms.at(selected_model).rotate_origin;
+                    rot.x += x_vec;
+                    rot.y += y_vec;
+                    rot.z += z_vec;
+                    model_uniforms.at(selected_model).rotate_origin = rot;
+                } else if (selected_face != -1) {
                     int modelID = modelIDs[scene_faces[selected_face].vertices[0]];
                     Model *model = models[modelID];
                     unsigned long modelFaceID = selected_face - model->FaceStart();
@@ -1183,53 +1460,82 @@ int main(int, char**) {
             if (left_clicked || right_clicked) {
                 click_z = 50;
                 
-                if (selection_mode == SM_ALL) {
+                if (selection_mode == SM_MODEL) {
+                    FaceClicked();
+                    
+                    if (selected_face != -1) {
+                        selected_model = modelIDs.at(scene_faces.at(selected_face).vertices[0]);
+                    } else if (selected_arrow == -1) {
+                        selected_model = -1;
+                    }
+                    
+                    if (selected_arrow != -1) {
+                        if (selected_model != -1) {
+                            current_action = new ModelMoveAction(&model_uniforms, selected_model);
+                            current_action->BeginRecording();
+                            
+                            if (past_actions.size() > 20) {
+                                UserAction *last_action = past_actions.back();
+                                past_actions.pop_back();
+                                delete last_action;
+                            }
+                        }
+                    }
+                    
+                    show_arrows = edit_mode == EM_MODEL && (selected_model != -1);
+                    
+                    selected_face = -1;
+                    selected_vertex = -1;
+                    selected_edge = simd_make_int2(-1, -1);
+                } else if (selection_mode == SM_FEV) {
                     FaceClicked();
                     VertexClicked();
                     EdgeClicked();
-                }
+                    
+                    selected_model = -1;
                 
-                if (selected_arrow != -1) {
-                    if (selected_face != -1) {
-                        Model* m = models.at(modelIDs.at(scene_faces.at(selected_face).vertices[0]));
-                        current_action = new FaceMoveAction(m, selected_face - m->FaceStart());
-                        current_action->BeginRecording();
-                        
-                        if (past_actions.size() > 20) {
-                            UserAction *last_action = past_actions.back();
-                            past_actions.pop_back();
-                            delete last_action;
-                        }
-                    } else if (selected_edge.x != -1) {
-                        Model* m = models.at(modelIDs.at(selected_edge.x));
-                        current_action = new EdgeMoveAction(m, selected_edge.x - m->VertexStart(), selected_edge.y - m->VertexStart());
-                        current_action->BeginRecording();
-                        
-                        if (past_actions.size() > 20) {
-                            UserAction *last_action = past_actions.back();
-                            past_actions.pop_back();
-                            delete last_action;
-                        }
-                    } else if (selected_vertex != -1) {
-                        Model* m = models.at(modelIDs.at(selected_vertex));
-                        current_action = new VertexMoveAction(m, selected_vertex - m->VertexStart());
-                        current_action->BeginRecording();
-                        
-                        if (past_actions.size() > 20) {
-                            UserAction *last_action = past_actions.back();
-                            past_actions.pop_back();
-                            delete last_action;
+                    if (selected_arrow != -1) {
+                        if (selected_face != -1) {
+                            Model* m = models.at(modelIDs.at(scene_faces.at(selected_face).vertices[0]));
+                            current_action = new FaceMoveAction(m, selected_face - m->FaceStart());
+                            current_action->BeginRecording();
+                            
+                            if (past_actions.size() > 20) {
+                                UserAction *last_action = past_actions.back();
+                                past_actions.pop_back();
+                                delete last_action;
+                            }
+                        } else if (selected_edge.x != -1) {
+                            Model* m = models.at(modelIDs.at(selected_edge.x));
+                            current_action = new EdgeMoveAction(m, selected_edge.x - m->VertexStart(), selected_edge.y - m->VertexStart());
+                            current_action->BeginRecording();
+                            
+                            if (past_actions.size() > 20) {
+                                UserAction *last_action = past_actions.back();
+                                past_actions.pop_back();
+                                delete last_action;
+                            }
+                        } else if (selected_vertex != -1) {
+                            Model* m = models.at(modelIDs.at(selected_vertex));
+                            current_action = new VertexMoveAction(m, selected_vertex - m->VertexStart());
+                            current_action->BeginRecording();
+                            
+                            if (past_actions.size() > 20) {
+                                UserAction *last_action = past_actions.back();
+                                past_actions.pop_back();
+                                delete last_action;
+                            }
                         }
                     }
+                    
+                    if (right_clicked) {
+                        render_rightclick_popup = (selected_vertex != -1 || selected_edge.x != -1 || selected_face != -1);
+                        rightclick_popup_loc = click_loc;
+                        rightclick_popup_size = simd_make_float2(90/(float)(window_width/2), 20/(float)(window_height/2));
+                    }
+                    
+                    show_arrows = edit_mode == EM_FEV && (selected_vertex != -1 || selected_edge.x != -1 || selected_face != -1);
                 }
-                
-                if (right_clicked) {
-                    render_rightclick_popup = (selected_vertex != -1 || selected_edge.x != -1 || selected_face != -1);
-                    rightclick_popup_loc = click_loc;
-                    rightclick_popup_size = simd_make_float2(90/(float)(window_width/2), 20/(float)(window_height/2));
-                }
-                
-                show_arrows = edit_mode == EM_DEFAULT && (selected_vertex != -1 || selected_edge.x != -1 || selected_face != -1);
             }
             
             SetArrowProjections();
@@ -1259,20 +1565,24 @@ int main(int, char**) {
             [render_encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:scene_faces.size()*3];
             
             // rendering the edges
-            [render_encoder setRenderPipelineState:scene_edge_render_pipeline_state];
-            [render_encoder setVertexBuffer:scene_vertex_buffer offset:0 atIndex:0];
-            [render_encoder setVertexBuffer:scene_face_buffer offset:0 atIndex:1];
-            //[render_encoder setVertexBuffer:edge_render_uniforms_buffer offset:0 atIndex:2];
-            for (int i = arrows_face_end*4; i < scene_faces.size()*4; i+=4) {
-                [render_encoder drawPrimitives:MTLPrimitiveTypeLineStrip vertexStart:i vertexCount:4];
+            if (selection_mode == SM_MODEL || selection_mode == SM_FEV) {
+                [render_encoder setRenderPipelineState:scene_edge_render_pipeline_state];
+                [render_encoder setVertexBuffer:scene_vertex_buffer offset:0 atIndex:0];
+                [render_encoder setVertexBuffer:scene_face_buffer offset:0 atIndex:1];
+                //[render_encoder setVertexBuffer:edge_render_uniforms_buffer offset:0 atIndex:2];
+                for (int i = arrows_face_end*4; i < scene_faces.size()*4; i+=4) {
+                    [render_encoder drawPrimitives:MTLPrimitiveTypeLineStrip vertexStart:i vertexCount:4];
+                }
             }
             
             // rendering the vertex points
-            [render_encoder setRenderPipelineState:scene_point_render_pipeline_state];
-            [render_encoder setVertexBuffer:scene_vertex_buffer offset:0 atIndex:0];
-            [render_encoder setVertexBuffer:vertex_render_uniforms_buffer offset:0 atIndex:1];
-            for (int i = arrows_vertex_end*4; i < scene_vertices.size()*4; i+=4) {
-                [render_encoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:i vertexCount:4];
+            if (selection_mode == SM_FEV) {
+                [render_encoder setRenderPipelineState:scene_point_render_pipeline_state];
+                [render_encoder setVertexBuffer:scene_vertex_buffer offset:0 atIndex:0];
+                [render_encoder setVertexBuffer:vertex_render_uniforms_buffer offset:0 atIndex:1];
+                for (int i = arrows_vertex_end*4; i < scene_vertices.size()*4; i+=4) {
+                    [render_encoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:i vertexCount:4];
+                }
             }
             
             // Start the Dear ImGui frame

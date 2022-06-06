@@ -9,9 +9,15 @@
 #define Model_h
 #include <stdio.h>
 #include <vector>
+#include <string>
 
 #include <simd/SIMD.h>
 
+struct ModelUniforms {
+    simd_float3 position;
+    simd_float3 rotate_origin;
+    simd_float3 angle; // euler angles zyx
+};
 
 struct Face {
     uint32_t vertices[3];
@@ -25,7 +31,8 @@ private:
     uint32_t modelID;
     unsigned long face_start;
     unsigned long vertex_start;
-    
+protected:
+    std::string name;
 public:
     Model(uint32_t mid);
     unsigned MakeVertex(float x, float y, float z);
@@ -52,6 +59,8 @@ public:
     
     unsigned long NumFaces();
     unsigned long NumVertices();
+    
+    std::string GetName();
     
     ~Model();
 };
