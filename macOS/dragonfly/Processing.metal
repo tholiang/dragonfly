@@ -11,6 +11,9 @@ using namespace metal;
 constant float pi = 3.14159265358979;
 constant float render_dist = 50;
 
+typedef simd_float3 Vertex;
+typedef simd_float3 Joint;
+
 struct Camera {
     vector_float3 pos;
     vector_float3 vector;
@@ -21,6 +24,17 @@ struct Camera {
 struct Face {
     unsigned int vertices[3];
     vector_float4 color;
+};
+
+struct Node {
+    vector_float3 pos;
+    vector_float3 angle; // euler angles zyx
+};
+
+struct NodeVertexLink {
+    int nid;
+    vector_float3 vector;
+    float weight;
 };
 
 struct VertexOut {
@@ -42,6 +56,11 @@ struct Uniforms {
 struct VertexRenderUniforms {
     float screen_ratio;
     vector_int3 selected_vertices;
+};
+
+struct NodeRenderUniforms {
+    float screen_ratio;
+    int selected_node;
 };
 
 /*struct EdgeRenderUniforms {
@@ -146,17 +165,59 @@ vector_float3 RotateAround (vector_float3 point, vector_float3 origin, vector_fl
     return point;
 }
 
-kernel void CalculateRotatedVertices(device vector_float3 *vertices [[buffer(0)]], unsigned int vid [[thread_position_in_grid]], const constant unsigned int *modelIDs [[buffer(1)]], const constant ModelUniforms *uniforms [[buffer(2)]]) {
-    ModelUniforms uniform = uniforms[modelIDs[vid]];
-    vector_float3 offset_vertex = vertices[vid];
-    offset_vertex.x += uniform.position.x;
-    offset_vertex.y += uniform.position.y;
-    offset_vertex.z += uniform.position.z;
-    vertices[vid] = RotateAround(offset_vertex, uniform.rotate_origin, uniform.angle);
+kernel void ResetVertices (device Vertex *vertices [[buffer(0)]], unsigned int vid [[thread_position_in_grid]]) {
+    vertices[vid] = vector_float3(0,0,0);
 }
 
-kernel void CalculateProjectedVertices(device vector_float3 *vertices [[buffer(0)]], unsigned int vid [[thread_position_in_grid]], constant Camera &camera [[buffer(1)]]) {
-    vertices[vid] = PointToPixel(vertices[vid], camera);
+kernel void CalculateModelNodeTransforms(device Node *nodes [[buffer(0)]], unsigned int vid [[thread_position_in_grid]], const constant unsigned int *modelIDs [[buffer(1)]], const constant ModelUniforms *uniforms [[buffer(2)]]) {
+    ModelUniforms uniform = uniforms[modelIDs[vid]];
+    vector_float3 offset_node = nodes[vid].pos;
+    offset_node.x += uniform.position.x;
+    offset_node.y += uniform.position.y;
+    offset_node.z += uniform.position.z;
+    nodes[vid].pos = RotateAround(offset_node, uniform.rotate_origin, uniform.angle);
+    nodes[vid].angle.x += uniform.angle.x;
+    nodes[vid].angle.y += uniform.angle.y;
+    nodes[vid].angle.z += uniform.angle.z;
+}
+
+kernel void CalculateVertices(device Vertex *vertices [[buffer(0)]], const constant NodeVertexLink *nvlinks [[buffer(1)]], unsigned int vid [[thread_position_in_grid]], const constant Node *nodes [[buffer(2)]]) {
+    Vertex v = vector_float3(0,0,0);
+    
+    NodeVertexLink link1 = nvlinks[vid*2];
+    NodeVertexLink link2 = nvlinks[vid*2 + 1];
+    
+    if (link1.nid != -1) {
+        Node n = nodes[link1.nid];
+        
+        Vertex desired1 = vector_float3(n.pos.x + link1.vector.x, n.pos.y + link1.vector.y, n.pos.z + link1.vector.z);
+        desired1 = RotateAround(desired1, n.pos, n.angle);
+        
+        v.x += link1.weight*desired1.x;
+        v.y += link1.weight*desired1.y;
+        v.z += link1.weight*desired1.z;
+    }
+    
+    if (link2.nid != -1) {
+        Node n = nodes[link2.nid];
+        
+        Vertex desired2 = vector_float3(n.pos.x + link2.vector.x, n.pos.y + link2.vector.y, n.pos.z + link2.vector.z);
+        desired2 = RotateAround(desired2, n.pos, n.angle);
+        
+        v.x += link2.weight*desired2.x;
+        v.y += link2.weight*desired2.y;
+        v.z += link2.weight*desired2.z;
+    }
+    
+    vertices[vid] = v;
+}
+
+kernel void CalculateProjectedVertices(device vector_float3 *output [[buffer(0)]], const constant Vertex *vertices [[buffer(1)]], unsigned int vid [[thread_position_in_grid]], constant Camera &camera [[buffer(2)]]) {
+    output[vid] = PointToPixel(vertices[vid], camera);
+}
+
+kernel void CalculateProjectedNodes(device Node *nodes [[buffer(0)]], unsigned int vid [[thread_position_in_grid]], constant Camera &camera [[buffer(2)]]) {
+    nodes[vid].pos = PointToPixel(nodes[vid].pos, camera);
 }
 
 
@@ -253,6 +314,37 @@ vertex VertexOut VertexPointShader (const constant vector_float3 *vertex_array [
     } else {
         output.color = vector_float4(0, 1, 0, 1);
     }
+    return output;
+}
+
+vertex VertexOut NodeShader (const constant Node *node_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant NodeRenderUniforms *uniforms [[buffer(1)]]) {
+    // 20 side "circle"
+    Node currentNode = node_array[vid/40];
+    VertexOut output;
+    
+    int angle_idx = vid % 40;
+    int type_idx = vid % 4;
+    
+    float radius = (1/currentNode.pos.z) / 500;
+    float angle;
+    
+    if (type_idx == 0) {
+        angle = (float) (angle_idx) * pi / 20;
+    } else if (type_idx == 1) {
+        angle = 0;
+        radius = 0;
+    } else {
+        angle = (float) (angle_idx+1) * pi / 20;
+    }
+    
+    output.pos = vector_float4(currentNode.pos.x + radius * cos(angle), currentNode.pos.y + (radius * sin(angle) * uniforms->screen_ratio), currentNode.pos.z-0.01, 1);
+    
+    if (vid/40 == uniforms->selected_node) {
+        output.color = vector_float4(1, 0.5, 0, 1);
+    } else {
+        output.color = vector_float4(0.8, 0.8, 0.9, 1);
+    }
+    
     return output;
 }
 

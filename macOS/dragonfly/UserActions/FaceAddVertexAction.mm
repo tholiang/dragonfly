@@ -37,7 +37,7 @@ void FaceAddVertexAction::EndRecording() {
 }
 
 void FaceAddVertexAction::Do() {
-    Face *f = model_->GetFace(fid_);
+    /*Face *f = model_->GetFace(fid_);
     unsigned vid1 = original_vertices_[0];
     unsigned vid2 = original_vertices_[1];
     unsigned vid3 = original_vertices_[2];
@@ -65,7 +65,7 @@ void FaceAddVertexAction::Do() {
     f3.vertices[1] = vid3;
     f3.vertices[2] = vid_;
     f3.color = f->color;
-    model_->InsertFace(f3, new_fid2_);
+    model_->InsertFace(f3, new_fid2_);*/
 }
 
 void FaceAddVertexAction::Undo() {

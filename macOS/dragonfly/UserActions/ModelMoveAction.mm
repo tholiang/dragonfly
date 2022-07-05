@@ -30,12 +30,20 @@ void ModelMoveAction::Do() {
     uniforms_->at(mid_).position.x += movement_vector_.x;
     uniforms_->at(mid_).position.y += movement_vector_.y;
     uniforms_->at(mid_).position.z += movement_vector_.z;
+    
+    uniforms_->at(mid_).rotate_origin.x += movement_vector_.x;
+    uniforms_->at(mid_).rotate_origin.y += movement_vector_.y;
+    uniforms_->at(mid_).rotate_origin.z += movement_vector_.z;
 }
 
 void ModelMoveAction::Undo() {
     uniforms_->at(mid_).position.x -= movement_vector_.x;
     uniforms_->at(mid_).position.y -= movement_vector_.y;
     uniforms_->at(mid_).position.z -= movement_vector_.z;
+    
+    uniforms_->at(mid_).rotate_origin.x -= movement_vector_.x;
+    uniforms_->at(mid_).rotate_origin.y -= movement_vector_.y;
+    uniforms_->at(mid_).rotate_origin.z -= movement_vector_.z;
 }
 
 ModelMoveAction::~ModelMoveAction () {

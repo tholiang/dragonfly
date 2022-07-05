@@ -12,11 +12,30 @@
 
 Model::Model(uint32 mid) : modelID(mid) {
     name = "model"+std::to_string(mid);
+    face_start = 0;
+    vertex_start = 0;
+    num_vertices = 0;
+    node_start = 0;
+    
+    Node node;
+    node.pos = simd_make_float3(0, 0, 0);
+    node.angle = simd_make_float3(0, 0, 0);
+    nodes.push_back(node);
 }
 
 unsigned Model::MakeVertex(float x, float y, float z) {
-    vertices.push_back(simd_make_float3(x, y, z));
-    return vertices.size()-1;
+    num_vertices++;
+    
+    NodeVertexLink nvlink;
+    nvlink.nid = 0;
+    nvlink.weight = 1;
+    nvlink.vector.x = x;
+    nvlink.vector.y = y;
+    nvlink.vector.z = z;
+    nvlinks.push_back(nvlink);
+    nvlinks.push_back(NodeVertexLink()); // empty link
+    
+    return num_vertices-1;
 }
 
 unsigned Model::MakeFace(unsigned v0, unsigned v1, unsigned v2, simd_float4 color) {
@@ -27,6 +46,83 @@ unsigned Model::MakeFace(unsigned v0, unsigned v1, unsigned v2, simd_float4 colo
     f.color = color;
     faces.push_back(f);
     return faces.size()-1;
+}
+
+unsigned Model::MakeNode(float x, float y, float z) {
+    Node node;
+    node.pos = simd_make_float3(x, y, z);
+    node.angle = simd_make_float3(0, 0, 0);
+    nodes.push_back(node);
+    return nodes.size()-1;
+}
+
+void Model::LinkNodeAndVertex(unsigned long vid, unsigned long nid) {
+    if (nid > nodes.size() || vid > num_vertices) {
+        return;
+    }
+    
+    Vertex vertex = GetVertex(vid);
+    Node node = nodes.at(nid);
+    
+    NodeVertexLink link1 = nvlinks[vid*2];
+    
+    int setIndex = vid*2+1;
+    
+    if (link1.nid == -1) {
+        setIndex = vid*2;
+    }
+    
+    NodeVertexLink nvlink;
+    nvlink.nid = nid;
+    nvlink.vector.x = vertex.x - node.pos.x;
+    nvlink.vector.y = vertex.y - node.pos.y;
+    nvlink.vector.z = vertex.z- node.pos.z;
+    
+    simd_float3 reverse_angle = simd_make_float3(-node.angle.x, -node.angle.y, -node.angle.z);
+    nvlink.vector = RotateAround(nvlink.vector, simd_make_float3(0, 0, 0), reverse_angle);
+    nvlink.weight = 1;
+    nvlinks[setIndex] = nvlink;
+    
+    DetermineLinkWeights(vertex, vid);
+}
+
+void Model::UnlinkNodeAndVertex(unsigned long vid, unsigned long nid) {
+    Vertex v = GetVertex(vid);
+    
+    if (nvlinks[vid*2].nid == nid) {
+        nvlinks[vid*2].nid = -1;
+        DetermineLinkWeights(v, vid);
+        return;
+    } else if (nvlinks[vid*2 + 1].nid == nid) {
+        nvlinks[vid*2 + 1].nid = -1;
+        DetermineLinkWeights(v, vid);
+        return;
+    }
+}
+
+void Model::DetermineLinkWeights(Vertex loc, unsigned long vid) {
+    std::vector<unsigned long> links;
+    
+    NodeVertexLink link1 = nvlinks.at(vid*2);
+    NodeVertexLink link2 = nvlinks.at(vid*2 + 1);
+    
+    if (link1.nid == -1 && link2.nid == -1) {
+        return;
+    } else if (link1.nid == -1) {
+        link2.weight = 1;
+    } else if (link2.nid == -1) {
+        link1.weight = 1;
+    } else {
+        float link1mag = sqrt(pow(link1.vector.x, 2) + pow(link1.vector.y, 2) + pow(link1.vector.z, 2));
+        float link2mag = sqrt(pow(link2.vector.x, 2) + pow(link2.vector.y, 2) + pow(link2.vector.z, 2));
+        
+        float inverse_dist_sum = 1/link1mag + 1/link2mag;
+        link1.weight = (1/link1mag) / inverse_dist_sum;
+        link2.weight = (1/link2mag) / inverse_dist_sum;
+    }
+    
+    nvlinks.at(vid*2) = link1;
+    nvlinks.at(vid*2 + 1) = link2;
 }
 
 void Model::MakeCube() {
@@ -58,11 +154,19 @@ void Model::MakeCube() {
     MakeFace(5, 7, 6, {1, 1, 1, 1});
 }
 
-void Model::InsertVertex(simd_float3 vertex, int vid) {
-    if (vid >= vertices.size()) {
-        vertices.push_back(vertex);
+void Model::InsertVertex(float x, float y, float z, int vid) {
+    if (vid >= num_vertices) {
+        MakeVertex(x, y, z);
     } else {
-        vertices.insert(vertices.begin()+vid, vertex);
+        NodeVertexLink nvlink;
+        num_vertices++;
+        nvlink.nid = 0;
+        nvlink.weight = 1;
+        nvlink.vector.x = x;
+        nvlink.vector.y = y;
+        nvlink.vector.z = z;
+        nvlinks.insert(nvlinks.begin()+vid*2, nvlink);
+        nvlinks.insert(nvlinks.begin()+vid*2 + 1, NodeVertexLink());
     }
 }
 
@@ -74,10 +178,20 @@ void Model::InsertFace(Face face, int fid) {
     }
 }
 
+void Model::MoveVertex(unsigned vid, float dx, float dy, float dz) {
+    nvlinks[vid*2].vector.x += dx;
+    nvlinks[vid*2].vector.y += dy;
+    nvlinks[vid*2].vector.z += dz;
+    
+    nvlinks[vid*2 + 1].vector.x += dx;
+    nvlinks[vid*2 + 1].vector.y += dy;
+    nvlinks[vid*2 + 1].vector.z += dz;
+}
+
 void Model::RemoveVertex(int vid) {
-    if (vid < vertices.size()) {
-        vertices.erase(vertices.begin() + vid);
-    }
+    nvlinks.erase(nvlinks.begin() + vid*2 + 1);
+    nvlinks.erase(nvlinks.begin() + vid*2);
+    num_vertices --;
 }
 
 void Model::RemoveFace(int fid) {
@@ -86,12 +200,39 @@ void Model::RemoveFace(int fid) {
     }
 }
 
-Face *Model::GetFace(unsigned long fid) {
-    return &faces.at(fid);
+Vertex Model::GetVertex(unsigned long vid) {
+    Vertex ret = simd_make_float3(0, 0, 0);
+    
+    NodeVertexLink link1 = nvlinks[vid*2];
+    NodeVertexLink link2 = nvlinks[vid*2 + 1];
+    
+    if (link1.nid != -1) {
+        Node n = nodes[link1.nid];
+        
+        Vertex desired1 = simd_make_float3(n.pos.x + link1.vector.x, n.pos.y + link1.vector.y, n.pos.z + link1.vector.z);
+        desired1 = RotateAround(desired1, n.pos, n.angle);
+        
+        ret.x += link1.weight*desired1.x;
+        ret.y += link1.weight*desired1.y;
+        ret.z += link1.weight*desired1.z;
+    }
+    
+    if (link2.nid != -1) {
+        Node n = nodes[link2.nid];
+        
+        Vertex desired2 = simd_make_float3(n.pos.x + link2.vector.x, n.pos.y + link2.vector.y, n.pos.z + link2.vector.z);
+        desired2 = RotateAround(desired2, n.pos, n.angle);
+        
+        ret.x += link2.weight*desired2.x;
+        ret.y += link2.weight*desired2.y;
+        ret.z += link2.weight*desired2.z;
+    }
+    
+    return ret;
 }
 
-simd_float3 *Model::GetVertex(unsigned long vid) {
-    return &vertices.at(vid);
+Face *Model::GetFace(unsigned long fid) {
+    return &faces.at(fid);
 }
 
 std::vector<unsigned long> Model::GetEdgeFaces(unsigned long vid1, unsigned long vid2) {
@@ -109,22 +250,52 @@ std::vector<unsigned long> Model::GetEdgeFaces(unsigned long vid1, unsigned long
     return ret;
 }
 
-std::vector<simd_float3> &Model::GetVertices() {
-    return vertices;
+
+std::vector<unsigned long> Model::GetLinkedNodes(unsigned long vid) {
+    std::vector<unsigned long> ret;
+    
+    NodeVertexLink link1 = nvlinks[vid*2];
+    NodeVertexLink link2 = nvlinks[vid*2 + 1];
+    
+    if (link1.nid != -1) {
+        ret.push_back(link1.nid);
+    }
+    
+    if (link2.nid != -1) {
+        ret.push_back(link2.nid);
+    }
+    
+    return ret;
+}
+
+std::vector<unsigned long> Model::GetLinkedVertices(unsigned long nid) {
+    std::vector<unsigned long> ret;
+    for (int i = 0; i < nvlinks.size(); i++) {
+        if (nvlinks[i].nid == nid) {
+            ret.push_back(i/2);
+        }
+    }
+    
+    return ret;
+}
+
+Node *Model::GetNode(unsigned long nid) {
+    return &nodes.at(nid);
 }
 
 std::vector<Face> &Model::GetFaces() {
     return faces;
 }
 
-void Model::AddToBuffers(std::vector<simd_float3> &vertexBuffer, std::vector<Face> &faceBuffer, std::vector<uint32> &modelIDs) {
+std::vector<Node> &Model::GetNodes() {
+    return nodes;
+}
+
+void Model::AddToBuffers(std::vector<Face> &faceBuffer, std::vector<Node> &nodeBuffer, std::vector<NodeVertexLink> &nvlinkBuffer, std::vector<uint32_t> &node_modelIDs, unsigned &total_vertices) {
     face_start = faceBuffer.size();
-    vertex_start = vertexBuffer.size();
+    vertex_start = total_vertices;
     
-    for (int i = 0; i < vertices.size(); i++) {
-        vertexBuffer.push_back(vertices[i]);
-        modelIDs.push_back(modelID);
-    }
+    total_vertices += num_vertices;
     
     for (int i = 0; i < faces.size(); i++) {
         Face og = faces[i];
@@ -134,6 +305,36 @@ void Model::AddToBuffers(std::vector<simd_float3> &vertexBuffer, std::vector<Fac
         face.vertices[1] = og.vertices[1]+vertex_start;
         face.vertices[2] = og.vertices[2]+vertex_start;
         faceBuffer.push_back(face);
+    }
+    
+    node_start = nodeBuffer.size();
+    
+    for (int i = 0; i < nodes.size(); i++) {
+        nodeBuffer.push_back(nodes[i]);
+        node_modelIDs.push_back(modelID);
+    }
+    
+    for (int i = 0; i < nvlinks.size(); i++) {
+        NodeVertexLink og = nvlinks[i];
+        NodeVertexLink nvlink;
+        if (og.nid != -1) {
+            nvlink.nid = og.nid + node_start;
+        }
+        nvlink.vector = og.vector;
+        nvlink.weight = og.weight;
+        nvlinkBuffer.push_back(nvlink);
+    }
+}
+
+void Model::UpdateNodeBuffers(std::vector<Node> &nodeBuffer) {
+    for (int i = 0; i < nodes.size(); i++) {
+        Node *node = &nodeBuffer.at(i+node_start);
+        node->pos.x = nodes[i].pos.x;
+        node->pos.y = nodes[i].pos.y;
+        node->pos.z = nodes[i].pos.z;
+        node->angle.x = nodes[i].angle.x;
+        node->angle.y = nodes[i].angle.y;
+        node->angle.z = nodes[i].angle.z;
     }
 }
 
@@ -149,12 +350,20 @@ unsigned long Model::VertexStart() {
     return vertex_start;
 }
 
+unsigned long Model::NodeStart() {
+    return node_start;
+}
+
 unsigned long Model::NumFaces() {
     return faces.size();
 }
 
 unsigned long Model::NumVertices() {
-    return vertices.size();
+    return num_vertices;
+}
+
+unsigned long Model::NumNodes() {
+    return nodes.size();
 }
 
 std::string Model::GetName() {
@@ -162,4 +371,42 @@ std::string Model::GetName() {
 }
 
 Model::~Model() {
+}
+
+simd_float3 Model::RotateAround (simd_float3 point, simd_float3 origin, simd_float3 angle) {
+    simd_float3 vec;
+    vec.x = point.x-origin.x;
+    vec.y = point.y-origin.y;
+    vec.z = point.z-origin.z;
+    
+    simd_float3 newvec;
+    
+    // gimbal locked
+    
+    // around z axis
+    newvec.x = vec.x*cos(angle.z)-vec.y*sin(angle.z);
+    newvec.y = vec.x*sin(angle.z)+vec.y*cos(angle.z);
+    
+    vec.x = newvec.x;
+    vec.y = newvec.y;
+    
+    // around y axis
+    newvec.x = vec.x*cos(angle.y)+vec.z*sin(angle.y);
+    newvec.z = -vec.x*sin(angle.y)+vec.z*cos(angle.y);
+    
+    vec.x = newvec.x;
+    vec.z = newvec.z;
+    
+    // around x axis
+    newvec.y = vec.y*cos(angle.x)-vec.z*sin(angle.x);
+    newvec.z = vec.y*sin(angle.x)+vec.z*cos(angle.x);
+    
+    vec.y = newvec.y;
+    vec.z = newvec.z;
+    
+    point.x = origin.x+vec.x;
+    point.y = origin.y+vec.y;
+    point.z = origin.z+vec.z;
+    
+    return point;
 }

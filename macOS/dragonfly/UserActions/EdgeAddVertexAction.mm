@@ -36,7 +36,7 @@ void EdgeAddVertexAction::EndRecording() {
 }
 
 void EdgeAddVertexAction::Do() {
-    fids_ = model_->GetEdgeFaces(vid1_, vid2_);
+    /*fids_ = model_->GetEdgeFaces(vid1_, vid2_);
     
     simd_float3 *v1 = model_->GetVertex(vid1_);
     simd_float3 *v2 = model_->GetVertex(vid2_);
@@ -84,7 +84,7 @@ void EdgeAddVertexAction::Do() {
             f2.color = f->color;
             model_->InsertFace(f2, new_fids_.at(i));
         }
-    }
+    }*/
 }
 
 void EdgeAddVertexAction::Undo() {
