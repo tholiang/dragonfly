@@ -15,7 +15,6 @@
 class EdgeAddVertexAction : public UserAction {
 public:
     EdgeAddVertexAction(Model *m, int vid_new, int vid1, int vid2);
-    simd_float3 BiAvg (simd_float3 p1, simd_float3 p2);
     virtual void BeginRecording();
     virtual void EndRecording();
     virtual void Do();

@@ -12,18 +12,18 @@
 #include <string>
 
 #include <simd/SIMD.h>
+#include <fstream>
+
+#include "../Utils.h"
 
 typedef simd_float3 Vertex;
 
-// vertex locations relative to joints
-// joint 0 is the default joint - at the center of the model
-// joint locations relative to model's uniform
+class Animation;
+class Model;
 
-struct ModelUniforms {
-    simd_float3 position;
-    simd_float3 rotate_origin;
-    simd_float3 angle; // euler angles zyx
-};
+// vertex locations relative to joints
+// node 0 is the default joint - at the center of the model
+// node locations relative to model's uniform
 
 struct Face {
     uint32_t vertices[3];
@@ -41,13 +41,43 @@ struct NodeVertexLink {
     float weight;
 };
 
+struct NodeKeyFrame {
+    uint32_t nid;
+    float time;
+    simd_float3 pos;
+    simd_float3 angle;
+};
+
+class Animation {
+private:
+    float length = 0.0;
+    Model *model_;
+    std::vector<std::vector<NodeKeyFrame *> *> node_animations;
+
+    std::pair<int, int> FindFrameIdx(uint32_t nid, float time);
+public:
+    Animation(Model *model);
+    ~Animation();
+    
+    float GetLength();
+
+    void SetKeyFrame(uint32_t nid, float time, simd_float3 pos, simd_float3 angle);
+    void RemoveKeyFrame(uint32_t nid, uint32_t kfid);
+
+    void SetAtTime(float time);
+    
+    void FromFile(std::ifstream &file);
+    void AddToFile(std::ofstream &file);
+};
+
 class Model {
 private:
-    std::vector<Face> faces;
-    std::vector<Node> nodes;
+    std::vector<Face *> faces;
+    std::vector<Node *> nodes;
+    std::vector<Animation *> animations;
     
     // two links per vertex - index = vertex index * 2 (+ 1)
-    std::vector<NodeVertexLink> nvlinks;
+    std::vector<NodeVertexLink *> nvlinks;
     
     uint32_t modelID;
     
@@ -58,9 +88,10 @@ private:
     
     unsigned long node_start = 0;
     
-    simd_float3 RotateAround (simd_float3 point, simd_float3 origin, simd_float3 angle);
+    long curr_aid = -1;
+    float curr_anim_time = 0;
 protected:
-    std::string name;
+    std::string name_;
 public:
     Model(uint32_t mid);
     // to default node
@@ -77,13 +108,21 @@ public:
     
     void MakeCube();
     
+    void FromFile(std::string path);
+    
     void InsertVertex(float x, float y, float z, int vid);
-    void InsertFace(Face face, int fid);
+    void InsertFace(Face *face, int fid);
     
     void MoveVertex(unsigned vid, float dx, float dy, float dz);
     
     void RemoveVertex(int vid);
     void RemoveFace(int fid);
+    
+    unsigned MakeAnimation();
+    void StartAnimation(int aid);
+    void SetKeyFrame(int aid, int nid, float time);
+    void UpdateAnimation(float dt);
+    unsigned NumAnimations();
     
     Vertex GetVertex(unsigned long vid);
     Face *GetFace(unsigned long fid);
@@ -95,9 +134,9 @@ public:
     Node *GetNode(unsigned long nid);
     
     //std::vector<Vertex> &GetVertices();
-    std::vector<Face> &GetFaces();
+    std::vector<Face*> &GetFaces();
     
-    std::vector<Node> &GetNodes();
+    std::vector<Node*> &GetNodes();
     
     void AddToBuffers(std::vector<Face> &faceBuffer, std::vector<Node> &nodeBuffer, std::vector<NodeVertexLink> &nvlinkBuffer, std::vector<uint32_t> &node_modelIDs, unsigned &total_vertices);
     void UpdateNodeBuffers(std::vector<Node> &nodeBuffer);
@@ -113,7 +152,9 @@ public:
     
     unsigned long NumNodes();
     
+    void SetName(std::string name);
     std::string GetName();
+    void SaveToFile(std::string path);
     
     ~Model();
 };

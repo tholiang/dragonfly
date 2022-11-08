@@ -16,8 +16,8 @@
 
 class Arrow : public Model {
 public:
-    Arrow(uint32 mid);
-    Arrow(uint32 mid, simd_float4 c);
+    Arrow(uint32_t mid);
+    Arrow(uint32_t mid, simd_float4 c);
 private:
     void MakeArrow();
     

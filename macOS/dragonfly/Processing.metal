@@ -216,8 +216,8 @@ kernel void CalculateProjectedVertices(device vector_float3 *output [[buffer(0)]
     output[vid] = PointToPixel(vertices[vid], camera);
 }
 
-kernel void CalculateProjectedNodes(device Node *nodes [[buffer(0)]], unsigned int vid [[thread_position_in_grid]], constant Camera &camera [[buffer(2)]]) {
-    nodes[vid].pos = PointToPixel(nodes[vid].pos, camera);
+kernel void CalculateProjectedNodes(device vector_float3 *output [[buffer(0)]], device Node *nodes [[buffer(1)]], unsigned int vid [[thread_position_in_grid]], constant Camera &camera [[buffer(2)]]) {
+    output[vid] = PointToPixel(nodes[vid].pos, camera);
 }
 
 
@@ -317,15 +317,15 @@ vertex VertexOut VertexPointShader (const constant vector_float3 *vertex_array [
     return output;
 }
 
-vertex VertexOut NodeShader (const constant Node *node_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant NodeRenderUniforms *uniforms [[buffer(1)]]) {
+vertex VertexOut NodeShader (const constant Vertex *node_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant NodeRenderUniforms *uniforms [[buffer(1)]]) {
     // 20 side "circle"
-    Node currentNode = node_array[vid/40];
+    Vertex currentNode = node_array[vid/40];
     VertexOut output;
     
     int angle_idx = vid % 40;
     int type_idx = vid % 4;
     
-    float radius = (1/currentNode.pos.z) / 500;
+    float radius = (1/currentNode.z) / 500;
     float angle;
     
     if (type_idx == 0) {
@@ -337,7 +337,7 @@ vertex VertexOut NodeShader (const constant Node *node_array [[buffer(0)]], unsi
         angle = (float) (angle_idx+1) * pi / 20;
     }
     
-    output.pos = vector_float4(currentNode.pos.x + radius * cos(angle), currentNode.pos.y + (radius * sin(angle) * uniforms->screen_ratio), currentNode.pos.z-0.01, 1);
+    output.pos = vector_float4(currentNode.x + radius * cos(angle), currentNode.y + (radius * sin(angle) * uniforms->screen_ratio), currentNode.z-0.01, 1);
     
     if (vid/40 == uniforms->selected_node) {
         output.color = vector_float4(1, 0.5, 0, 1);

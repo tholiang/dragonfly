@@ -12,59 +12,36 @@ FaceMoveAction::FaceMoveAction(Model *m, int fid) : model_(m), fid_(fid) {
 }
 
 void FaceMoveAction::BeginRecording() {
-//    Face *f = model_->GetFace(fid_);
-//    simd_float3 *v1 = model_->GetVertex(f->vertices[0]);
-//    v1_initial_location_.x = v1->x;
-//    v1_initial_location_.y = v1->y;
-//    v1_initial_location_.z = v1->z;
-//
-//    recording_ = true;
+    Face *f = model_->GetFace(fid_);
+    v1_initial_location_ = model_->GetVertex(f->vertices[0]);
+
+    recording_ = true;
 }
 
 void FaceMoveAction::EndRecording() {
-//    Face *f = model_->GetFace(fid_);
-//    simd_float3 *v1 = model_->GetVertex(f->vertices[0]);
-//    movement_vector_.x = v1->x - v1_initial_location_.x;
-//    movement_vector_.y = v1->y - v1_initial_location_.y;
-//    movement_vector_.z = v1->z - v1_initial_location_.z;
-//
-//    recording_ = false;
+    Face *f = model_->GetFace(fid_);
+    simd_float3 end = model_->GetVertex(f->vertices[0]);
+    movement_vector_.x = end.x - v1_initial_location_.x;
+    movement_vector_.y = end.y - v1_initial_location_.y;
+    movement_vector_.z = end.z - v1_initial_location_.z;
+
+    recording_ = false;
 }
 
 void FaceMoveAction::Do() {
-//    Face *f = model_->GetFace(fid_);
-//    simd_float3 *v1 = model_->GetVertex(f->vertices[0]);
-//    simd_float3 *v2 = model_->GetVertex(f->vertices[1]);
-//    simd_float3 *v3 = model_->GetVertex(f->vertices[2]);
-//    v1->x += movement_vector_.x;
-//    v1->y += movement_vector_.y;
-//    v1->z += movement_vector_.z;
-//
-//    v2->x += movement_vector_.x;
-//    v2->y += movement_vector_.y;
-//    v2->z += movement_vector_.z;
-//
-//    v3->x += movement_vector_.x;
-//    v3->y += movement_vector_.y;
-//    v3->z += movement_vector_.z;
+    Face *f = model_->GetFace(fid_);
+    
+    model_->MoveVertex(f->vertices[0], movement_vector_.x, movement_vector_.y, movement_vector_.z);
+    model_->MoveVertex(f->vertices[1], movement_vector_.x, movement_vector_.y, movement_vector_.z);
+    model_->MoveVertex(f->vertices[2], movement_vector_.x, movement_vector_.y, movement_vector_.z);
 }
 
 void FaceMoveAction::Undo() {
-//    Face *f = model_->GetFace(fid_);
-//    simd_float3 *v1 = model_->GetVertex(f->vertices[0]);
-//    simd_float3 *v2 = model_->GetVertex(f->vertices[1]);
-//    simd_float3 *v3 = model_->GetVertex(f->vertices[2]);
-//    v1->x -= movement_vector_.x;
-//    v1->y -= movement_vector_.y;
-//    v1->z -= movement_vector_.z;
-//    
-//    v2->x -= movement_vector_.x;
-//    v2->y -= movement_vector_.y;
-//    v2->z -= movement_vector_.z;
-//    
-//    v3->x -= movement_vector_.x;
-//    v3->y -= movement_vector_.y;
-//    v3->z -= movement_vector_.z;
+    Face *f = model_->GetFace(fid_);
+    
+    model_->MoveVertex(f->vertices[0], -movement_vector_.x, -movement_vector_.y, -movement_vector_.z);
+    model_->MoveVertex(f->vertices[1], -movement_vector_.x, -movement_vector_.y, -movement_vector_.z);
+    model_->MoveVertex(f->vertices[2], -movement_vector_.x, -movement_vector_.y, -movement_vector_.z);
 }
 
 FaceMoveAction::~FaceMoveAction () {

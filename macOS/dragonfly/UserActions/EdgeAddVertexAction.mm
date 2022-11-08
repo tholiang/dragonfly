@@ -12,14 +12,6 @@ EdgeAddVertexAction::EdgeAddVertexAction(Model *m, int vid_new, int vid1, int vi
     type_ = "Edge Add Vertex Action";
 }
 
-simd_float3 EdgeAddVertexAction::BiAvg (simd_float3 p1, simd_float3 p2) {
-    float x = (p1.x + p2.x)/2;
-    float y = (p1.y + p2.y)/2;
-    float z = (p1.z + p2.z)/2;
-    
-    return simd_make_float3(x, y, z);
-}
-
 void EdgeAddVertexAction::BeginRecording() {
     fids_ = model_->GetEdgeFaces(vid1_, vid2_);
     original_face_size_ = model_->NumFaces();
@@ -36,12 +28,12 @@ void EdgeAddVertexAction::EndRecording() {
 }
 
 void EdgeAddVertexAction::Do() {
-    /*fids_ = model_->GetEdgeFaces(vid1_, vid2_);
+    fids_ = model_->GetEdgeFaces(vid1_, vid2_);
     
-    simd_float3 *v1 = model_->GetVertex(vid1_);
-    simd_float3 *v2 = model_->GetVertex(vid2_);
-    simd_float3 new_v = BiAvg(*v1, *v2);
-    model_->InsertVertex(new_v, vid_new_);
+    simd_float3 v1 = model_->GetVertex(vid1_);
+    simd_float3 v2 = model_->GetVertex(vid2_);
+    simd_float3 new_v = DragonflyUtils::BiAvg(v1, v2);
+    model_->InsertVertex(new_v.x, new_v.y, new_v.z, vid_new_);
     
     for (std::size_t i = 0; i < fids_.size(); i++) {
         unsigned long fid = fids_[i];
@@ -77,14 +69,14 @@ void EdgeAddVertexAction::Do() {
             f->vertices[1] = vid_new_;
             f->vertices[2] = other_vid;
             
-            Face f2 = Face();
-            f2.vertices[0] = vid2_;
-            f2.vertices[1] = vid_new_;
-            f2.vertices[2] = other_vid;
-            f2.color = f->color;
+            Face *f2 = new Face();
+            f2->vertices[0] = vid2_;
+            f2->vertices[1] = vid_new_;
+            f2->vertices[2] = other_vid;
+            f2->color = f->color;
             model_->InsertFace(f2, new_fids_.at(i));
         }
-    }*/
+    }
 }
 
 void EdgeAddVertexAction::Undo() {

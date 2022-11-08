@@ -14,7 +14,6 @@
 class FaceAddVertexAction : public UserAction {
 public:
     FaceAddVertexAction(Model *m, int vid, int fid);
-    simd_float3 TriAvg (simd_float3 p1, simd_float3 p2, simd_float3 p3);
     virtual void BeginRecording();
     virtual void EndRecording();
     virtual void Do();

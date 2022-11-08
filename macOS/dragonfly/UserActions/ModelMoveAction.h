@@ -11,18 +11,19 @@
 #include <vector>
 
 #include "UserAction.h"
+#include "../Modeling/Scene.h"
 #include "../Modeling/Model.h"
 
 class ModelMoveAction : public UserAction {
 public:
-    ModelMoveAction(std::vector<ModelUniforms> *uniforms, int mid);
+    ModelMoveAction(Scene *scene, int mid);
     virtual void BeginRecording();
     virtual void EndRecording();
     virtual void Do();
     virtual void Undo();
     virtual ~ModelMoveAction();
 private:
-    std::vector<ModelUniforms> *uniforms_;
+    Scene *scene_;
     int mid_;
     simd_float3 initial_location_;
     simd_float3 movement_vector_;

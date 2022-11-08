@@ -9,7 +9,7 @@
 #include "Arrow.h"
 
 Arrow::Arrow(uint32 mid) : Model(mid) {
-    name = "arrow"+std::to_string(mid);
+    name_ = "arrow"+std::to_string(mid);
     color = simd_make_float4(1, 0, 0, 0); // default red
     MakeArrow();
 }

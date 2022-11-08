@@ -39,6 +39,11 @@
 		D2E399A62874B399003381DD /* Scene.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2E399A52874B399003381DD /* Scene.mm */; };
 		D2E399AA2874BD59003381DD /* Scheme.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2E399A82874BD59003381DD /* Scheme.mm */; };
 		D2E399AD2874C877003381DD /* ComputePipeline.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2E399AC2874C877003381DD /* ComputePipeline.mm */; };
+		D2E399B02874DEC4003381DD /* RenderPipeline.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2E399AF2874DEC4003381DD /* RenderPipeline.mm */; };
+		D2E399B62874E998003381DD /* EditFEVScheme.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2E399B52874E997003381DD /* EditFEVScheme.mm */; };
+		D2E399B82874EDA5003381DD /* EditNodeScheme.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2E399B72874EDA5003381DD /* EditNodeScheme.mm */; };
+		D2E399BC2874F6E8003381DD /* EditModelScheme.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2E399BB2874F6E8003381DD /* EditModelScheme.mm */; };
+		D2E399BF2874FDA5003381DD /* Utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2E399BE2874FDA5003381DD /* Utils.mm */; };
 		D2EAF75327914118002DE553 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D2EAF75227914118002DE553 /* AppDelegate.m */; };
 		D2EAF75827914119002DE553 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D2EAF75727914119002DE553 /* Assets.xcassets */; };
 		D2EAF75D27914119002DE553 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2EAF75C27914119002DE553 /* main.mm */; };
@@ -47,6 +52,8 @@
 		D2EAF77427914119002DE553 /* dragonflyUITestsLaunchTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D2EAF77327914119002DE553 /* dragonflyUITestsLaunchTests.m */; };
 		D2EAF92427914191002DE553 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2EAF92327914191002DE553 /* Metal.framework */; platformFilter = maccatalyst; };
 		D2EAF92627914197002DE553 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2EAF92527914197002DE553 /* QuartzCore.framework */; platformFilter = maccatalyst; };
+		D2F0B0CF28985CF700057FD6 /* Engine.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2F0B0CE28985CF200057FD6 /* Engine.mm */; };
+		D2F0B0D2289878F600057FD6 /* SchemeController.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2F0B0D1289878F300057FD6 /* SchemeController.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -135,6 +142,16 @@
 		D2E399A92874BD59003381DD /* Scheme.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Scheme.h; sourceTree = "<group>"; };
 		D2E399AC2874C877003381DD /* ComputePipeline.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ComputePipeline.mm; sourceTree = "<group>"; };
 		D2E399AE2874C883003381DD /* ComputePipeline.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ComputePipeline.h; sourceTree = "<group>"; };
+		D2E399AF2874DEC4003381DD /* RenderPipeline.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = RenderPipeline.mm; sourceTree = "<group>"; };
+		D2E399B32874DF29003381DD /* RenderPipeline.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RenderPipeline.h; sourceTree = "<group>"; };
+		D2E399B42874E883003381DD /* EditFEVScheme.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EditFEVScheme.h; sourceTree = "<group>"; };
+		D2E399B52874E997003381DD /* EditFEVScheme.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = EditFEVScheme.mm; sourceTree = "<group>"; };
+		D2E399B72874EDA5003381DD /* EditNodeScheme.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = EditNodeScheme.mm; sourceTree = "<group>"; };
+		D2E399B92874EDAE003381DD /* EditNodeScheme.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EditNodeScheme.h; sourceTree = "<group>"; };
+		D2E399BA2874F6D8003381DD /* EditModelScheme.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EditModelScheme.h; sourceTree = "<group>"; };
+		D2E399BB2874F6E8003381DD /* EditModelScheme.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = EditModelScheme.mm; sourceTree = "<group>"; };
+		D2E399BD2874FD95003381DD /* Utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
+		D2E399BE2874FDA5003381DD /* Utils.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Utils.mm; sourceTree = "<group>"; };
 		D2EAF74E27914118002DE553 /* dragonfly.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = dragonfly.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2EAF75127914118002DE553 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		D2EAF75227914118002DE553 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -148,6 +165,10 @@
 		D2EAF77327914119002DE553 /* dragonflyUITestsLaunchTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = dragonflyUITestsLaunchTests.m; sourceTree = "<group>"; };
 		D2EAF92327914191002DE553 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		D2EAF92527914197002DE553 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		D2F0B0CD28985CE200057FD6 /* Engine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Engine.h; sourceTree = "<group>"; };
+		D2F0B0CE28985CF200057FD6 /* Engine.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Engine.mm; sourceTree = "<group>"; };
+		D2F0B0D0289878E300057FD6 /* SchemeController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SchemeController.h; sourceTree = "<group>"; };
+		D2F0B0D1289878F300057FD6 /* SchemeController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = SchemeController.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -264,6 +285,8 @@
 				D2A99F7D2792BF7D00E85036 /* Model.mm */,
 				D203034F27D466F4006667BA /* Arrow.h */,
 				D203035027D4670E006667BA /* Arrow.mm */,
+				D2E399A72874B3AF003381DD /* Scene.h */,
+				D2E399A52874B399003381DD /* Scene.mm */,
 			);
 			path = Modeling;
 			sourceTree = "<group>";
@@ -271,10 +294,29 @@
 		D2E399AB2874BEBE003381DD /* Schemes */ = {
 			isa = PBXGroup;
 			children = (
+				D2F0B0D0289878E300057FD6 /* SchemeController.h */,
+				D2F0B0D1289878F300057FD6 /* SchemeController.mm */,
 				D2E399A92874BD59003381DD /* Scheme.h */,
 				D2E399A82874BD59003381DD /* Scheme.mm */,
+				D2E399BA2874F6D8003381DD /* EditModelScheme.h */,
+				D2E399BB2874F6E8003381DD /* EditModelScheme.mm */,
+				D2E399B42874E883003381DD /* EditFEVScheme.h */,
+				D2E399B52874E997003381DD /* EditFEVScheme.mm */,
+				D2E399B92874EDAE003381DD /* EditNodeScheme.h */,
+				D2E399B72874EDA5003381DD /* EditNodeScheme.mm */,
 			);
 			path = Schemes;
+			sourceTree = "<group>";
+		};
+		D2E399B12874DED4003381DD /* Pipelines */ = {
+			isa = PBXGroup;
+			children = (
+				D2E399AE2874C883003381DD /* ComputePipeline.h */,
+				D2E399AC2874C877003381DD /* ComputePipeline.mm */,
+				D2E399B32874DF29003381DD /* RenderPipeline.h */,
+				D2E399AF2874DEC4003381DD /* RenderPipeline.mm */,
+			);
+			path = Pipelines;
 			sourceTree = "<group>";
 		};
 		D2EAF74527914118002DE553 = {
@@ -307,13 +349,14 @@
 				D2EAF75127914118002DE553 /* AppDelegate.h */,
 				D2EAF75227914118002DE553 /* AppDelegate.m */,
 				D2EAF75727914119002DE553 /* Assets.xcassets */,
+				D2E399BD2874FD95003381DD /* Utils.h */,
+				D2E399BE2874FDA5003381DD /* Utils.mm */,
 				D20C0B33284539C700F5DC08 /* UserActions */,
 				D20C0B34284539D300F5DC08 /* Modeling */,
 				D2E399AB2874BEBE003381DD /* Schemes */,
-				D2E399A72874B3AF003381DD /* Scene.h */,
-				D2E399A52874B399003381DD /* Scene.mm */,
-				D2E399AE2874C883003381DD /* ComputePipeline.h */,
-				D2E399AC2874C877003381DD /* ComputePipeline.mm */,
+				D2E399B12874DED4003381DD /* Pipelines */,
+				D2F0B0CD28985CE200057FD6 /* Engine.h */,
+				D2F0B0CE28985CF200057FD6 /* Engine.mm */,
 				D2EAF75C27914119002DE553 /* main.mm */,
 				D224A4652791464D0099CF9D /* Processing.metal */,
 			);
@@ -487,13 +530,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D2E399BF2874FDA5003381DD /* Utils.mm in Sources */,
+				D2E399BC2874F6E8003381DD /* EditModelScheme.mm in Sources */,
 				D2A99F7E2792BF7D00E85036 /* Model.mm in Sources */,
 				D2047B6C2793B1A000B4B442 /* imgui.cpp in Sources */,
 				D20C0B422845E20400F5DC08 /* EdgeAddVertexAction.mm in Sources */,
 				D2EAF75D27914119002DE553 /* main.mm in Sources */,
 				D2E399A62874B399003381DD /* Scene.mm in Sources */,
 				D2047B522793B1A000B4B442 /* imgui_impl_metal.mm in Sources */,
+				D2E399B62874E998003381DD /* EditFEVScheme.mm in Sources */,
 				D2047B622793B1A000B4B442 /* imgui_impl_sdl.cpp in Sources */,
+				D2E399B82874EDA5003381DD /* EditNodeScheme.mm in Sources */,
 				D2E399AA2874BD59003381DD /* Scheme.mm in Sources */,
 				D20C0B3C2845618500F5DC08 /* EdgeMoveAction.mm in Sources */,
 				D2047BDE2793B1A000B4B442 /* imgui_draw.cpp in Sources */,
@@ -504,8 +551,11 @@
 				D2047B4E2793B1A000B4B442 /* imgui_widgets.cpp in Sources */,
 				D20C0B30284538AD00F5DC08 /* UserAction.mm in Sources */,
 				D203035127D4670E006667BA /* Arrow.mm in Sources */,
+				D2F0B0CF28985CF700057FD6 /* Engine.mm in Sources */,
 				D2D9BC612846FE8400D22480 /* ModelMoveAction.mm in Sources */,
+				D2E399B02874DEC4003381DD /* RenderPipeline.mm in Sources */,
 				D2047BDD2793B1A000B4B442 /* imgui_demo.cpp in Sources */,
+				D2F0B0D2289878F600057FD6 /* SchemeController.mm in Sources */,
 				D20C0B392845542C00F5DC08 /* FaceMoveAction.mm in Sources */,
 				D20C0B3628453C2C00F5DC08 /* VertexMoveAction.mm in Sources */,
 				D2EAF75327914118002DE553 /* AppDelegate.m in Sources */,
