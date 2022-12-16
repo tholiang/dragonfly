@@ -24,7 +24,8 @@ namespace DragonflyUtils {
     simd_float3 TriAvg (simd_float3 p1, simd_float3 p2, simd_float3 p3);
     simd_float3 BiAvg (simd_float3 p1, simd_float3 p2);
     float sign (simd_float2 p1, simd_float3 p2, simd_float3 p3);
-    float dist (simd_float2 p1, simd_float3 p2);
+    float dist2to3 (simd_float2 p1, simd_float3 p2);
+    float dist3to3 (simd_float3 p1, simd_float3 p2);
     float WeightedZ (simd_float2 click, simd_float3 p1, simd_float3 p2, simd_float3 p3);
     simd_float3 CrossProduct (simd_float3 p1, simd_float3 p2);
     bool InTriangle(vector_float2 point, simd_float3 v1, simd_float3 v2, simd_float3 v3);

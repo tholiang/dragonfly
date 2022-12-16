@@ -31,6 +31,7 @@ struct Face {
 };
 
 struct Node {
+    int locked_to = -1;
     simd_float3 pos;
     simd_float3 angle; // euler angles zyx
 };
@@ -106,6 +107,8 @@ public:
     
     void DetermineLinkWeights(Vertex loc, unsigned long vid);
     
+    void LockNodeToNode(unsigned nid1, unsigned nid2);
+    
     void MakeCube();
     
     void FromFile(std::string path);
@@ -113,7 +116,11 @@ public:
     void InsertVertex(float x, float y, float z, int vid);
     void InsertFace(Face *face, int fid);
     
-    void MoveVertex(unsigned vid, float dx, float dy, float dz);
+    void MoveVertexBy(unsigned vid, float dx, float dy, float dz);
+    void MoveNodeBy(unsigned nid, float dx, float dy, float dz);
+    
+    void MoveVertexTo(unsigned vid, float x, float y, float z);
+    void MoveNodeTo(unsigned nid, float x, float y, float z);
     
     void RemoveVertex(int vid);
     void RemoveFace(int fid);

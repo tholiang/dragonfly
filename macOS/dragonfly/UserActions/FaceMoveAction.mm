@@ -31,17 +31,17 @@ void FaceMoveAction::EndRecording() {
 void FaceMoveAction::Do() {
     Face *f = model_->GetFace(fid_);
     
-    model_->MoveVertex(f->vertices[0], movement_vector_.x, movement_vector_.y, movement_vector_.z);
-    model_->MoveVertex(f->vertices[1], movement_vector_.x, movement_vector_.y, movement_vector_.z);
-    model_->MoveVertex(f->vertices[2], movement_vector_.x, movement_vector_.y, movement_vector_.z);
+    model_->MoveVertexBy(f->vertices[0], movement_vector_.x, movement_vector_.y, movement_vector_.z);
+    model_->MoveVertexBy(f->vertices[1], movement_vector_.x, movement_vector_.y, movement_vector_.z);
+    model_->MoveVertexBy(f->vertices[2], movement_vector_.x, movement_vector_.y, movement_vector_.z);
 }
 
 void FaceMoveAction::Undo() {
     Face *f = model_->GetFace(fid_);
     
-    model_->MoveVertex(f->vertices[0], -movement_vector_.x, -movement_vector_.y, -movement_vector_.z);
-    model_->MoveVertex(f->vertices[1], -movement_vector_.x, -movement_vector_.y, -movement_vector_.z);
-    model_->MoveVertex(f->vertices[2], -movement_vector_.x, -movement_vector_.y, -movement_vector_.z);
+    model_->MoveVertexBy(f->vertices[0], -movement_vector_.x, -movement_vector_.y, -movement_vector_.z);
+    model_->MoveVertexBy(f->vertices[1], -movement_vector_.x, -movement_vector_.y, -movement_vector_.z);
+    model_->MoveVertexBy(f->vertices[2], -movement_vector_.x, -movement_vector_.y, -movement_vector_.z);
 }
 
 FaceMoveAction::~FaceMoveAction () {

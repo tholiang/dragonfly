@@ -114,11 +114,7 @@ void EditNodeScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
                 Model *model = scene_->GetModel(selected_model_);
                 unsigned long modelNodeId = selected_node_ - model->FaceStart();
                 if (modelNodeId > 0) {
-                    Node *selected = model->GetNode(modelNodeId);
-                    
-                    selected->pos.x += x_vec;
-                    selected->pos.y += y_vec;
-                    selected->pos.z += z_vec;
+                    model->MoveNodeBy(modelNodeId, x_vec, y_vec, z_vec);
                 }
             }
         }
@@ -174,7 +170,7 @@ std::pair<std::pair<int, int>, float> EditNodeScheme::NodeClicked(simd_float2 lo
             simd_float2 scaled_click = simd_make_float2(loc.x * window_width_, loc.y * window_height_);
             simd_float3 scaled_node = simd_make_float3(scene_models_projected_nodes_[nid].x * window_width_, scene_models_projected_nodes_[nid].y * window_height_, scene_models_projected_nodes_[nid].z);
             
-            float d = dist(scaled_click, scaled_node);
+            float d = dist2to3(scaled_click, scaled_node);
             
             if (d <= radius) {
                 if (minZ == -1 || scene_models_projected_nodes_[nid].z < minZ) {
@@ -362,16 +358,25 @@ void EditNodeScheme::NodeEditMenu() {
     }
     
     ImGui::SetCursorPos(ImVec2(50, 290));
+    ImGui::Text("lock to: ");
+    ImGui::SetCursorPos(ImVec2(90, 290));
+    std::string locked_to = TextField(std::to_string(node->locked_to), "##nodelock");
+    if (isUnsignedLong(locked_to) && selected_node_ != model->NodeStart()) {
+        unsigned long new_lock = std::stoul(locked_to);
+        model->LockNodeToNode(selected_node_ - model->NodeStart(), new_lock);
+    }
+    
+    ImGui::SetCursorPos(ImVec2(50, 320));
     ImGui::Text("keyframe: ");
-    ImGui::SetCursorPos(ImVec2(70, 310));
-    ImGui::Text("animation id: ");
-    ImGui::SetCursorPos(ImVec2(120, 310));
-    std::string aidin = TextField(std::to_string(wanted_aid), "##naid");
     ImGui::SetCursorPos(ImVec2(70, 340));
-    ImGui::Text("time: ");
-    ImGui::SetCursorPos(ImVec2(100, 340));
-    std::string timein = TextField(std::to_string(wanted_time), "##natime");
+    ImGui::Text("animation id: ");
+    ImGui::SetCursorPos(ImVec2(120, 340));
+    std::string aidin = TextField(std::to_string(wanted_aid), "##naid");
     ImGui::SetCursorPos(ImVec2(70, 370));
+    ImGui::Text("time: ");
+    ImGui::SetCursorPos(ImVec2(100, 370));
+    std::string timein = TextField(std::to_string(wanted_time), "##natime");
+    ImGui::SetCursorPos(ImVec2(70, 400));
     if (isUnsignedLong(aidin) && isFloat(timein)) {
         wanted_aid = std::stoul(aidin);
         wanted_time = std::stof(timein);

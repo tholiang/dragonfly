@@ -27,13 +27,13 @@ void EdgeMoveAction::EndRecording() {
 }
 
 void EdgeMoveAction::Do() {
-    model_->MoveVertex(vid1_, movement_vector_.x, movement_vector_.y, movement_vector_.z);
-    model_->MoveVertex(vid2_, movement_vector_.x, movement_vector_.y, movement_vector_.z);
+    model_->MoveVertexBy(vid1_, movement_vector_.x, movement_vector_.y, movement_vector_.z);
+    model_->MoveVertexBy(vid2_, movement_vector_.x, movement_vector_.y, movement_vector_.z);
 }
 
 void EdgeMoveAction::Undo() {
-    model_->MoveVertex(vid1_, -movement_vector_.x, -movement_vector_.y, -movement_vector_.z);
-    model_->MoveVertex(vid2_, -movement_vector_.x, -movement_vector_.y, -movement_vector_.z);
+    model_->MoveVertexBy(vid1_, -movement_vector_.x, -movement_vector_.y, -movement_vector_.z);
+    model_->MoveVertexBy(vid2_, -movement_vector_.x, -movement_vector_.y, -movement_vector_.z);
 }
 
 EdgeMoveAction::~EdgeMoveAction () {

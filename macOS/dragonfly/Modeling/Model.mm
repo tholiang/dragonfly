@@ -285,6 +285,10 @@ void Model::DetermineLinkWeights(Vertex loc, unsigned long vid) {
     nvlinks.at(vid*2 + 1) = link2;
 }
 
+void Model::LockNodeToNode(unsigned nid1, unsigned nid2) {
+    nodes[nid1]->locked_to = nid2;
+}
+
 void Model::MakeCube() {
     MakeVertex(0, 0, 0);
     MakeVertex(1, 0, 0);
@@ -412,7 +416,7 @@ void Model::InsertFace(Face *face, int fid) {
     }
 }
 
-void Model::MoveVertex(unsigned vid, float dx, float dy, float dz) {
+void Model::MoveVertexBy(unsigned vid, float dx, float dy, float dz) {
     nvlinks[vid*2]->vector.x += dx;
     nvlinks[vid*2]->vector.y += dy;
     nvlinks[vid*2]->vector.z += dz;
@@ -420,6 +424,53 @@ void Model::MoveVertex(unsigned vid, float dx, float dy, float dz) {
     nvlinks[vid*2 + 1]->vector.x += dx;
     nvlinks[vid*2 + 1]->vector.y += dy;
     nvlinks[vid*2 + 1]->vector.z += dz;
+}
+
+void Model::MoveNodeBy(unsigned nid, float dx, float dy, float dz) {
+    float new_x = nodes[nid]->pos.x + dx;
+    float new_y = nodes[nid]->pos.y + dy;
+    float new_z = nodes[nid]->pos.z + dz;
+    
+    if (nodes[nid]->locked_to == -1) {
+        nodes[nid]->pos.x = new_x;
+        nodes[nid]->pos.y = new_y;
+        nodes[nid]->pos.z = new_z;
+    } else {
+        float curr_dist = dist3to3(nodes[nid]->pos, nodes[nodes[nid]->locked_to]->pos);
+        float new_dist = dist3to3(simd_make_float3(new_x, new_y, new_z), nodes[nodes[nid]->locked_to]->pos);
+        nodes[nid]->pos.x = new_x * curr_dist / new_dist;
+        nodes[nid]->pos.y = new_y * curr_dist / new_dist;
+        nodes[nid]->pos.z = new_z * curr_dist / new_dist;
+    }
+}
+
+void Model::MoveVertexTo(unsigned vid, float x, float y, float z) {
+    int nid1 = nvlinks[vid*2]->nid;
+    float dx = x - (nodes[nid1]->pos.x + nvlinks[vid*2]->vector.x);
+    float dy = y - (nodes[nid1]->pos.y + nvlinks[vid*2]->vector.y);
+    float dz = z - (nodes[nid1]->pos.z + nvlinks[vid*2]->vector.z);
+    
+    nvlinks[vid*2]->vector.x += dx;
+    nvlinks[vid*2]->vector.y += dy;
+    nvlinks[vid*2]->vector.z += dz;
+    
+    nvlinks[vid*2 + 1]->vector.x += dx;
+    nvlinks[vid*2 + 1]->vector.y += dy;
+    nvlinks[vid*2 + 1]->vector.z += dz;
+}
+
+void Model::MoveNodeTo(unsigned nid, float x, float y, float z) {
+    if (nodes[nid]->locked_to == -1) {
+        nodes[nid]->pos.x = x;
+        nodes[nid]->pos.y = y;
+        nodes[nid]->pos.z = z;
+    } else {
+        float curr_dist = dist3to3(nodes[nid]->pos, nodes[nodes[nid]->locked_to]->pos);
+        float new_dist = dist3to3(simd_make_float3(x, y, z), nodes[nodes[nid]->locked_to]->pos);
+        nodes[nid]->pos.x = x * new_dist / curr_dist;
+        nodes[nid]->pos.y = y * new_dist / curr_dist;
+        nodes[nid]->pos.z = z * new_dist / curr_dist;
+    }
 }
 
 void Model::RemoveVertex(int vid) {

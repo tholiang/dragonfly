@@ -27,11 +27,11 @@ void VertexMoveAction::EndRecording() {
 }
 
 void VertexMoveAction::Do() {
-    model_->MoveVertex(vid_, movement_vector_.x, movement_vector_.y, movement_vector_.z);
+    model_->MoveVertexBy(vid_, movement_vector_.x, movement_vector_.y, movement_vector_.z);
 }
 
 void VertexMoveAction::Undo() {
-    model_->MoveVertex(vid_, -movement_vector_.x, -movement_vector_.y, -movement_vector_.z);
+    model_->MoveVertexBy(vid_, -movement_vector_.x, -movement_vector_.y, -movement_vector_.z);
 }
 
 VertexMoveAction::~VertexMoveAction () {

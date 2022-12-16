@@ -27,6 +27,7 @@ struct Face {
 };
 
 struct Node {
+    int locked_to;
     vector_float3 pos;
     vector_float3 angle; // euler angles zyx
 };

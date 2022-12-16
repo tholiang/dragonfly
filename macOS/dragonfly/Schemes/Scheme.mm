@@ -304,8 +304,8 @@ NodeRenderUniforms *Scheme::GetNodeRenderUniforms() {
 
 void Scheme::Undo() {
     if (!past_actions.empty()) {
-        UserAction *action = past_actions.front();
-        past_actions.pop_front();
+        UserAction *action = past_actions.back();
+        past_actions.pop_back();
         action->Undo();
         delete action;
         

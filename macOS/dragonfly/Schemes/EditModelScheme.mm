@@ -81,8 +81,8 @@ void EditModelScheme::HandleMouseUp(simd_float2 loc, bool left) {
 }
 
 bool EditModelScheme::ClickOnScene(simd_float2 loc) {
-    int pixelX = window_width_ * (1-loc.x)/2;
-    int pixelY = window_height_ * (1-loc.y)/2;
+    int pixelX = window_width_ * (loc.x+1)/2;
+    int pixelY = window_height_ * (loc.y+1)/2;
     
     if (pixelX < UI_start_.x || pixelX > UI_start_.x + window_width_ - right_menu_width_) {
         return false;

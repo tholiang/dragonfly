@@ -63,14 +63,18 @@ float DragonflyUtils::sign (simd_float2 p1, simd_float3 p2, simd_float3 p3) {
     return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
 }
 
-float DragonflyUtils::dist (simd_float2 p1, simd_float3 p2) {
+float DragonflyUtils::dist2to3 (simd_float2 p1, simd_float3 p2) {
     return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
 }
 
+float DragonflyUtils::dist3to3 (simd_float3 p1, simd_float3 p2) {
+    return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2) + pow(p1.z - p2.z, 2));
+}
+
 float DragonflyUtils::WeightedZ (simd_float2 click, simd_float3 p1, simd_float3 p2, simd_float3 p3) {
-    float dist1 = dist(click, p1);
-    float dist2 = dist(click, p2);
-    float dist3 = dist(click, p3);
+    float dist1 = dist2to3(click, p1);
+    float dist2 = dist2to3(click, p2);
+    float dist3 = dist2to3(click, p3);
     
     float total_dist = dist1 + dist2 + dist3;
     float weightedZ = p1.z*(dist1/total_dist);

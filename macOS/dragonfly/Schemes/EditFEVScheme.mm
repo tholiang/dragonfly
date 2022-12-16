@@ -224,8 +224,8 @@ std::pair<std::pair<std::pair<int, int>, int>, float> EditFEVScheme::EdgeClicked
                 Vertex v2sub = simd_make_float3(v2.x-edgeVec.y, v2.y+edgeVec.x, v2.z);
                 
                 if (InTriangle(loc, v1plus, v1sub, v2plus) || InTriangle(loc, v1sub, v2sub, v2plus)) {
-                    float dist1 = dist(loc, v1);
-                    float dist2 = dist(loc, v2);
+                    float dist1 = dist2to3(loc, v1);
+                    float dist2 = dist2to3(loc, v2);
                     
                     float total_dist = dist1 + dist2;
                     float weightedZ = v1.z*(dist1/total_dist);
@@ -444,23 +444,23 @@ void EditFEVScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
                 unsigned long modelFaceID = selected_face - model->FaceStart();
                 Face *selected = model->GetFace(modelFaceID);
                 
-                model->MoveVertex(selected->vertices[0], x_vec, y_vec, z_vec);
-                model->MoveVertex(selected->vertices[1], x_vec, y_vec, z_vec);
-                model->MoveVertex(selected->vertices[2], x_vec, y_vec, z_vec);
+                model->MoveVertexBy(selected->vertices[0], x_vec, y_vec, z_vec);
+                model->MoveVertexBy(selected->vertices[1], x_vec, y_vec, z_vec);
+                model->MoveVertexBy(selected->vertices[2], x_vec, y_vec, z_vec);
                 
                 should_reset_static_buffers = true;
             } else if (selected_vertex != -1) {
                 Model *model = scene_->GetModel(selected_model);
                 unsigned long modelVertexID = selected_vertex - model->VertexStart();
-                model->MoveVertex(modelVertexID, x_vec, y_vec, z_vec);
+                model->MoveVertexBy(modelVertexID, x_vec, y_vec, z_vec);
                 
                 should_reset_static_buffers = true;
             } else if (selected_edge.x != -1) {
                 Model *model = scene_->GetModel(selected_model);
                 unsigned long modelVertex1ID = selected_edge.x - model->VertexStart();
                 unsigned long modelVertex2ID = selected_edge.y - model->VertexStart();
-                model->MoveVertex(modelVertex1ID, x_vec, y_vec, z_vec);
-                model->MoveVertex(modelVertex2ID, x_vec, y_vec, z_vec);
+                model->MoveVertexBy(modelVertex1ID, x_vec, y_vec, z_vec);
+                model->MoveVertexBy(modelVertex2ID, x_vec, y_vec, z_vec);
                 
                 should_reset_static_buffers = true;
             }
