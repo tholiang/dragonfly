@@ -179,6 +179,20 @@ void Scene::NewModelFromFile(std::string path) {
     model_uniforms.push_back(new_uniform);
 }
 
+void Scene::NewModelFromPointData(std::string path) {
+    PointData *pd = PointDataFromFile(path);
+    Model *m = ModelFromPointData(pd);
+    delete pd;
+    m->SetId(models.size());
+    models.push_back(m);
+    ModelUniforms new_uniform;
+    new_uniform.position = simd_make_float3(0, 0, 0);
+    new_uniform.rotate_origin = simd_make_float3(0, 0, 0);
+    new_uniform.angle = simd_make_float3(0, 0, 0);
+    
+    model_uniforms.push_back(new_uniform);
+}
+
 unsigned long Scene::NumModels() {
     return models.size();
 }

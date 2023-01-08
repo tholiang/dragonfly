@@ -44,9 +44,10 @@ int RenderPipeline::init () {
     // get screen size
     SDL_DisplayMode DM;
     SDL_GetCurrentDisplayMode(0, &DM);
-    auto width = DM.w;
-    auto height = DM.h;
+    auto width = 1080; //DM.w;
+    auto height = 700; //DM.h;
     
+    std::cout<<width<<" "<<height<<std::endl;
     window = SDL_CreateWindow("dragonfly", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     if (window == NULL)
     {

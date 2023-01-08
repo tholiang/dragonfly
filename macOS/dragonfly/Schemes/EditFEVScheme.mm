@@ -200,7 +200,7 @@ std::pair<std::pair<std::pair<int, int>, int>, float> EditFEVScheme::EdgeClicked
         Model *m = scene_->GetModel(mid);
         int fid_end = fid + m->NumFaces();
         
-        for (; fid < scene_face_length_; fid++) {
+        for (; fid < fid_end; fid++) {
             Face face = scene_models_faces_[fid];
             
             for (int vid = 0; vid < 3; vid++) {
@@ -243,7 +243,6 @@ std::pair<std::pair<std::pair<int, int>, int>, float> EditFEVScheme::EdgeClicked
         }
     }
     
-    
     return std::make_pair(std::make_pair(std::make_pair(clickedv1, clickedv2), clickedMid), minZ);
 }
 
@@ -281,14 +280,16 @@ void EditFEVScheme::HandleSelection(simd_float2 loc) {
             selected_arrow = controls_selection.first;
             minZ = controls_selection.second;
             
+            Model *m = scene_->GetModel(selected_model);
+            
             if (selected_face != -1) {
-                current_action = new FaceMoveAction(scene_->GetModel(selected_model), selected_face);
+                current_action = new FaceMoveAction(m, selected_face - m->FaceStart());
                 current_action->BeginRecording();
             } else if (selected_edge.x != -1) {
-                current_action = new EdgeMoveAction(scene_->GetModel(selected_model), selected_edge.x, selected_edge.y);
+                current_action = new EdgeMoveAction(m, selected_edge.x - m->VertexStart(), selected_edge.y - m->VertexStart());
                 current_action->BeginRecording();
             } else if (selected_vertex != -1) {
-                current_action = new VertexMoveAction(scene_->GetModel(selected_model), selected_vertex);
+                current_action = new VertexMoveAction(m, selected_vertex - m->VertexStart());
                 current_action->BeginRecording();
             }
         }

@@ -696,6 +696,10 @@ unsigned long Model::NumNodes() {
     return nodes.size();
 }
 
+void Model::SetId(uint32_t mid) {
+    modelID = mid;
+}
+
 void Model::SetName(std::string name) {
     name_ = name;
 }

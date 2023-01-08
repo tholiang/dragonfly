@@ -266,6 +266,14 @@ void Scheme::NewModelFromFile(std::string path) {
     should_reset_static_buffers = true;
 }
 
+void Scheme::NewModelFromPointData(std::string path) {
+    scene_->NewModelFromPointData(path);
+    
+    CalculateCounts();
+    should_reset_empty_buffers = true;
+    should_reset_static_buffers = true;
+}
+
 void Scheme::UpdateUIVars() {
     window_width_ = ImGui::GetIO().DisplaySize.x;
     window_height_ = ImGui::GetIO().DisplaySize.y;

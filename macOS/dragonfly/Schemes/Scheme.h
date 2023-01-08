@@ -19,7 +19,7 @@
 
 #include "imgui.h"
 
-#include "../Utils.h"
+#include "../Utils/Utils.h"
 
 #include "../Modeling/Model.h"
 #include "../Modeling/Scene.h"
@@ -181,6 +181,7 @@ public:
     
     void CreateNewModel();
     void NewModelFromFile(std::string path);
+    void NewModelFromPointData(std::string path);
     
     virtual void BuildUI() = 0;
     

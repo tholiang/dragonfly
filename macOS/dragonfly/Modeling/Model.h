@@ -14,7 +14,7 @@
 #include <simd/SIMD.h>
 #include <fstream>
 
-#include "../Utils.h"
+#include "../Utils/Utils.h"
 
 typedef simd_float3 Vertex;
 
@@ -158,6 +158,8 @@ public:
     unsigned long NumVertices();
     
     unsigned long NumNodes();
+    
+    void SetId(uint32_t mid);
     
     void SetName(std::string name);
     std::string GetName();

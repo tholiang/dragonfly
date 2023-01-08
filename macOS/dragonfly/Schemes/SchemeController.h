@@ -27,6 +27,7 @@ private:
     bool saving_model = false;
     bool saving_scene = false;
     bool importing_model = false;
+    bool importing_pointdata = false;
     bool importing_scene = false;
     
     void MenuBar();

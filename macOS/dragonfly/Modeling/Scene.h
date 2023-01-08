@@ -18,6 +18,7 @@
 #include <sys/types.h>
 
 #include "Model.h"
+#include "../Utils/Project2D.h"
 
 struct ModelUniforms {
     simd_float3 position;
@@ -51,6 +52,7 @@ public:
     
     void CreateNewModel();
     void NewModelFromFile(std::string path);
+    void NewModelFromPointData(std::string path);
     
     unsigned long NumModels();
     

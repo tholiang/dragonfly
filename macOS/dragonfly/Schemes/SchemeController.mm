@@ -63,6 +63,14 @@ void SchemeController::MenuBar() {
                 fileDialog.SetTypeFilters({ ".drgn" });
                 fileDialog.Open();
             }
+            if (ImGui::MenuItem("Import PointData", ""))   {
+                importing_pointdata = true;
+                
+                fileDialog = ImGui::FileBrowser(ImGuiFileBrowserFlags_CloseOnEsc);
+                fileDialog.SetTitle("Importing PointData");
+                fileDialog.SetTypeFilters({ ".drpd" });
+                fileDialog.Open();
+            }
             if (ImGui::MenuItem("Import Scene", ""))   {
                 importing_scene = true;
                 
@@ -109,7 +117,7 @@ void SchemeController::MenuBar() {
 }
 
 void SchemeController::FileDialog() {
-    if (importing_model || importing_scene || saving_model || saving_scene) {
+    if (importing_model || importing_pointdata || importing_scene || saving_model || saving_scene) {
         fileDialog.Display();
     }
     
@@ -130,6 +138,14 @@ void SchemeController::FileDialog() {
             fileDialog.ClearSelected();
             fileDialog.Close();
             importing_model = false;
+        } else if (importing_pointdata) {
+            std::cout << "Selected filename" << fileDialog.GetSelected().string() << std::endl;
+            
+            scheme_->NewModelFromPointData(fileDialog.GetSelected().string());
+            
+            fileDialog.ClearSelected();
+            fileDialog.Close();
+            importing_model = false;
         } else if (importing_scene) {
             /*std::cout << "Selected scene" << fileDialog.GetSelected().string() << std::endl;
             
@@ -143,6 +159,7 @@ void SchemeController::FileDialog() {
     
     if(!fileDialog.IsOpened()) {
         importing_model = false;
+        importing_pointdata = false;
         importing_scene = false;
         saving_model = false;
         saving_scene = false;

@@ -8,7 +8,6 @@
 #include "Utils.h"
 
 
-
 bool DragonflyUtils::isFloat( std::string str ) {
     std::istringstream iss(str);
     float f;
@@ -57,6 +56,10 @@ simd_float3 DragonflyUtils::BiAvg (simd_float3 p1, simd_float3 p2) {
     float z = (p1.z + p2.z)/2;
     
     return simd_make_float3(x, y, z);
+}
+
+float DragonflyUtils::sign2D (simd_float2 p1, simd_float2 p2, simd_float2 p3) {
+    return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
 }
 
 float DragonflyUtils::sign (simd_float2 p1, simd_float3 p2, simd_float3 p3) {
@@ -141,6 +144,17 @@ simd_float3 DragonflyUtils::MouseFaceIntercept (simd_float2 &mouse, int fid) {
     
     return LinePlaneIntersect(camera->pos, mouse_vec, scene_vertices.at(face.vertices[0]), scene_vertices.at(face.vertices[1]), scene_vertices.at(face.vertices[2]));
 }*/
+
+bool DragonflyUtils::InTriangle2D(vector_float2 point, simd_float2 v1, simd_float2 v2, simd_float2 v3) {
+    float d1 = sign2D(point, v1, v2);
+    float d2 = sign2D(point, v2, v3);
+    float d3 = sign2D(point, v3, v1);
+
+    bool has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+    bool has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+    return (!(has_neg && has_pos));
+}
 
 bool DragonflyUtils::InTriangle(vector_float2 point, simd_float3 v1, simd_float3 v2, simd_float3 v3) {
     float d1 = sign(point, v1, v2);

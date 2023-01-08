@@ -44,6 +44,7 @@
 		D2E399B82874EDA5003381DD /* EditNodeScheme.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2E399B72874EDA5003381DD /* EditNodeScheme.mm */; };
 		D2E399BC2874F6E8003381DD /* EditModelScheme.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2E399BB2874F6E8003381DD /* EditModelScheme.mm */; };
 		D2E399BF2874FDA5003381DD /* Utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2E399BE2874FDA5003381DD /* Utils.mm */; };
+		D2E79A7E2950103000051DDF /* Project2D.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2E79A7C2950103000051DDF /* Project2D.mm */; };
 		D2EAF75327914118002DE553 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D2EAF75227914118002DE553 /* AppDelegate.m */; };
 		D2EAF75827914119002DE553 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D2EAF75727914119002DE553 /* Assets.xcassets */; };
 		D2EAF75D27914119002DE553 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2EAF75C27914119002DE553 /* main.mm */; };
@@ -152,6 +153,8 @@
 		D2E399BB2874F6E8003381DD /* EditModelScheme.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = EditModelScheme.mm; sourceTree = "<group>"; };
 		D2E399BD2874FD95003381DD /* Utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
 		D2E399BE2874FDA5003381DD /* Utils.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Utils.mm; sourceTree = "<group>"; };
+		D2E79A7C2950103000051DDF /* Project2D.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Project2D.mm; sourceTree = "<group>"; };
+		D2E79A7D2950103000051DDF /* Project2D.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Project2D.h; sourceTree = "<group>"; };
 		D2EAF74E27914118002DE553 /* dragonfly.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = dragonfly.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2EAF75127914118002DE553 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		D2EAF75227914118002DE553 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -319,6 +322,17 @@
 			path = Pipelines;
 			sourceTree = "<group>";
 		};
+		D2E79A7B29500E9600051DDF /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				D2E399BD2874FD95003381DD /* Utils.h */,
+				D2E399BE2874FDA5003381DD /* Utils.mm */,
+				D2E79A7D2950103000051DDF /* Project2D.h */,
+				D2E79A7C2950103000051DDF /* Project2D.mm */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
 		D2EAF74527914118002DE553 = {
 			isa = PBXGroup;
 			children = (
@@ -349,8 +363,7 @@
 				D2EAF75127914118002DE553 /* AppDelegate.h */,
 				D2EAF75227914118002DE553 /* AppDelegate.m */,
 				D2EAF75727914119002DE553 /* Assets.xcassets */,
-				D2E399BD2874FD95003381DD /* Utils.h */,
-				D2E399BE2874FDA5003381DD /* Utils.mm */,
+				D2E79A7B29500E9600051DDF /* Utils */,
 				D20C0B33284539C700F5DC08 /* UserActions */,
 				D20C0B34284539D300F5DC08 /* Modeling */,
 				D2E399AB2874BEBE003381DD /* Schemes */,
@@ -541,6 +554,7 @@
 				D2E399B62874E998003381DD /* EditFEVScheme.mm in Sources */,
 				D2047B622793B1A000B4B442 /* imgui_impl_sdl.cpp in Sources */,
 				D2E399B82874EDA5003381DD /* EditNodeScheme.mm in Sources */,
+				D2E79A7E2950103000051DDF /* Project2D.mm in Sources */,
 				D2E399AA2874BD59003381DD /* Scheme.mm in Sources */,
 				D20C0B3C2845618500F5DC08 /* EdgeMoveAction.mm in Sources */,
 				D2047BDE2793B1A000B4B442 /* imgui_draw.cpp in Sources */,
