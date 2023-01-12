@@ -372,7 +372,7 @@ void EditFEVScheme::HandleSelection(simd_float2 loc) {
         }
     }
     
-    if (nothing_clicked) {
+    if (nothing_clicked && !keypresses_.shift) {
         selected_arrow = -1;
         selected_model = -1;
         selected_face = -1;
@@ -428,10 +428,12 @@ void EditFEVScheme::HandleSelection(simd_float2 loc) {
 
 void EditFEVScheme::SelectVerticesInDrag() {
     selected_arrow = -1;
-    selected_model = -1;
     selected_face = -1;
     selected_edge = -1;
-    vertex_render_uniforms.selected_vertices.clear();
+    if (!keypresses_.shift) {
+        selected_model = -1;
+        vertex_render_uniforms.selected_vertices.clear();
+    }
     
     float left = drag_size.x > 0 ? click_loc_.x : click_loc_.x + drag_size.x;
     float right = drag_size.x > 0 ? click_loc_.x + drag_size.x : click_loc_.x;
@@ -440,6 +442,10 @@ void EditFEVScheme::SelectVerticesInDrag() {
     
     int vid = 0;
     for (int mid = 0; mid < scene_->NumModels(); mid++) {
+        if (selected_model != -1) {
+            mid = selected_model;
+            vid = scene_->GetModel(mid)->VertexStart();
+        }
         Model *m = scene_->GetModel(mid);
         int vid_end = vid + m->NumVertices();
         
