@@ -53,6 +53,7 @@ class Animation {
 private:
     float length = 0.0;
     Model *model_;
+    // a vector of vectors of frames for each node
     std::vector<std::vector<NodeKeyFrame *> *> node_animations;
 
     std::pair<int, int> FindFrameIdx(uint32_t nid, float time);
@@ -62,6 +63,7 @@ public:
     
     float GetLength();
 
+    void AddNode();
     void SetKeyFrame(uint32_t nid, float time, simd_float3 pos, simd_float3 angle);
     void RemoveKeyFrame(uint32_t nid, uint32_t kfid);
 

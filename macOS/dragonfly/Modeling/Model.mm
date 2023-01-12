@@ -48,10 +48,14 @@ std::pair<int, int> Animation::FindFrameIdx(uint32_t nid, float time) {
 
     if (frames->at(end)->time < time) {
         return std::make_pair(end, end+1);
+    } else if (frames->at(end)->time == time) {
+        return std::make_pair(end, end);
     }
 
     if (frames->at(start)->time > time) {
         return std::make_pair(start-1, start);
+    } else if (frames->at(start)->time == time) {
+        return std::make_pair(start, start);
     }
 
     while (end - start > 1) {
@@ -68,6 +72,11 @@ std::pair<int, int> Animation::FindFrameIdx(uint32_t nid, float time) {
     }
 
     return std::make_pair(start, end);
+}
+
+
+void Animation::AddNode() {
+    node_animations.push_back(new std::vector<NodeKeyFrame *>());
 }
 
 void Animation::SetKeyFrame(uint32_t nid, float time, simd_float3 pos, simd_float3 angle) {
@@ -89,6 +98,10 @@ void Animation::SetKeyFrame(uint32_t nid, float time, simd_float3 pos, simd_floa
         frames->push_back(to_insert);
     } else if (insert_loc.first != insert_loc.second) {
         frames->insert(frames->begin() + insert_loc.first, to_insert);
+    } else {
+        NodeKeyFrame *last = frames->at(insert_loc.first);
+        frames->at(insert_loc.first) = to_insert;
+        delete last;
     }
 }
 
@@ -213,6 +226,10 @@ unsigned Model::MakeNode(float x, float y, float z) {
     node->pos = simd_make_float3(x, y, z);
     node->angle = simd_make_float3(0, 0, 0);
     nodes.push_back(node);
+    
+    for (int i = 0; i < animations.size(); i++) {
+        animations[i]->AddNode();
+    }
     return nodes.size()-1;
 }
 
@@ -232,11 +249,11 @@ void Model::LinkNodeAndVertex(unsigned long vid, unsigned long nid) {
         setIndex = vid*2;
     }
     
-    NodeVertexLink *nvlink = new NodeVertexLink();
+    NodeVertexLink *nvlink = nvlinks[setIndex];
     nvlink->nid = nid;
     nvlink->vector.x = vertex.x - node->pos.x;
     nvlink->vector.y = vertex.y - node->pos.y;
-    nvlink->vector.z = vertex.z- node->pos.z;
+    nvlink->vector.z = vertex.z - node->pos.z;
     
     simd_float3 reverse_angle = simd_make_float3(-node->angle.x, -node->angle.y, -node->angle.z);
     nvlink->vector = RotateAround(nvlink->vector, simd_make_float3(0, 0, 0), reverse_angle);
@@ -276,13 +293,18 @@ void Model::DetermineLinkWeights(Vertex loc, unsigned long vid) {
         float link1mag = sqrt(pow(link1->vector.x, 2) + pow(link1->vector.y, 2) + pow(link1->vector.z, 2));
         float link2mag = sqrt(pow(link2->vector.x, 2) + pow(link2->vector.y, 2) + pow(link2->vector.z, 2));
         
-        float inverse_dist_sum = 1/link1mag + 1/link2mag;
-        link1->weight = (1/link1mag) / inverse_dist_sum;
-        link2->weight = (1/link2mag) / inverse_dist_sum;
+        if (link1mag == 0) {
+            link1->weight = 1;
+            link2->weight = 0;
+        } else if (link2mag == 0) {
+            link1->weight = 0;
+            link2->weight = 1;
+        } else {
+            float inverse_dist_sum = 1/link1mag + 1/link2mag;
+            link1->weight = (1/link1mag) / inverse_dist_sum;
+            link2->weight = (1/link2mag) / inverse_dist_sum;
+        }
     }
-    
-    nvlinks.at(vid*2) = link1;
-    nvlinks.at(vid*2 + 1) = link2;
 }
 
 void Model::LockNodeToNode(unsigned nid1, unsigned nid2) {

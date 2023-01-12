@@ -829,34 +829,51 @@ void EditFEVScheme::VertexEditMenu() {
     
     int current_y = 60;
     
-    std::vector<unsigned long> linked_nodes = model->GetLinkedNodes(vertex_render_uniforms.selected_vertices[0] - model->VertexStart());
-    for (int i = 0; i < linked_nodes.size(); i++) {
-        ImGui::SetCursorPos(ImVec2(30, current_y));
-        ImGui::Text("Linked to node %lu", linked_nodes[i]);
+    std::vector<unsigned long> linked_nodes0 = model->GetLinkedNodes(vertex_render_uniforms.selected_vertices[0] - model->VertexStart());
+    bool same_links = true;
+    for (int i = 1; i < vertex_render_uniforms.selected_vertices.size(); i++) {
+        std::vector<unsigned long> linked_nodes = model->GetLinkedNodes(vertex_render_uniforms.selected_vertices[i] - model->VertexStart());
+        if (linked_nodes[0] != linked_nodes0[0] || linked_nodes.size() != linked_nodes0.size() || (linked_nodes0.size() > 1 && linked_nodes[1] != linked_nodes0[1])) {
+            same_links = false;
+            break;
+        }
+    }
+    if (same_links) {
+        for (int i = 0; i < linked_nodes0.size(); i++) {
+            ImGui::SetCursorPos(ImVec2(30, current_y));
+            ImGui::Text("Linked to node %lu", linked_nodes0[i]);
+            
+            if (linked_nodes0.size() > 1) {
+                ImGui::SetCursorPos(ImVec2(150, current_y));
+                if (ImGui::Button("Unlink")) {
+                    for (int j = 0; j < vertex_render_uniforms.selected_vertices.size(); j++) {
+                        model->UnlinkNodeAndVertex(vertex_render_uniforms.selected_vertices[j] - model->VertexStart(), linked_nodes0[i]);
+                    }
+                    should_reset_static_buffers = true;
+                }
+            }
+            
+            current_y += 30;
+        }
         
-        if (linked_nodes.size() > 1) {
-        ImGui::SetCursorPos(ImVec2(150, current_y));
-            if (ImGui::Button("Unlink")) {
-                model->UnlinkNodeAndVertex(vertex_render_uniforms.selected_vertices[0] - model->VertexStart(), linked_nodes[i]);
+        ImGui::SetCursorPos(ImVec2(30, current_y));
+        ImGui::Text("Link to node: ");
+        char buf [128] = "";
+        ImGui::SetCursorPos(ImVec2(130, current_y));
+        if (ImGui::InputText("##linknode", buf, IM_ARRAYSIZE(buf), ImGuiInputTextFlags_EnterReturnsTrue)) {
+            if (isUnsignedLong(buf)) {
+                unsigned long nid = std::stoul(buf);
+                for (int i = 0; i < vertex_render_uniforms.selected_vertices.size(); i++) {
+                    model->LinkNodeAndVertex(vertex_render_uniforms.selected_vertices[i] - model->VertexStart(), nid);
+                    
+                }
                 should_reset_static_buffers = true;
             }
         }
-        
-        current_y += 30;
+    } else {
+        ImGui::SetCursorPos(ImVec2(30, current_y));
+        ImGui::Text("Mixed node links");
     }
-    
-    ImGui::SetCursorPos(ImVec2(30, current_y));
-    ImGui::Text("Link to node: ");
-    char buf [128] = "";
-    ImGui::SetCursorPos(ImVec2(130, current_y));
-    if (ImGui::InputText("##linknode", buf, IM_ARRAYSIZE(buf), ImGuiInputTextFlags_EnterReturnsTrue)) {
-        if (isUnsignedLong(buf)) {
-            unsigned long nid = std::stoul(buf);
-            model->LinkNodeAndVertex(vertex_render_uniforms.selected_vertices[0] - model->VertexStart(), nid);
-            should_reset_static_buffers = true;
-        }
-    }
-    
 }
 
 void EditFEVScheme::EdgeEditMenu() {
