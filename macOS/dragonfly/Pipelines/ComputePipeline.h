@@ -49,6 +49,7 @@ private:
 
     id <MTLBuffer> scene_transform_uniforms_buffer;
     id <MTLBuffer> scene_vertex_render_uniforms_buffer;
+    id <MTLBuffer> scene_selected_vertices_buffer;
     id <MTLBuffer> scene_node_render_uniforms_buffer;
     
     // buffers for controls models compute

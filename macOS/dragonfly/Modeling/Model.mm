@@ -474,6 +474,25 @@ void Model::MoveNodeTo(unsigned nid, float x, float y, float z) {
 }
 
 void Model::RemoveVertex(int vid) {
+    for (int i = faces.size()-1; i >= 0; i--) {
+        Face *f = faces[i];
+        
+        if (f->vertices[0] == vid || f->vertices[1] == vid || f->vertices[2] == vid) {
+            RemoveFace(i);
+            continue;
+        }
+        
+        if (f->vertices[0] > vid) {
+            f->vertices[0]--;
+        }
+        if (f->vertices[1] > vid) {
+            f->vertices[1]--;
+        }
+        if (f->vertices[2] > vid) {
+            f->vertices[2]--;
+        }
+    }
+    
     nvlinks.erase(nvlinks.begin() + vid*2 + 1);
     nvlinks.erase(nvlinks.begin() + vid*2);
     num_vertices --;

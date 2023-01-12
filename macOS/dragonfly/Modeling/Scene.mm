@@ -100,59 +100,67 @@ simd_float3 Scene::GetModelAngle(unsigned long mid) {
 }
 
 void Scene::MoveModelBy(unsigned int mid, float dx, float dy, float dz) {
-    ModelUniforms * mu = GetModelUniforms(mid);
-    
-    if (mu == NULL) {
-        return;
+    if (mid < model_uniforms.size()) {
+        ModelUniforms * mu = GetModelUniforms(mid);
+        
+        if (mu == NULL) {
+            return;
+        }
+        
+        mu->position.x += dx;
+        mu->position.y += dy;
+        mu->position.z += dz;
+        
+        mu->rotate_origin.x += dx;
+        mu->rotate_origin.y += dy;
+        mu->rotate_origin.z += dz;
     }
-    
-    mu->position.x += dx;
-    mu->position.y += dy;
-    mu->position.z += dz;
-    
-    mu->rotate_origin.x += dx;
-    mu->rotate_origin.y += dy;
-    mu->rotate_origin.z += dz;
 }
 
 void Scene::RotateModelBy(unsigned int mid, float dx, float dy, float dz) {
-    ModelUniforms * mu = GetModelUniforms(mid);
-    
-    if (mu == NULL) {
-        return;
+    if (mid < model_uniforms.size()) {
+        ModelUniforms * mu = GetModelUniforms(mid);
+        
+        if (mu == NULL) {
+            return;
+        }
+        
+        mu->angle.x += dx;
+        mu->angle.y += dy;
+        mu->angle.z += dz;
     }
-    
-    mu->angle.x += dx;
-    mu->angle.y += dy;
-    mu->angle.z += dz;
 }
 
 void Scene::MoveModelTo(unsigned int mid, float x, float y, float z) {
-    ModelUniforms * mu = GetModelUniforms(mid);
-    
-    if (mu == NULL) {
-        return;
+    if (mid < model_uniforms.size()) {
+        ModelUniforms * mu = GetModelUniforms(mid);
+        
+        if (mu == NULL) {
+            return;
+        }
+        
+        mu->rotate_origin.x += x - mu->position.x;
+        mu->rotate_origin.y += y - mu->position.y;
+        mu->rotate_origin.z += z - mu->position.z;
+        
+        mu->position.x = x;
+        mu->position.y = y;
+        mu->position.z = z;
     }
-    
-    mu->rotate_origin.x += x - mu->position.x;
-    mu->rotate_origin.y += y - mu->position.y;
-    mu->rotate_origin.z += z - mu->position.z;
-    
-    mu->position.x = x;
-    mu->position.y = y;
-    mu->position.z = z;
 }
 
 void Scene::RotateModelTo(unsigned int mid, float x, float y, float z) {
-    ModelUniforms * mu = GetModelUniforms(mid);
-    
-    if (mu == NULL) {
-        return;
+    if (mid < model_uniforms.size()) {
+        ModelUniforms * mu = GetModelUniforms(mid);
+        
+        if (mu == NULL) {
+            return;
+        }
+        
+        mu->angle.x = x;
+        mu->angle.y = y;
+        mu->angle.z = z;
     }
-    
-    mu->angle.x = x;
-    mu->angle.y = y;
-    mu->angle.z = z;
 }
 
 void Scene::CreateNewModel() {
@@ -191,6 +199,14 @@ void Scene::NewModelFromPointData(std::string path) {
     new_uniform.angle = simd_make_float3(0, 0, 0);
     
     model_uniforms.push_back(new_uniform);
+}
+
+
+void Scene::RemoveModel(unsigned long mid) {
+    if (mid < models.size()) {
+        models.erase(models.begin() + mid);
+        model_uniforms.erase(model_uniforms.begin() + mid);
+    }
 }
 
 unsigned long Scene::NumModels() {

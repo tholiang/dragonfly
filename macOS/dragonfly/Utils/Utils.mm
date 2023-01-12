@@ -8,6 +8,16 @@
 #include "Utils.h"
 
 
+
+bool DragonflyUtils::InIntVector(std::vector<int> &vec, int a) {
+    for (int i = 0; i < vec.size(); i++) {
+        if (vec[i] == a) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool DragonflyUtils::isFloat( std::string str ) {
     std::istringstream iss(str);
     float f;

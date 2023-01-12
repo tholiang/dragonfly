@@ -35,7 +35,8 @@ enum SchemeType {
 
 struct VertexRenderUniforms {
     float screen_ratio = 1280.0/720.0;
-    vector_int3 selected_vertices;
+    int num_selected_vertices = 0;
+    std::vector<int> selected_vertices;
 };
 
 struct NodeRenderUniforms {
@@ -50,6 +51,7 @@ struct KeyPresses {
     bool d = false;
     bool space = false;
     bool shift = false;
+    bool option = false;
     bool control = false;
     bool command = false;
 };

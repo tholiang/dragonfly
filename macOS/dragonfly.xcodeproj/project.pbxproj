@@ -27,14 +27,13 @@
 		D2047BDE2793B1A000B4B442 /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2047B342793B1A000B4B442 /* imgui_draw.cpp */; };
 		D20C0B30284538AD00F5DC08 /* UserAction.mm in Sources */ = {isa = PBXBuildFile; fileRef = D20C0B2F284538AD00F5DC08 /* UserAction.mm */; };
 		D20C0B3628453C2C00F5DC08 /* VertexMoveAction.mm in Sources */ = {isa = PBXBuildFile; fileRef = D20C0B3528453C2C00F5DC08 /* VertexMoveAction.mm */; };
-		D20C0B392845542C00F5DC08 /* FaceMoveAction.mm in Sources */ = {isa = PBXBuildFile; fileRef = D20C0B382845542C00F5DC08 /* FaceMoveAction.mm */; };
-		D20C0B3C2845618500F5DC08 /* EdgeMoveAction.mm in Sources */ = {isa = PBXBuildFile; fileRef = D20C0B3B2845618500F5DC08 /* EdgeMoveAction.mm */; };
 		D20C0B3F2845D68900F5DC08 /* FaceAddVertexAction.mm in Sources */ = {isa = PBXBuildFile; fileRef = D20C0B3E2845D68900F5DC08 /* FaceAddVertexAction.mm */; };
 		D20C0B422845E20400F5DC08 /* EdgeAddVertexAction.mm in Sources */ = {isa = PBXBuildFile; fileRef = D20C0B412845E20400F5DC08 /* EdgeAddVertexAction.mm */; };
 		D224A4662791464D0099CF9D /* Processing.metal in Sources */ = {isa = PBXBuildFile; fileRef = D224A4652791464D0099CF9D /* Processing.metal */; };
 		D28B7D852793B4AC00C0E47F /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D28B7D842793B4AC00C0E47F /* SDL2.framework */; };
 		D28B7D862793B4AC00C0E47F /* SDL2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D28B7D842793B4AC00C0E47F /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D2A99F7E2792BF7D00E85036 /* Model.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2A99F7D2792BF7D00E85036 /* Model.mm */; };
+		D2B08AD7296D240800CA5FFC /* JoinModels.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2B08AD5296D240800CA5FFC /* JoinModels.mm */; };
 		D2D9BC612846FE8400D22480 /* ModelMoveAction.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2D9BC602846FE8400D22480 /* ModelMoveAction.mm */; };
 		D2E399A62874B399003381DD /* Scene.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2E399A52874B399003381DD /* Scene.mm */; };
 		D2E399AA2874BD59003381DD /* Scheme.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2E399A82874BD59003381DD /* Scheme.mm */; };
@@ -120,10 +119,6 @@
 		D20C0B31284538BE00F5DC08 /* UserAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UserAction.h; sourceTree = "<group>"; };
 		D20C0B32284539BE00F5DC08 /* VertexMoveAction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VertexMoveAction.h; sourceTree = "<group>"; };
 		D20C0B3528453C2C00F5DC08 /* VertexMoveAction.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = VertexMoveAction.mm; sourceTree = "<group>"; };
-		D20C0B372845541E00F5DC08 /* FaceMoveAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FaceMoveAction.h; sourceTree = "<group>"; };
-		D20C0B382845542C00F5DC08 /* FaceMoveAction.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FaceMoveAction.mm; sourceTree = "<group>"; };
-		D20C0B3A2845617D00F5DC08 /* EdgeMoveAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EdgeMoveAction.h; sourceTree = "<group>"; };
-		D20C0B3B2845618500F5DC08 /* EdgeMoveAction.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = EdgeMoveAction.mm; sourceTree = "<group>"; };
 		D20C0B3D2845D66800F5DC08 /* FaceAddVertexAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FaceAddVertexAction.h; sourceTree = "<group>"; };
 		D20C0B3E2845D68900F5DC08 /* FaceAddVertexAction.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FaceAddVertexAction.mm; sourceTree = "<group>"; };
 		D20C0B402845E1FB00F5DC08 /* EdgeAddVertexAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EdgeAddVertexAction.h; sourceTree = "<group>"; };
@@ -135,6 +130,8 @@
 		D28B7D842793B4AC00C0E47F /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
 		D2A99F7C2792BCF100E85036 /* Model.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; path = Model.h; sourceTree = "<group>"; };
 		D2A99F7D2792BF7D00E85036 /* Model.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = Model.mm; sourceTree = "<group>"; };
+		D2B08AD5296D240800CA5FFC /* JoinModels.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = JoinModels.mm; sourceTree = "<group>"; };
+		D2B08AD6296D240800CA5FFC /* JoinModels.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JoinModels.h; sourceTree = "<group>"; };
 		D2D9BC5F2846FE7900D22480 /* ModelMoveAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ModelMoveAction.h; sourceTree = "<group>"; };
 		D2D9BC602846FE8400D22480 /* ModelMoveAction.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ModelMoveAction.mm; sourceTree = "<group>"; };
 		D2E399A52874B399003381DD /* Scene.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Scene.mm; sourceTree = "<group>"; };
@@ -269,10 +266,6 @@
 				D2D9BC602846FE8400D22480 /* ModelMoveAction.mm */,
 				D20C0B32284539BE00F5DC08 /* VertexMoveAction.h */,
 				D20C0B3528453C2C00F5DC08 /* VertexMoveAction.mm */,
-				D20C0B3A2845617D00F5DC08 /* EdgeMoveAction.h */,
-				D20C0B3B2845618500F5DC08 /* EdgeMoveAction.mm */,
-				D20C0B372845541E00F5DC08 /* FaceMoveAction.h */,
-				D20C0B382845542C00F5DC08 /* FaceMoveAction.mm */,
 				D20C0B3D2845D66800F5DC08 /* FaceAddVertexAction.h */,
 				D20C0B3E2845D68900F5DC08 /* FaceAddVertexAction.mm */,
 				D20C0B402845E1FB00F5DC08 /* EdgeAddVertexAction.h */,
@@ -329,6 +322,8 @@
 				D2E399BE2874FDA5003381DD /* Utils.mm */,
 				D2E79A7D2950103000051DDF /* Project2D.h */,
 				D2E79A7C2950103000051DDF /* Project2D.mm */,
+				D2B08AD6296D240800CA5FFC /* JoinModels.h */,
+				D2B08AD5296D240800CA5FFC /* JoinModels.mm */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -543,6 +538,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D2B08AD7296D240800CA5FFC /* JoinModels.mm in Sources */,
 				D2E399BF2874FDA5003381DD /* Utils.mm in Sources */,
 				D2E399BC2874F6E8003381DD /* EditModelScheme.mm in Sources */,
 				D2A99F7E2792BF7D00E85036 /* Model.mm in Sources */,
@@ -556,7 +552,6 @@
 				D2E399B82874EDA5003381DD /* EditNodeScheme.mm in Sources */,
 				D2E79A7E2950103000051DDF /* Project2D.mm in Sources */,
 				D2E399AA2874BD59003381DD /* Scheme.mm in Sources */,
-				D20C0B3C2845618500F5DC08 /* EdgeMoveAction.mm in Sources */,
 				D2047BDE2793B1A000B4B442 /* imgui_draw.cpp in Sources */,
 				D20C0B3F2845D68900F5DC08 /* FaceAddVertexAction.mm in Sources */,
 				D224A4662791464D0099CF9D /* Processing.metal in Sources */,
@@ -570,7 +565,6 @@
 				D2E399B02874DEC4003381DD /* RenderPipeline.mm in Sources */,
 				D2047BDD2793B1A000B4B442 /* imgui_demo.cpp in Sources */,
 				D2F0B0D2289878F600057FD6 /* SchemeController.mm in Sources */,
-				D20C0B392845542C00F5DC08 /* FaceMoveAction.mm in Sources */,
 				D20C0B3628453C2C00F5DC08 /* VertexMoveAction.mm in Sources */,
 				D2EAF75327914118002DE553 /* AppDelegate.m in Sources */,
 			);

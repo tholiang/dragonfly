@@ -90,11 +90,12 @@ void RenderPipeline::SetSchemeController(SchemeController *sctr) {
     scheme_controller = sctr;
 }
 
-void RenderPipeline::SetBuffers(id<MTLBuffer> spv, id<MTLBuffer> sf, id<MTLBuffer> spn, id<MTLBuffer> svru, id<MTLBuffer> snru, id<MTLBuffer> cpv, id<MTLBuffer> cf) {
+void RenderPipeline::SetBuffers(id<MTLBuffer> spv, id<MTLBuffer> sf, id<MTLBuffer> spn, id<MTLBuffer> svru, id<MTLBuffer> ssv, id<MTLBuffer> snru, id<MTLBuffer> cpv, id<MTLBuffer> cf) {
     scene_projected_vertex_buffer = spv;
     scene_face_buffer = sf;
     scene_projected_node_buffer = spn;
     scene_vertex_render_uniforms_buffer = svru;
+    scene_selected_vertices_buffer = ssv;
     scene_node_render_uniforms_buffer = snru;
     
     controls_projected_vertex_buffer = cpv;
@@ -200,6 +201,7 @@ void RenderPipeline::Render() {
             [render_encoder setRenderPipelineState:scene_point_render_pipeline_state];
             [render_encoder setVertexBuffer:scene_projected_vertex_buffer offset:0 atIndex:0];
             [render_encoder setVertexBuffer:scene_vertex_render_uniforms_buffer offset:0 atIndex:1];
+            [render_encoder setVertexBuffer:scene_selected_vertices_buffer offset:0 atIndex:2];
             for (int i = 0; i < num_vertices*4; i+=4) {
                 [render_encoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:i vertexCount:4];
             }

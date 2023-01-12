@@ -15,6 +15,7 @@ EditFEVScheme::EditFEVScheme() {
     type = SchemeType::EditFEV;
     
     selected_edge = simd_make_int2(-1, -1);
+    button_size_ = ImVec2(100, 30);
     
     should_render.faces = true;
     should_render.edges = true;
@@ -92,10 +93,12 @@ void EditFEVScheme::HandleMouseDown(simd_float2 loc, bool left) {
     loc.x = ((float) loc.x / (float) window_width_)*2 - 1;
     loc.y = -(((float) loc.y / (float) window_height_)*2 - 1);
     
+    drag_size.x = 0;
+    drag_size.y = 0;
+    
     if (!left) {
-        if (selected_face != -1 || selected_edge.x != -1) {
+        if (vertex_render_uniforms.selected_vertices.size() > 0) {
             rightclick_popup_loc_ = loc;
-            rightclick_popup_size_ = simd_make_float2(90/(float)(window_width_/2), 20/(float)(window_height_/2));
             render_rightclick_popup_ = true;
         } else {
             render_rightclick_popup_ = false;
@@ -115,7 +118,14 @@ void EditFEVScheme::HandleMouseUp(simd_float2 loc, bool left) {
         if (!(render_rightclick_popup_ && InRectangle(rightclick_popup_loc_, rightclick_popup_size_, loc))) {
             render_rightclick_popup_ = false;
         }
+        
+        if (dist2to3(drag_size, simd_make_float3(0, 0, 0)) > 0.05) {
+            SelectVerticesInDrag();
+        }
     }
+    
+    drag_size.x = 0;
+    drag_size.y = 0;
     
     if (current_action != NULL) {
         current_action->EndRecording();
@@ -282,14 +292,13 @@ void EditFEVScheme::HandleSelection(simd_float2 loc) {
             
             Model *m = scene_->GetModel(selected_model);
             
-            if (selected_face != -1) {
-                current_action = new FaceMoveAction(m, selected_face - m->FaceStart());
-                current_action->BeginRecording();
-            } else if (selected_edge.x != -1) {
-                current_action = new EdgeMoveAction(m, selected_edge.x - m->VertexStart(), selected_edge.y - m->VertexStart());
-                current_action->BeginRecording();
-            } else if (selected_vertex != -1) {
-                current_action = new VertexMoveAction(m, selected_vertex - m->VertexStart());
+            if (!vertex_render_uniforms.selected_vertices.empty()) {
+                std::vector<int> model_vertices;
+                for (int i = 0; i < vertex_render_uniforms.selected_vertices.size(); i++) {
+                    model_vertices.push_back(vertex_render_uniforms.selected_vertices[i] - m->VertexStart());
+                }
+                
+                current_action = new VertexMoveAction(m, model_vertices);
                 current_action->BeginRecording();
             }
         }
@@ -301,14 +310,15 @@ void EditFEVScheme::HandleSelection(simd_float2 loc) {
         if (face_selection.second < minZ || minZ == -1) {
             selected_arrow = -1;
             selected_face = face_selection.first.first;
+            
+            if (selected_model != face_selection.first.second) {
+                vertex_render_uniforms.selected_vertices.clear();
+            }
+            
             selected_model = face_selection.first.second;
             minZ = face_selection.second;
             
             Face face = scene_models_faces_[selected_face];
-            
-            vertex_render_uniforms.selected_vertices[0] = face.vertices[0];
-            vertex_render_uniforms.selected_vertices[1] = face.vertices[1];
-            vertex_render_uniforms.selected_vertices[2] = face.vertices[2];
             
             nothing_clicked = false;
         }
@@ -320,14 +330,13 @@ void EditFEVScheme::HandleSelection(simd_float2 loc) {
             selected_face = -1;
             selected_edge.x = edge_selection.first.first.first;
             selected_edge.y = edge_selection.first.first.second;
+            
+            if (selected_model != edge_selection.first.second) {
+                vertex_render_uniforms.selected_vertices.clear();
+            }
+            
             selected_model = edge_selection.first.second;
             minZ = edge_selection.second;
-
-            vertex_render_uniforms.selected_vertices[0] = selected_edge.x;
-            vertex_render_uniforms.selected_vertices[1] = selected_edge.y;
-            vertex_render_uniforms.selected_vertices[2] = -1;
-
-            nothing_clicked = false;
         }
     }
 
@@ -337,13 +346,27 @@ void EditFEVScheme::HandleSelection(simd_float2 loc) {
             selected_face = -1;
             selected_edge.x = -1;
             selected_edge.y = -1;
-            selected_vertex = vertex_selection.first.first;
+            
+            if (selected_model != vertex_selection.first.second) {
+                vertex_render_uniforms.selected_vertices.clear();
+            }
+            
             selected_model = vertex_selection.first.second;
             minZ = vertex_selection.second;
-
-            vertex_render_uniforms.selected_vertices[0] = selected_vertex;
-            vertex_render_uniforms.selected_vertices[1] = -1;
-            vertex_render_uniforms.selected_vertices[2] = -1;
+            
+            bool in1 = false;
+            if (keypresses_.shift) {
+                for (int i = 0; i < vertex_render_uniforms.selected_vertices.size(); i++) {
+                    if (vertex_selection.first.first == vertex_render_uniforms.selected_vertices[i]) {
+                        in1 = true;
+                        vertex_render_uniforms.selected_vertices.erase(vertex_render_uniforms.selected_vertices.begin() + i);
+                        break;
+                    }
+                }
+            } else {
+                vertex_render_uniforms.selected_vertices.clear();
+            }
+            if (!in1) vertex_render_uniforms.selected_vertices.push_back(vertex_selection.first.first);
 
             nothing_clicked = false;
         }
@@ -354,22 +377,101 @@ void EditFEVScheme::HandleSelection(simd_float2 loc) {
         selected_model = -1;
         selected_face = -1;
         selected_edge = -1;
-        selected_vertex = -1;
-        
-        vertex_render_uniforms.selected_vertices[0] = -1;
-        vertex_render_uniforms.selected_vertices[1] = -1;
-        vertex_render_uniforms.selected_vertices[2] = -1;
+        vertex_render_uniforms.selected_vertices.clear();
+    } else {
+        if (selected_face != -1) {
+            Face face = scene_models_faces_[selected_face];
+            bool in1 = false;
+            bool in2 = false;
+            bool in3 = false;
+            if (keypresses_.shift) {
+                for (int i = 0; i < vertex_render_uniforms.selected_vertices.size(); i++) {
+                    if (face.vertices[0] == vertex_render_uniforms.selected_vertices[i]) in1 = true;
+                    if (face.vertices[1] == vertex_render_uniforms.selected_vertices[i]) in2 = true;
+                    if (face.vertices[2] == vertex_render_uniforms.selected_vertices[i]) in3 = true;
+                }
+            } else {
+                vertex_render_uniforms.selected_vertices.clear();
+            }
+            if (!in1) vertex_render_uniforms.selected_vertices.push_back(face.vertices[0]);
+            if (!in2) vertex_render_uniforms.selected_vertices.push_back(face.vertices[1]);
+            if (!in3) vertex_render_uniforms.selected_vertices.push_back(face.vertices[2]);
+            
+            if (vertex_render_uniforms.selected_vertices.size() > 3) {
+                selected_face = -1;
+            }
+        } else if (selected_edge.x != -1) {
+            bool in1 = false;
+            bool in2 = false;
+            if (keypresses_.shift) {
+                for (int i = 0; i < vertex_render_uniforms.selected_vertices.size(); i++) {
+                    if (selected_edge.x == vertex_render_uniforms.selected_vertices[i]) in1 = true;
+                    if (selected_edge.y == vertex_render_uniforms.selected_vertices[i]) in2 = true;
+                }
+            } else {
+                vertex_render_uniforms.selected_vertices.clear();
+            }
+            if (!in1) vertex_render_uniforms.selected_vertices.push_back(selected_edge.x);
+            if (!in2) vertex_render_uniforms.selected_vertices.push_back(selected_edge.y);
+            
+            if (vertex_render_uniforms.selected_vertices.size() > 2) {
+                selected_edge.x = -1;
+                selected_edge.y = -1;
+            }
+
+            nothing_clicked = false;
+        }
     }
+    
+    vertex_render_uniforms.num_selected_vertices = vertex_render_uniforms.selected_vertices.size();
+}
+
+void EditFEVScheme::SelectVerticesInDrag() {
+    selected_arrow = -1;
+    selected_model = -1;
+    selected_face = -1;
+    selected_edge = -1;
+    vertex_render_uniforms.selected_vertices.clear();
+    
+    float left = drag_size.x > 0 ? click_loc_.x : click_loc_.x + drag_size.x;
+    float right = drag_size.x > 0 ? click_loc_.x + drag_size.x : click_loc_.x;
+    float down = drag_size.y > 0 ? click_loc_.y : click_loc_.y + drag_size.y;
+    float up = drag_size.y > 0 ? click_loc_.y + drag_size.y : click_loc_.y;
+    
+    int vid = 0;
+    for (int mid = 0; mid < scene_->NumModels(); mid++) {
+        Model *m = scene_->GetModel(mid);
+        int vid_end = vid + m->NumVertices();
+        
+        for (; vid < vid_end; vid++) {
+            Vertex vertex = scene_models_projected_vertices_[vid];
+            
+            if (vertex.x > left && vertex.x < right && vertex.y > down && vertex.y < up) {
+                if (selected_model == -1) {
+                    selected_model = mid;
+                }
+                
+                vertex_render_uniforms.selected_vertices.push_back(vid);
+            }
+        }
+        
+        if (selected_model != -1) {
+            break;
+        }
+    }
+    
+    vertex_render_uniforms.num_selected_vertices = vertex_render_uniforms.selected_vertices.size();
 }
 
 void EditFEVScheme::SetControlsOrigin() {
-    if (selected_face != -1) {
-        Face face = scene_models_faces_[selected_face];
-        controls_origin_ = TriAvg(scene_models_vertices_[face.vertices[0]], scene_models_vertices_[face.vertices[1]], scene_models_vertices_[face.vertices[2]]);
-    } else if (selected_edge.x != -1) {
-        controls_origin_ = BiAvg(scene_models_vertices_[selected_edge.x], scene_models_vertices_[selected_edge.y]);
-    } else if (selected_vertex != -1) {
-        controls_origin_ = scene_models_vertices_[selected_vertex];
+    if (!vertex_render_uniforms.selected_vertices.empty()) {
+        simd_float3 avg = simd_make_float3(0, 0, 0);
+        for (int i = 0; i < vertex_render_uniforms.selected_vertices.size(); i++) {
+            avg.x += scene_models_vertices_[vertex_render_uniforms.selected_vertices[i]].x;
+            avg.y += scene_models_vertices_[vertex_render_uniforms.selected_vertices[i]].y;
+            avg.z += scene_models_vertices_[vertex_render_uniforms.selected_vertices[i]].z;
+        }
+        controls_origin_ = simd_make_float3(avg.x/vertex_render_uniforms.selected_vertices.size(), avg.y/vertex_render_uniforms.selected_vertices.size(), avg.z/vertex_render_uniforms.selected_vertices.size());
     } else {
         simd_float3 behind_camera;
         behind_camera.x = camera_->pos.x - camera_->vector.x*10;
@@ -440,31 +542,18 @@ void EditFEVScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
             y_vec *= 0.01*mvmt;
             z_vec *= 0.01*mvmt;
             
-            if (selected_face != -1) {
-                Model *model = scene_->GetModel(selected_model);
-                unsigned long modelFaceID = selected_face - model->FaceStart();
-                Face *selected = model->GetFace(modelFaceID);
-                
-                model->MoveVertexBy(selected->vertices[0], x_vec, y_vec, z_vec);
-                model->MoveVertexBy(selected->vertices[1], x_vec, y_vec, z_vec);
-                model->MoveVertexBy(selected->vertices[2], x_vec, y_vec, z_vec);
-                
-                should_reset_static_buffers = true;
-            } else if (selected_vertex != -1) {
-                Model *model = scene_->GetModel(selected_model);
-                unsigned long modelVertexID = selected_vertex - model->VertexStart();
+            Model *model = scene_->GetModel(selected_model);
+            
+            for (int i = 0; i < vertex_render_uniforms.selected_vertices.size(); i++) {
+                unsigned long modelVertexID = vertex_render_uniforms.selected_vertices[i] - model->VertexStart();
                 model->MoveVertexBy(modelVertexID, x_vec, y_vec, z_vec);
-                
-                should_reset_static_buffers = true;
-            } else if (selected_edge.x != -1) {
-                Model *model = scene_->GetModel(selected_model);
-                unsigned long modelVertex1ID = selected_edge.x - model->VertexStart();
-                unsigned long modelVertex2ID = selected_edge.y - model->VertexStart();
-                model->MoveVertexBy(modelVertex1ID, x_vec, y_vec, z_vec);
-                model->MoveVertexBy(modelVertex2ID, x_vec, y_vec, z_vec);
-                
-                should_reset_static_buffers = true;
             }
+            
+            should_reset_static_buffers = true;
+        } else {
+            float relx = ((float) (x) / (float) window_width_)*2 - 1;
+            float rely = -(((float) (y) / (float) window_height_)*2 - 1);
+            drag_size = simd_make_float2(relx - click_loc_.x, rely - click_loc_.y);
         }
     }
 }
@@ -575,14 +664,61 @@ void EditFEVScheme::AddVertexToEdge (int vid1, int vid2, int mid) {
     should_reset_static_buffers = true;
 }
 
+
+void EditFEVScheme::StartJoinModels() {
+    joinModelA = selected_model;
+    int vstart = scene_->GetModel(selected_model)->VertexStart();
+    for (int i = 0; i < vertex_render_uniforms.selected_vertices.size(); i++) {
+        joinAvids.push_back(vertex_render_uniforms.selected_vertices[i] - vstart);
+    }
+    
+    selected_arrow = -1;
+    selected_model = -1;
+    selected_edge = -1;
+    selected_face = -1;
+    vertex_render_uniforms.selected_vertices.clear();
+    vertex_render_uniforms.num_selected_vertices = 0;
+}
+
+void EditFEVScheme::JoinModels() {
+    joinModelB = selected_model;
+    int vstart = scene_->GetModel(selected_model)->VertexStart();
+    for (int i = 0; i < vertex_render_uniforms.selected_vertices.size(); i++) {
+        joinBvids.push_back(vertex_render_uniforms.selected_vertices[i] - vstart);
+    }
+    
+    if (joinModelA != joinModelB && joinAvids.size() == joinBvids.size()) {
+        DragonflyUtils::JoinModels(scene_->GetModel(joinModelA), scene_->GetModel(joinModelB), scene_->GetModelUniforms(joinModelA), scene_->GetModelUniforms(joinModelB), joinAvids, joinBvids);
+        
+        scene_vertex_length_ -= joinBvids.size();
+        scene_node_length_ -= scene_->GetModel(joinModelB)->NumNodes();
+        scene_->RemoveModel(joinModelB);
+        should_reset_empty_buffers = true;
+        should_reset_static_buffers = true;
+    }
+    
+    selected_arrow = -1;
+    selected_model = -1;
+    selected_edge = -1;
+    selected_face = -1;
+    vertex_render_uniforms.selected_vertices.clear();
+    vertex_render_uniforms.num_selected_vertices = 0;
+    
+    joinModelA = -1;
+    joinModelB = -1;
+    joinAvids.clear();
+    joinBvids.clear();
+}
+
 void EditFEVScheme::RightClickPopup() {
     ImVec2 pixel_loc = ImVec2(window_width_ * (rightclick_popup_loc_.x+1)/2 - UI_start_.x, window_height_ * (2-(rightclick_popup_loc_.y+1))/2 - UI_start_.y);
     ImGui::SetCursorPos(pixel_loc);
     
-    ImVec2 button_size = ImVec2(window_width_ * rightclick_popup_size_.x/2, window_height_ * rightclick_popup_size_.y/2);
+    num_right_click_buttons_ = 0;
     
     if (selected_face != -1 || selected_edge.x != -1) {
-        if (ImGui::Button("Add Vertex", ImVec2(button_size.x, button_size.y))) {
+        num_right_click_buttons_++;
+        if (ImGui::Button("Add Vertex", ImVec2(button_size_.x, button_size_.y))) {
             render_rightclick_popup_ = false;
             if (selected_face != -1) {
                 Model* m = scene_->GetModel(selected_model);
@@ -609,7 +745,73 @@ void EditFEVScheme::RightClickPopup() {
                 current_action = NULL;
             }
         }
+        pixel_loc.y += button_size_.y;
+        ImGui::SetCursorPos(ImVec2(pixel_loc.x, pixel_loc.y));
     }
+    
+    if (selected_face != -1 || vertex_render_uniforms.selected_vertices.size() == 1) {
+        num_right_click_buttons_++;
+        if (ImGui::Button("Delete", ImVec2(button_size_.x, button_size_.y))) {
+            render_rightclick_popup_ = false;
+            
+            Model* m = scene_->GetModel(selected_model);
+            if (selected_face != -1) {
+                m->RemoveFace(selected_face - m->FaceStart());
+                scene_face_length_--;
+            } else {
+                m->RemoveVertex(vertex_render_uniforms.selected_vertices[0] - m->VertexStart());
+                vertex_render_uniforms.selected_vertices.clear();
+                scene_vertex_length_--;
+            }
+            
+            should_reset_empty_buffers = true;
+            should_reset_static_buffers = true;
+        }
+        pixel_loc.y += button_size_.y;
+        ImGui::SetCursorPos(ImVec2(pixel_loc.x, pixel_loc.y));
+    }
+    
+    if (vertex_render_uniforms.selected_vertices.size() == 3 && selected_face == -1) {
+        num_right_click_buttons_++;
+        if (ImGui::Button("Make Face", ImVec2(button_size_.x, button_size_.y))) {
+            render_rightclick_popup_ = false;
+            
+            Model* m = scene_->GetModel(selected_model);
+            int v0 = vertex_render_uniforms.selected_vertices[0] - m->VertexStart();
+            int v1 = vertex_render_uniforms.selected_vertices[1] - m->VertexStart();
+            int v2 = vertex_render_uniforms.selected_vertices[2] - m->VertexStart();
+            m->MakeFace(v0, v1, v2, simd_make_float4(1, 1, 1, 1));
+            
+            scene_face_length_++;
+            should_reset_empty_buffers = true;
+            should_reset_static_buffers = true;
+        }
+        pixel_loc.y += button_size_.y;
+        ImGui::SetCursorPos(ImVec2(pixel_loc.x, pixel_loc.y));
+    }
+    
+    if (vertex_render_uniforms.selected_vertices.size() > 0 && joinModelA == -1) {
+        num_right_click_buttons_++;
+        if (ImGui::Button("Join With", ImVec2(button_size_.x, button_size_.y))) {
+            render_rightclick_popup_ = false;
+            
+            StartJoinModels();
+        }
+        pixel_loc.y += button_size_.y;
+        ImGui::SetCursorPos(ImVec2(pixel_loc.x, pixel_loc.y));
+    } else if (vertex_render_uniforms.selected_vertices.size() > 0) {
+        num_right_click_buttons_++;
+        if (ImGui::Button("Join", ImVec2(button_size_.x, button_size_.y))) {
+            render_rightclick_popup_ = false;
+            
+            JoinModels();
+        }
+        pixel_loc.y += button_size_.y;
+        ImGui::SetCursorPos(ImVec2(pixel_loc.x, pixel_loc.y));
+    }
+    
+
+    rightclick_popup_size_ = simd_make_float2((button_size_.x)/(float)(window_width_/2), (button_size_.y * num_right_click_buttons_)/(float)(window_height_/2));
 }
 
 void EditFEVScheme::VertexEditMenu() {
@@ -617,11 +819,11 @@ void EditFEVScheme::VertexEditMenu() {
     
     ImGui::Text("Selected Model ID: %i", selected_model);
     ImGui::SetCursorPos(ImVec2(20, 30));
-    ImGui::Text("Selected Vertex ID: %lu", selected_vertex - model->VertexStart());
+    ImGui::Text("Selected Vertex ID: %lu", vertex_render_uniforms.selected_vertices[0] - model->VertexStart());
     
     int current_y = 60;
     
-    std::vector<unsigned long> linked_nodes = model->GetLinkedNodes(selected_vertex - model->VertexStart());
+    std::vector<unsigned long> linked_nodes = model->GetLinkedNodes(vertex_render_uniforms.selected_vertices[0] - model->VertexStart());
     for (int i = 0; i < linked_nodes.size(); i++) {
         ImGui::SetCursorPos(ImVec2(30, current_y));
         ImGui::Text("Linked to node %lu", linked_nodes[i]);
@@ -629,7 +831,7 @@ void EditFEVScheme::VertexEditMenu() {
         if (linked_nodes.size() > 1) {
         ImGui::SetCursorPos(ImVec2(150, current_y));
             if (ImGui::Button("Unlink")) {
-                model->UnlinkNodeAndVertex(selected_vertex - model->VertexStart(), linked_nodes[i]);
+                model->UnlinkNodeAndVertex(vertex_render_uniforms.selected_vertices[0] - model->VertexStart(), linked_nodes[i]);
                 should_reset_static_buffers = true;
             }
         }
@@ -644,7 +846,7 @@ void EditFEVScheme::VertexEditMenu() {
     if (ImGui::InputText("##linknode", buf, IM_ARRAYSIZE(buf), ImGuiInputTextFlags_EnterReturnsTrue)) {
         if (isUnsignedLong(buf)) {
             unsigned long nid = std::stoul(buf);
-            model->LinkNodeAndVertex(selected_vertex - model->VertexStart(), nid);
+            model->LinkNodeAndVertex(vertex_render_uniforms.selected_vertices[0] - model->VertexStart(), nid);
             should_reset_static_buffers = true;
         }
     }
@@ -670,12 +872,12 @@ void EditFEVScheme::RightMenu() {
     ImGui::Begin("side", &show_UI, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);
     
     ImGui::SetCursorPos(ImVec2(20, 10));
-    if (selected_vertex != -1) {
-        VertexEditMenu();
-    } else if (selected_edge.x != -1) {
+    if (selected_edge.x != -1) {
         EdgeEditMenu();
     } else if (selected_face != -1) {
         FaceEditMenu();
+    } else if (!vertex_render_uniforms.selected_vertices.empty()) {
+        VertexEditMenu();
     } else {
         ImGui::Text("Nothing Selected");
     }
@@ -701,6 +903,31 @@ void EditFEVScheme::MainWindow() {
     }
     
     ImGui::End();
+    
+    bool should_show_drag = left_mouse_down_ && dist2to3(drag_size, simd_make_float3(0, 0, 0)) > 0.05;
+    if (should_show_drag) {
+        ImVec2 start;
+        if (drag_size.x < 0) {
+            start.x = window_width_*((click_loc_.x + drag_size.x)+1)/2;
+        } else {
+            start.x = window_width_*((click_loc_.x)+1)/2;
+        }
+        if (drag_size.y > 0) {
+            start.y = window_height_*(2-(click_loc_.y + drag_size.y+1))/2;
+        } else {
+            start.y = window_height_*(2-(click_loc_.y+1))/2;
+        }
+        
+        ImGui::SetNextWindowPos(start);
+        ImGui::SetNextWindowSize(ImVec2(abs(window_width_*drag_size.x/2), abs(window_height_*(-drag_size.y/2))));
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.4f, 0.8f, 0.3f));
+        
+        ImGui::Begin("drag", &should_show_drag, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);
+        
+        ImGui::PopStyleColor();
+        
+        ImGui::End();
+    }
 }
 
 void EditFEVScheme::BuildUI() {

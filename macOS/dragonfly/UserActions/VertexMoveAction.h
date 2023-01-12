@@ -13,7 +13,7 @@
 
 class VertexMoveAction : public UserAction {
 public:
-    VertexMoveAction(Model *m, int vid);
+    VertexMoveAction(Model *m, std::vector<int> vids);
     virtual void BeginRecording();
     virtual void EndRecording();
     virtual void Do();
@@ -21,7 +21,7 @@ public:
     virtual ~VertexMoveAction();
 private:
     Model *model_;
-    int vid_;
+    std::vector<int> vids_;
     simd_float3 initial_location_;
     simd_float3 movement_vector_;
 };

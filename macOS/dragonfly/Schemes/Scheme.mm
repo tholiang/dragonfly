@@ -10,10 +10,6 @@
 using namespace DragonflyUtils;
 
 Scheme::Scheme() {
-    vertex_render_uniforms.selected_vertices[0] = -1;
-    vertex_render_uniforms.selected_vertices[1] = -1;
-    vertex_render_uniforms.selected_vertices[2] = -1;
-    
     node_render_uniforms_.selected_node = -1;
     
     UI_start_.x = 0;
@@ -132,6 +128,9 @@ void Scheme::HandleKeyPresses(int key, bool keydown) {
             case 1073742048:
                 keypresses_.control = keydown;
                 break;
+            case 1073742054:
+                keypresses_.option = keydown;
+                break;
             case 1073742055:
                 keypresses_.command = keydown;
                 break;
@@ -166,7 +165,7 @@ void Scheme::HandleCameraMovement() {
     if (keypresses_.space) {
         camera_->pos.z += (3.0/fps);
     }
-    if (keypresses_.shift) {
+    if (keypresses_.option) {
         camera_->pos.z -= (3.0/fps);
     }
 }

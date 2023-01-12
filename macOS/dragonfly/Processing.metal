@@ -56,7 +56,7 @@ struct Uniforms {
 
 struct VertexRenderUniforms {
     float screen_ratio;
-    vector_int3 selected_vertices;
+    int num_selected_vertices;
 };
 
 struct NodeRenderUniforms {
@@ -221,6 +221,95 @@ kernel void CalculateProjectedNodes(device vector_float3 *output [[buffer(0)]], 
     output[vid] = PointToPixel(nodes[vid].pos, camera);
 }
 
+vertex VertexOut DefaultVertexShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant Face *face_array[[buffer(1)]], unsigned int vid [[vertex_id]]) {
+    Face currentFace = face_array[vid/3];
+    vector_float3 currentVertex = vertex_array[currentFace.vertices[vid%3]];
+    VertexOut output;
+    output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z, 1);
+    output.color = currentFace.color;
+    return output;
+}
+
+vertex VertexOut VertexEdgeShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant Face *face_array[[buffer(1)]]/*, const constant EdgeRenderUniforms *uniforms [[buffer(2)]]*/, unsigned int vid [[vertex_id]]) {
+    Face currentFace = face_array[vid/4];
+    vector_float3 currentVertex = vertex_array[currentFace.vertices[vid%3]];
+    VertexOut output;
+    output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z-0.0001, 1);
+    output.color = vector_float4(0, 0, 1, 1);
+    
+    /*if (uniforms->selected_edge.x == currentFace.vertices[vid%3] && uniforms->selected_edge.y == currentFace.vertices[(vid+1)%3]) {
+        output.color = vector_float4(1, 0.5, 0, 1);
+    }
+    
+    if (uniforms->selected_edge.y == currentFace.vertices[(vid)%3] && uniforms->selected_edge.x == currentFace.vertices[(vid-1)%3]) {
+        output.color = vector_float4(1, 0.5, 0, 1);
+    }*/
+    return output;
+}
+
+vertex VertexOut VertexPointShader (const constant vector_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant VertexRenderUniforms *uniforms [[buffer(1)]], const constant int *selected_vertices [[buffer(2)]]) {
+    vector_float3 currentVertex = vertex_array[vid/4];
+    VertexOut output;
+    if (vid % 4 == 0) {
+        output.pos = vector_float4(currentVertex.x-0.007, currentVertex.y-0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
+    } else if (vid % 4 == 1) {
+        output.pos = vector_float4(currentVertex.x-0.007, currentVertex.y+0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
+    } else if (vid % 4 == 2) {
+        output.pos = vector_float4(currentVertex.x+0.007, currentVertex.y-0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
+    } else {
+        output.pos = vector_float4(currentVertex.x+0.007, currentVertex.y+0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
+    }
+    
+    bool is_selected = false;
+    for (int i = 0; i < uniforms->num_selected_vertices; i++) {
+        if (vid/4 == selected_vertices[i]) {
+            output.color = vector_float4(1, 0.5, 0, 1);
+            is_selected = true;
+            break;
+        }
+    }
+    if (!is_selected) {
+        output.color = vector_float4(0, 1, 0, 1);
+    }
+    return output;
+}
+
+vertex VertexOut NodeShader (const constant Vertex *node_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant NodeRenderUniforms *uniforms [[buffer(1)]]) {
+    // 20 side "circle"
+    Vertex currentNode = node_array[vid/40];
+    VertexOut output;
+    
+    int angle_idx = vid % 40;
+    int type_idx = vid % 4;
+    
+    float radius = (1/currentNode.z) / 500;
+    float angle;
+    
+    if (type_idx == 0) {
+        angle = (float) (angle_idx) * pi / 20;
+    } else if (type_idx == 1) {
+        angle = 0;
+        radius = 0;
+    } else {
+        angle = (float) (angle_idx+1) * pi / 20;
+    }
+    
+    output.pos = vector_float4(currentNode.x + radius * cos(angle), currentNode.y + (radius * sin(angle) * uniforms->screen_ratio), currentNode.z-0.01, 1);
+    
+    if (vid/40 == uniforms->selected_node) {
+        output.color = vector_float4(1, 0.5, 0, 1);
+    } else {
+        output.color = vector_float4(0.8, 0.8, 0.9, 1);
+    }
+    
+    return output;
+}
+
+fragment vector_float4 FragmentShader(VertexOut interpolated [[stage_in]]){
+    return interpolated.color;
+}
+
+
 
 // UNUSED
 /*float sign (vector_float2 p1, vector_float3 p2, vector_float3 p3) {
@@ -270,88 +359,6 @@ kernel void FaceClicked(device int &clickedIdx [[buffer(0)]], device float &minZ
         }
     }
 }*/
-
-vertex VertexOut DefaultVertexShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant Face *face_array[[buffer(1)]], unsigned int vid [[vertex_id]]) {
-    Face currentFace = face_array[vid/3];
-    vector_float3 currentVertex = vertex_array[currentFace.vertices[vid%3]];
-    VertexOut output;
-    output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z, 1);
-    output.color = currentFace.color;
-    return output;
-}
-
-vertex VertexOut VertexEdgeShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant Face *face_array[[buffer(1)]]/*, const constant EdgeRenderUniforms *uniforms [[buffer(2)]]*/, unsigned int vid [[vertex_id]]) {
-    Face currentFace = face_array[vid/4];
-    vector_float3 currentVertex = vertex_array[currentFace.vertices[vid%3]];
-    VertexOut output;
-    output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z-0.0001, 1);
-    output.color = vector_float4(0, 0, 1, 1);
-    
-    /*if (uniforms->selected_edge.x == currentFace.vertices[vid%3] && uniforms->selected_edge.y == currentFace.vertices[(vid+1)%3]) {
-        output.color = vector_float4(1, 0.5, 0, 1);
-    }
-    
-    if (uniforms->selected_edge.y == currentFace.vertices[(vid)%3] && uniforms->selected_edge.x == currentFace.vertices[(vid-1)%3]) {
-        output.color = vector_float4(1, 0.5, 0, 1);
-    }*/
-    return output;
-}
-
-vertex VertexOut VertexPointShader (const constant vector_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant VertexRenderUniforms *uniforms [[buffer(1)]]) {
-    vector_float3 currentVertex = vertex_array[vid/4];
-    VertexOut output;
-    if (vid % 4 == 0) {
-        output.pos = vector_float4(currentVertex.x-0.007, currentVertex.y-0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
-    } else if (vid % 4 == 1) {
-        output.pos = vector_float4(currentVertex.x-0.007, currentVertex.y+0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
-    } else if (vid % 4 == 2) {
-        output.pos = vector_float4(currentVertex.x+0.007, currentVertex.y-0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
-    } else {
-        output.pos = vector_float4(currentVertex.x+0.007, currentVertex.y+0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
-    }
-    
-    if (vid/4 == uniforms->selected_vertices.x || vid/4 == uniforms->selected_vertices.y || vid/4 == uniforms->selected_vertices.z) {
-        output.color = vector_float4(1, 0.5, 0, 1);
-    } else {
-        output.color = vector_float4(0, 1, 0, 1);
-    }
-    return output;
-}
-
-vertex VertexOut NodeShader (const constant Vertex *node_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant NodeRenderUniforms *uniforms [[buffer(1)]]) {
-    // 20 side "circle"
-    Vertex currentNode = node_array[vid/40];
-    VertexOut output;
-    
-    int angle_idx = vid % 40;
-    int type_idx = vid % 4;
-    
-    float radius = (1/currentNode.z) / 500;
-    float angle;
-    
-    if (type_idx == 0) {
-        angle = (float) (angle_idx) * pi / 20;
-    } else if (type_idx == 1) {
-        angle = 0;
-        radius = 0;
-    } else {
-        angle = (float) (angle_idx+1) * pi / 20;
-    }
-    
-    output.pos = vector_float4(currentNode.x + radius * cos(angle), currentNode.y + (radius * sin(angle) * uniforms->screen_ratio), currentNode.z-0.01, 1);
-    
-    if (vid/40 == uniforms->selected_node) {
-        output.color = vector_float4(1, 0.5, 0, 1);
-    } else {
-        output.color = vector_float4(0.8, 0.8, 0.9, 1);
-    }
-    
-    return output;
-}
-
-fragment vector_float4 FragmentShader(VertexOut interpolated [[stage_in]]){
-    return interpolated.color;
-}
 
 /*vertex VertexOut ProjectionCalculationVertexShader (const constant vector_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant vector_float4 *color_array [[buffer(1)]], constant Camera &camera [[buffer(2)]]) {
     vector_float3 currentVertex = vertex_array[vid];

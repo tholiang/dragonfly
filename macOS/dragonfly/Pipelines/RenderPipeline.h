@@ -56,6 +56,7 @@ private:
     id <MTLBuffer> scene_projected_node_buffer;
     
     id <MTLBuffer> scene_vertex_render_uniforms_buffer;
+    id <MTLBuffer> scene_selected_vertices_buffer;
     id <MTLBuffer> scene_node_render_uniforms_buffer;
     
     // buffers for controls models compute
@@ -70,7 +71,7 @@ public:
     int init();
     void SetScheme(Scheme *sch);
     void SetSchemeController(SchemeController *sctr);
-    void SetBuffers(id<MTLBuffer> spv, id<MTLBuffer> sf, id<MTLBuffer> spn, id<MTLBuffer> svru, id<MTLBuffer> snru, id<MTLBuffer> cpv, id<MTLBuffer> cf);
+    void SetBuffers(id<MTLBuffer> spv, id<MTLBuffer> sf, id<MTLBuffer> spn, id<MTLBuffer> svru, id<MTLBuffer> ssv, id<MTLBuffer> snru, id<MTLBuffer> cpv, id<MTLBuffer> cf);
     
     void SetPipeline();
     

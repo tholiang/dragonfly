@@ -18,6 +18,7 @@
 #include "imgui.h"
 
 namespace DragonflyUtils {
+bool InIntVector(std::vector<int> &vec, int a);
 bool isFloat( std::string str );
 bool isUnsignedLong( std::string str );
 std::vector<float> splitStringToFloats (std::string str);

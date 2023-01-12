@@ -54,6 +54,8 @@ public:
     void NewModelFromFile(std::string path);
     void NewModelFromPointData(std::string path);
     
+    void RemoveModel(unsigned long mid);
+    
     unsigned long NumModels();
     
     std::vector<Model *> *GetModels();

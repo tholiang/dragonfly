@@ -118,7 +118,8 @@ void ComputePipeline::ResetDynamicBuffers() {
     
     camera_buffer = [device newBufferWithBytes:scheme->GetCamera() length:sizeof(Camera) options:{}];
     scene_transform_uniforms_buffer = [device newBufferWithBytes: scene_transforms->data() length:(scene_transforms->size() * sizeof(ModelUniforms)) options:{}];
-    scene_vertex_render_uniforms_buffer = [device newBufferWithBytes: scheme->GetVertexRenderUniforms() length:(sizeof(VertexRenderUniforms)) options:{}];
+    scene_vertex_render_uniforms_buffer = [device newBufferWithBytes: scheme->GetVertexRenderUniforms() length:(sizeof(VertexRenderUniforms) - sizeof(scheme->GetVertexRenderUniforms()->selected_vertices)) options:{}];
+    scene_selected_vertices_buffer = [device newBufferWithBytes: scheme->GetVertexRenderUniforms()->selected_vertices.data() length:(scheme->GetVertexRenderUniforms()->selected_vertices.size() * sizeof(int)) options:{}];
     scene_node_render_uniforms_buffer = [device newBufferWithBytes: scheme->GetNodeRenderUniforms() length:(sizeof(NodeRenderUniforms)) options:{}];
     scene_node_buffer = [device newBufferWithBytes: scene_node_array.data() length:(scene_node_array.size() * sizeof(Node)) options:MTLResourceStorageModeShared];
     
@@ -242,7 +243,7 @@ void ComputePipeline::Compute() {
 
 
 void ComputePipeline::SendDataToRenderer(RenderPipeline *renderer) {
-    renderer->SetBuffers(scene_projected_vertex_buffer, scene_face_buffer, scene_projected_node_buffer, scene_vertex_render_uniforms_buffer, scene_node_render_uniforms_buffer, controls_projected_vertex_buffer, controls_faces_buffer);
+    renderer->SetBuffers(scene_projected_vertex_buffer, scene_face_buffer, scene_projected_node_buffer, scene_vertex_render_uniforms_buffer, scene_selected_vertices_buffer, scene_node_render_uniforms_buffer, controls_projected_vertex_buffer, controls_faces_buffer);
 }
 
 void ComputePipeline::SendDataToScheme() {

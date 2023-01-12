@@ -10,10 +10,9 @@
 
 #include "Scheme.h"
 #include "../UserActions/VertexMoveAction.h"
-#include "../UserActions/EdgeMoveAction.h"
-#include "../UserActions/FaceMoveAction.h"
 #include "../UserActions/FaceAddVertexAction.h"
 #include "../UserActions/EdgeAddVertexAction.h"
+#include "../Utils/JoinModels.h"
 
 class EditFEVScheme : public Scheme {
 private:
@@ -21,8 +20,12 @@ private:
     
     bool render_rightclick_popup_ = false;
     simd_float2 rightclick_popup_loc_;
+    int num_right_click_buttons_ = 0;
+    ImVec2 button_size_;
     simd_float2 rightclick_popup_size_;
     bool rightclick_popup_clicked_ = false;
+    
+    simd_float2 drag_size;
     
     Arrow *z_arrow;
     Arrow *x_arrow;
@@ -36,8 +39,13 @@ private:
     
     int selected_face = -1;
     vector_int2 selected_edge;
-    int selected_vertex = -1;
+//    int selected_vertex = -1;
     int selected_model = -1;
+    
+    int joinModelA = -1;
+    int joinModelB = -1;
+    std::vector<int> joinAvids;
+    std::vector<int> joinBvids;
     
     void CreateControlsModels();
     
@@ -51,12 +59,17 @@ private:
     
     void HandleSelection(simd_float2 loc);
     
+    void SelectVerticesInDrag();
+    
     void SetControlsOrigin();
     
     void SetArrowProjections();
     
     void AddVertexToFace (int fid, int mid);
     void AddVertexToEdge (int vid1, int vid2, int mid);
+    
+    void StartJoinModels();
+    void JoinModels();
     
     void RightClickPopup();
     
