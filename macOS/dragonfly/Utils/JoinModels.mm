@@ -199,7 +199,7 @@ void DragonflyUtils::JoinModels(Model *A, Model *B, ModelUniforms *muA, ModelUni
     
     int prevAvertices = A->NumVertices();
     
-    simd_float3 modeldiff = simd_make_float3(muB->position.x - muA->position.x, muB->position.y - muA->position.y, muB->position.z - muA->position.z);
+    simd_float3 modeldiff = simd_make_float3(muB->b.pos.x - muA->b.pos.x, muB->b.pos.y - muA->b.pos.y, muB->b.pos.z - muA->b.pos.z);
     
     std::vector<int> assignments = Hungarian(A_vals, B_vals);
     for (int j = 0; j < B->NumVertices(); j++) {

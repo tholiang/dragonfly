@@ -14,6 +14,14 @@ constant float render_dist = 50;
 typedef simd_float3 Vertex;
 typedef simd_float2 Dot;
 
+struct Basis {
+    simd_float3 pos;
+    // angles
+    simd_float3 x;
+    simd_float3 y;
+    simd_float3 z;
+};
+
 struct Camera {
     vector_float3 pos;
     vector_float3 vector;
@@ -32,8 +40,7 @@ struct Face {
 
 struct Node {
     int locked_to;
-    vector_float3 pos;
-    vector_float3 angle; // euler angles zyx
+    Basis b;
 };
 
 struct NodeVertexLink {
@@ -48,9 +55,8 @@ struct VertexOut {
 };
 
 struct ModelUniforms {
-    vector_float3 position;
     vector_float3 rotate_origin;
-    vector_float3 angle; // euler angles
+    Basis b;
 };
 
 struct Uniforms {
@@ -179,6 +185,53 @@ vector_float3 RotateAround (vector_float3 point, vector_float3 origin, vector_fl
     return point;
 }
 
+simd_float3 TranslatePointToBasis(Basis b, simd_float3 point) {
+    simd_float3 ret;
+    // x component
+    ret.x = point.x * b.x.x;
+    ret.y = point.x * b.x.y;
+    ret.z = point.x * b.x.z;
+    // y component
+    ret.x += point.y * b.y.x;
+    ret.y += point.y * b.y.y;
+    ret.z += point.y * b.y.z;
+    // z component
+    ret.x += point.z * b.z.x;
+    ret.y += point.z * b.z.y;
+    ret.z += point.z * b.z.z;
+    
+    ret.x += b.pos.x;
+    ret.y += b.pos.y;
+    ret.z += b.pos.z;
+    
+    return ret;
+}
+
+simd_float3 RotatePointToBasis(Basis b, simd_float3 point) {
+    simd_float3 ret;
+    // x component
+    ret.x = point.x * b.x.x;
+    ret.y = point.x * b.x.y;
+    ret.z = point.x * b.x.z;
+    // y component
+    ret.x += point.y * b.y.x;
+    ret.y += point.y * b.y.y;
+    ret.z += point.y * b.y.z;
+    // z component
+    ret.x += point.z * b.z.x;
+    ret.y += point.z * b.z.y;
+    ret.z += point.z * b.z.z;
+    
+    return ret;
+}
+
+simd_float3 AddVectors(simd_float3 v1, simd_float3 v2) {
+    simd_float3 ret;
+    ret.x = v1.x + v2.x;
+    ret.y = v1.y + v2.y;
+    ret.z = v1.z + v2.z;
+}
+
 vector_float3 cross_product (vector_float3 p1, vector_float3 p2, vector_float3 p3) {
     vector_float3 u = vector_float3(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
     vector_float3 v = vector_float3(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
@@ -222,14 +275,19 @@ kernel void ResetVertices (device Vertex *vertices [[buffer(0)]], unsigned int v
 
 kernel void CalculateModelNodeTransforms(device Node *nodes [[buffer(0)]], unsigned int vid [[thread_position_in_grid]], const constant unsigned int *modelIDs [[buffer(1)]], const constant ModelUniforms *uniforms [[buffer(2)]]) {
     ModelUniforms uniform = uniforms[modelIDs[vid]];
-    vector_float3 offset_node = nodes[vid].pos;
-    offset_node.x += uniform.position.x;
-    offset_node.y += uniform.position.y;
-    offset_node.z += uniform.position.z;
-    nodes[vid].pos = RotateAround(offset_node, uniform.rotate_origin, uniform.angle);
-    nodes[vid].angle.x += uniform.angle.x;
-    nodes[vid].angle.y += uniform.angle.y;
-    nodes[vid].angle.z += uniform.angle.z;
+//    vector_float3 offset_node = nodes[vid].b.pos;
+//    offset_node.x += uniform.b.pos.x;
+//    offset_node.y += uniform.b.pos.y;
+//    offset_node.z += uniform.b.pos.z;
+//    nodes[vid].pos = RotateAround(offset_node, uniform.rotate_origin, uniform.angle);
+    nodes[vid].b.pos = TranslatePointToBasis(uniform.b, nodes[vid].b.pos);
+    nodes[vid].b.x = RotatePointToBasis(uniform.b, nodes[vid].b.x);
+    nodes[vid].b.y = RotatePointToBasis(uniform.b, nodes[vid].b.y);
+    nodes[vid].b.z = RotatePointToBasis(uniform.b, nodes[vid].b.z);
+    
+//    nodes[vid].angle.x += uniform.angle.x;
+//    nodes[vid].angle.y += uniform.angle.y;
+//    nodes[vid].angle.z += uniform.angle.z;
 }
 
 kernel void CalculateVertices(device Vertex *vertices [[buffer(0)]], const constant NodeVertexLink *nvlinks [[buffer(1)]], unsigned int vid [[thread_position_in_grid]], const constant Node *nodes [[buffer(2)]]) {
@@ -241,8 +299,9 @@ kernel void CalculateVertices(device Vertex *vertices [[buffer(0)]], const const
     if (link1.nid != -1) {
         Node n = nodes[link1.nid];
         
-        Vertex desired1 = vector_float3(n.pos.x + link1.vector.x, n.pos.y + link1.vector.y, n.pos.z + link1.vector.z);
-        desired1 = RotateAround(desired1, n.pos, n.angle);
+//        Vertex desired1 = vector_float3(n.pos.x + link1.vector.x, n.pos.y + link1.vector.y, n.pos.z + link1.vector.z);
+//        desired1 = RotateAround(desired1, n.pos, n.angle);
+        Vertex desired1 = TranslatePointToBasis(n.b, link1.vector);
         
         v.x += link1.weight*desired1.x;
         v.y += link1.weight*desired1.y;
@@ -252,8 +311,9 @@ kernel void CalculateVertices(device Vertex *vertices [[buffer(0)]], const const
     if (link2.nid != -1) {
         Node n = nodes[link2.nid];
         
-        Vertex desired2 = vector_float3(n.pos.x + link2.vector.x, n.pos.y + link2.vector.y, n.pos.z + link2.vector.z);
-        desired2 = RotateAround(desired2, n.pos, n.angle);
+//        Vertex desired2 = vector_float3(n.pos.x + link2.vector.x, n.pos.y + link2.vector.y, n.pos.z + link2.vector.z);
+//        desired2 = RotateAround(desired2, n.pos, n.angle);
+        Vertex desired2 = TranslatePointToBasis(n.b, link2.vector);
         
         v.x += link2.weight*desired2.x;
         v.y += link2.weight*desired2.y;
@@ -268,7 +328,7 @@ kernel void CalculateProjectedVertices(device vector_float3 *output [[buffer(0)]
 }
 
 kernel void CalculateProjectedNodes(device vector_float3 *output [[buffer(0)]], device Node *nodes [[buffer(1)]], unsigned int vid [[thread_position_in_grid]], constant Camera &camera [[buffer(2)]]) {
-    output[vid] = PointToPixel(nodes[vid].pos, camera);
+    output[vid] = PointToPixel(nodes[vid].b.pos, camera);
 }
 
 kernel void CalculateFaceLighting(device Face *output [[buffer(0)]], const constant Face *faces[[buffer(1)]], const constant Vertex *vertices [[buffer(2)]], const constant Vertex *light[[buffer(3)]], unsigned int fid[[thread_position_in_grid]]) {

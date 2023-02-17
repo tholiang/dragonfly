@@ -15,6 +15,9 @@
 #include <fstream>
 
 #include "../Utils/Utils.h"
+#include "../Utils/Basis.h"
+
+using namespace DragonflyUtils;
 
 typedef simd_float3 Vertex;
 
@@ -36,8 +39,7 @@ struct Face {
 
 struct Node {
     int locked_to = -1;
-    simd_float3 pos;
-    simd_float3 angle; // euler angles zyx
+    Basis b;
 };
 
 struct NodeVertexLink {
@@ -49,8 +51,7 @@ struct NodeVertexLink {
 struct NodeKeyFrame {
     uint32_t nid;
     float time;
-    simd_float3 pos;
-    simd_float3 angle;
+    Basis b;
 };
 
 class Animation {
@@ -68,7 +69,7 @@ public:
     float GetLength();
 
     void AddNode();
-    void SetKeyFrame(uint32_t nid, float time, simd_float3 pos, simd_float3 angle);
+    void SetKeyFrame(uint32_t nid, float time, Basis basis);
     void RemoveKeyFrame(uint32_t nid, uint32_t kfid);
 
     void SetAtTime(float time);

@@ -30,9 +30,8 @@ void EditNodeScheme::CreateControlsModels() {
     z_arrow = new Arrow(0);
     
     ModelUniforms z_arrow_uniform;
-    z_arrow_uniform.position = simd_make_float3(0, 0, 1);
+    z_arrow_uniform.b.pos = simd_make_float3(0, 0, 1);
     z_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 1);
-    z_arrow_uniform.angle = simd_make_float3(0, 0, 0);
     
     controls_model_uniforms_.push_back(z_arrow_uniform);
     arrow_projections[0] = simd_make_float2(0,0);
@@ -43,9 +42,10 @@ void EditNodeScheme::CreateControlsModels() {
     x_arrow = new Arrow(1, simd_make_float4(0, 1, 0, 1));
     
     ModelUniforms x_arrow_uniform;
-    x_arrow_uniform.position = simd_make_float3(0, 0, 1);
+    x_arrow_uniform.b.pos = simd_make_float3(0, 0, 1);
     x_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 1);
-    x_arrow_uniform.angle = simd_make_float3(M_PI_2, 0, 0);
+    //x_arrow_uniform.angle = simd_make_float3(M_PI_2, 0, 0);
+    RotateBasisOnY(&x_arrow_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(x_arrow_uniform);
     arrow_projections[2] = simd_make_float2(0,0);
@@ -56,9 +56,10 @@ void EditNodeScheme::CreateControlsModels() {
     y_arrow = new Arrow(2, simd_make_float4(0, 0, 1, 1));
     
     ModelUniforms y_arrow_uniform;
-    y_arrow_uniform.position = simd_make_float3(0, 0, 1);
+    y_arrow_uniform.b.pos = simd_make_float3(0, 0, 1);
     y_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 1);
-    y_arrow_uniform.angle = simd_make_float3(0, -M_PI_2, 0);
+//    y_arrow_uniform.angle = simd_make_float3(0, -M_PI_2, 0);
+    RotateBasisOnX(&y_arrow_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(y_arrow_uniform);
     arrow_projections[4] = simd_make_float2(0,0);
@@ -88,24 +89,24 @@ void EditNodeScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
             
             // move
             ModelUniforms arrow_uniform = controls_model_uniforms_[selected_arrow];
-            float x_vec = 0;
-            float y_vec = 0;
-            float z_vec = 1;
-            // gimbal locked
-            
-            // around z axis
-            //x_vec = x_vec*cos(arrow_uniform.angle.z)-y_vec*sin(arrow_uniform.angle.z);
-            //y_vec = x_vec*sin(arrow_uniform.angle.z)+y_vec*cos(arrow_uniform.angle.z);
-            
-            // around y axis
-            float newx = x_vec*cos(arrow_uniform.angle.y)+z_vec*sin(arrow_uniform.angle.y);
-            z_vec = -x_vec*sin(arrow_uniform.angle.y)+z_vec*cos(arrow_uniform.angle.y);
-            x_vec = newx;
-            
-            // around x axis
-            float newy = y_vec*cos(arrow_uniform.angle.x)-z_vec*sin(arrow_uniform.angle.x);
-            z_vec = y_vec*sin(arrow_uniform.angle.x)+z_vec*cos(arrow_uniform.angle.x);
-            y_vec = newy;
+            float x_vec = arrow_uniform.b.z.x; // 0;
+            float y_vec = arrow_uniform.b.z.y;// 0;
+            float z_vec = arrow_uniform.b.z.z;// 1;
+//            // gimbal locked
+//
+//            // around z axis
+//            //x_vec = x_vec*cos(arrow_uniform.angle.z)-y_vec*sin(arrow_uniform.angle.z);
+//            //y_vec = x_vec*sin(arrow_uniform.angle.z)+y_vec*cos(arrow_uniform.angle.z);
+//
+//            // around y axis
+//            float newx = x_vec*cos(arrow_uniform.angle.y)+z_vec*sin(arrow_uniform.angle.y);
+//            z_vec = -x_vec*sin(arrow_uniform.angle.y)+z_vec*cos(arrow_uniform.angle.y);
+//            x_vec = newx;
+//
+//            // around x axis
+//            float newy = y_vec*cos(arrow_uniform.angle.x)-z_vec*sin(arrow_uniform.angle.x);
+//            z_vec = y_vec*sin(arrow_uniform.angle.x)+z_vec*cos(arrow_uniform.angle.x);
+//            y_vec = newy;
             
             x_vec *= 0.01*mvmt;
             y_vec *= 0.01*mvmt;
@@ -243,7 +244,7 @@ void EditNodeScheme::SetControlsOrigin() {
         Model *model = scene_->GetModel(selected_model_);
         unsigned long modelNodeId = selected_node_ - model->FaceStart();
         if (modelNodeId > 0) {
-            controls_origin_ = scene_models_nodes_[selected_node_].pos;
+            controls_origin_ = scene_models_nodes_[selected_node_].b.pos;
         }
     } else {
         simd_float3 behind_camera;
@@ -303,81 +304,92 @@ void EditNodeScheme::NodeEditMenu() {
     ImGui::SetCursorPos(ImVec2(50, 80));
     ImGui::Text("x: ");
     ImGui::SetCursorPos(ImVec2(70, 80));
-    std::string x_input = TextField(std::to_string(node->pos.x), "##nodex");
+    std::string x_input = TextField(std::to_string(node->b.pos.x), "##nodex");
     if (isFloat(x_input) && selected_node_ != model->NodeStart()) {
         float new_x = std::stof(x_input);
-        node->pos.x = new_x;
+        node->b.pos.x = new_x;
     }
     
     ImGui::SetCursorPos(ImVec2(50, 110));
     ImGui::Text("y: ");
     ImGui::SetCursorPos(ImVec2(70, 110));
-    std::string y_input = TextField(std::to_string(node->pos.y), "##nodey");
+    std::string y_input = TextField(std::to_string(node->b.pos.y), "##nodey");
     if (isFloat(y_input) && selected_node_ != model->NodeStart()) {
         float new_y = std::stof(y_input);
-        node->pos.y = new_y;
+        node->b.pos.y = new_y;
     }
     
     ImGui::SetCursorPos(ImVec2(50, 140));
     ImGui::Text("z: ");
     ImGui::SetCursorPos(ImVec2(70, 140));
-    std::string z_input = TextField(std::to_string(node->pos.z), "##nodez");
+    std::string z_input = TextField(std::to_string(node->b.pos.z), "##nodez");
     if (isFloat(z_input) && selected_node_ != model->NodeStart()) {
         float new_z = std::stof(z_input);
-        node->pos.z = new_z;
+        node->b.pos.z = new_z;
     }
     
     
     ImGui::SetCursorPos(ImVec2(30, 170));
-    ImGui::Text("Angle");
-    
+    ImGui::Text("Rotate By");
+
     ImGui::SetCursorPos(ImVec2(50, 200));
     ImGui::Text("x: ");
     ImGui::SetCursorPos(ImVec2(70, 200));
-    std::string xa_input = TextField(std::to_string(node->angle.x * 180 / M_PI), "##nodeax");
-    if (isFloat(xa_input) && selected_node_ != model->NodeStart()) {
-        float new_x = std::stof(xa_input);
-        node->angle.x = new_x * M_PI / 180;
-    }
-    
+    angle_input_x = TextField(angle_input_x, "##nodeax");
+
     ImGui::SetCursorPos(ImVec2(50, 230));
     ImGui::Text("y: ");
     ImGui::SetCursorPos(ImVec2(70, 230));
-    std::string ya_input = TextField(std::to_string(node->angle.y * 180 / M_PI), "##nodeay");
-    if (isFloat(ya_input) && selected_node_ != model->NodeStart()) {
-        float new_y = std::stof(ya_input);
-        node->angle.y = new_y * M_PI / 180;
-    }
-    
+    angle_input_y = TextField(angle_input_y, "##nodeay");
+
     ImGui::SetCursorPos(ImVec2(50, 260));
     ImGui::Text("z: ");
     ImGui::SetCursorPos(ImVec2(70, 260));
-    std::string za_input = TextField(std::to_string(node->angle.z * 180 / M_PI), "##nodeaz");
-    if (isFloat(za_input) && selected_node_ != model->NodeStart()) {
-        float new_z = std::stof(za_input);
-        node->angle.z = new_z * M_PI / 180;
+    angle_input_z = TextField(angle_input_z, "##nodeaz");
+    
+    ImGui::SetCursorPos(ImVec2(50, 280));
+    if (ImGui::Button("Rotate", ImVec2(80,30))) {
+        if (isFloat(angle_input_x) && selected_node_ != model->NodeStart()) {
+            float new_x = std::stof(angle_input_x);
+            RotateBasisOnX(&node->b, new_x * M_PI / 180);
+            //node->angle.x = new_x * M_PI / 180;
+        }
+        if (isFloat(angle_input_y) && selected_node_ != model->NodeStart()) {
+            float new_y = std::stof(angle_input_y);
+            RotateBasisOnY(&node->b, new_y * M_PI / 180);
+            //node->angle.y = new_y * M_PI / 180;
+        }
+        if (isFloat(angle_input_z) && selected_node_ != model->NodeStart()) {
+            float new_z = std::stof(angle_input_z);
+            RotateBasisOnZ(&node->b, new_z * M_PI / 180);
+            //node->angle.z = new_z * M_PI / 180;
+        }
+        
+        angle_input_x = "0";
+        angle_input_y = "0";
+        angle_input_z = "0";
     }
     
-    ImGui::SetCursorPos(ImVec2(50, 290));
+    ImGui::SetCursorPos(ImVec2(50, 320));
     ImGui::Text("lock to: ");
-    ImGui::SetCursorPos(ImVec2(90, 290));
+    ImGui::SetCursorPos(ImVec2(90, 320));
     std::string locked_to = TextField(std::to_string(node->locked_to), "##nodelock");
     if (isUnsignedLong(locked_to) && selected_node_ != model->NodeStart()) {
         unsigned long new_lock = std::stoul(locked_to);
         model->LockNodeToNode(selected_node_ - model->NodeStart(), new_lock);
     }
     
-    ImGui::SetCursorPos(ImVec2(50, 320));
+    ImGui::SetCursorPos(ImVec2(50, 350));
     ImGui::Text("keyframe: ");
-    ImGui::SetCursorPos(ImVec2(70, 340));
-    ImGui::Text("animation id: ");
-    ImGui::SetCursorPos(ImVec2(120, 340));
-    std::string aidin = TextField(std::to_string(wanted_aid), "##naid");
     ImGui::SetCursorPos(ImVec2(70, 370));
-    ImGui::Text("time: ");
-    ImGui::SetCursorPos(ImVec2(100, 370));
-    std::string timein = TextField(std::to_string(wanted_time), "##natime");
+    ImGui::Text("animation id: ");
+    ImGui::SetCursorPos(ImVec2(120, 370));
+    std::string aidin = TextField(std::to_string(wanted_aid), "##naid");
     ImGui::SetCursorPos(ImVec2(70, 400));
+    ImGui::Text("time: ");
+    ImGui::SetCursorPos(ImVec2(100, 400));
+    std::string timein = TextField(std::to_string(wanted_time), "##natime");
+    ImGui::SetCursorPos(ImVec2(70, 430));
     if (isUnsignedLong(aidin) && isFloat(timein)) {
         wanted_aid = std::stoul(aidin);
         wanted_time = std::stof(timein);

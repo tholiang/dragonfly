@@ -55,6 +55,7 @@
 		D2EAF92427914191002DE553 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2EAF92327914191002DE553 /* Metal.framework */; platformFilter = maccatalyst; };
 		D2EAF92627914197002DE553 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2EAF92527914197002DE553 /* QuartzCore.framework */; platformFilter = maccatalyst; };
 		D2EF6E8D29779E2C002BE578 /* Normals.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2EF6E8B29779E2C002BE578 /* Normals.mm */; };
+		D2EFA03829A01F410080D216 /* Basis.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2EFA03629A01F410080D216 /* Basis.mm */; };
 		D2F0B0CF28985CF700057FD6 /* Engine.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2F0B0CE28985CF200057FD6 /* Engine.mm */; };
 		D2F0B0D2289878F600057FD6 /* SchemeController.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2F0B0D1289878F300057FD6 /* SchemeController.mm */; };
 /* End PBXBuildFile section */
@@ -174,6 +175,8 @@
 		D2EAF92527914197002DE553 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		D2EF6E8B29779E2C002BE578 /* Normals.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Normals.mm; sourceTree = "<group>"; };
 		D2EF6E8C29779E2C002BE578 /* Normals.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Normals.h; sourceTree = "<group>"; };
+		D2EFA03629A01F410080D216 /* Basis.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Basis.mm; sourceTree = "<group>"; };
+		D2EFA03729A01F410080D216 /* Basis.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Basis.h; sourceTree = "<group>"; };
 		D2F0B0CD28985CE200057FD6 /* Engine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Engine.h; sourceTree = "<group>"; };
 		D2F0B0CE28985CF200057FD6 /* Engine.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Engine.mm; sourceTree = "<group>"; };
 		D2F0B0D0289878E300057FD6 /* SchemeController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SchemeController.h; sourceTree = "<group>"; };
@@ -333,6 +336,8 @@
 			children = (
 				D2E399BD2874FD95003381DD /* Utils.h */,
 				D2E399BE2874FDA5003381DD /* Utils.mm */,
+				D2EFA03729A01F410080D216 /* Basis.h */,
+				D2EFA03629A01F410080D216 /* Basis.mm */,
 				D2E79A7D2950103000051DDF /* Project2D.h */,
 				D2E79A7C2950103000051DDF /* Project2D.mm */,
 				D2B08AD6296D240800CA5FFC /* JoinModels.h */,
@@ -581,6 +586,7 @@
 				D2E399B02874DEC4003381DD /* RenderPipeline.mm in Sources */,
 				D2047BDD2793B1A000B4B442 /* imgui_demo.cpp in Sources */,
 				D2F0B0D2289878F600057FD6 /* SchemeController.mm in Sources */,
+				D2EFA03829A01F410080D216 /* Basis.mm in Sources */,
 				D284008A29903A7200DD3B72 /* Slice.mm in Sources */,
 				D20C0B3628453C2C00F5DC08 /* VertexMoveAction.mm in Sources */,
 				D2EF6E8D29779E2C002BE578 /* Normals.mm in Sources */,

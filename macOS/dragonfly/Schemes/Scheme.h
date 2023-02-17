@@ -20,12 +20,15 @@
 #include "imgui.h"
 
 #include "../Utils/Utils.h"
+#include "../Utils/Basis.h"
 
 #include "../Modeling/Model.h"
 #include "../Modeling/Scene.h"
 #include "../Modeling/Arrow.h"
 
 #include "../UserActions/UserAction.h"
+
+using namespace DragonflyUtils;
 
 enum SchemeType {
     EditModel,

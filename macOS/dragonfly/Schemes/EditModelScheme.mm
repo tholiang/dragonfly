@@ -32,9 +32,8 @@ void EditModelScheme::CreateControlsModels() {
     z_arrow = new Arrow(0);
     
     ModelUniforms z_arrow_uniform;
-    z_arrow_uniform.position = simd_make_float3(0, 0, 1);
+    z_arrow_uniform.b.pos = simd_make_float3(0, 0, 1);
     z_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 1);
-    z_arrow_uniform.angle = simd_make_float3(0, 0, 0);
     
     controls_model_uniforms_.push_back(z_arrow_uniform);
     arrow_projections[0] = simd_make_float2(0,0);
@@ -45,9 +44,10 @@ void EditModelScheme::CreateControlsModels() {
     x_arrow = new Arrow(1, simd_make_float4(0, 1, 0, 1));
     
     ModelUniforms x_arrow_uniform;
-    x_arrow_uniform.position = simd_make_float3(0, 0, 1);
+    x_arrow_uniform.b.pos = simd_make_float3(0, 0, 1);
     x_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 1);
-    x_arrow_uniform.angle = simd_make_float3(M_PI_2, 0, 0);
+    //x_arrow_uniform.angle = simd_make_float3(M_PI_2, 0, 0);
+    RotateBasisOnY(&x_arrow_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(x_arrow_uniform);
     arrow_projections[2] = simd_make_float2(0,0);
@@ -58,9 +58,10 @@ void EditModelScheme::CreateControlsModels() {
     y_arrow = new Arrow(2, simd_make_float4(0, 0, 1, 1));
     
     ModelUniforms y_arrow_uniform;
-    y_arrow_uniform.position = simd_make_float3(0, 0, 1);
+    y_arrow_uniform.b.pos = simd_make_float3(0, 0, 1);
     y_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 1);
-    y_arrow_uniform.angle = simd_make_float3(0, -M_PI_2, 0);
+//    y_arrow_uniform.angle = simd_make_float3(0, -M_PI_2, 0);
+    RotateBasisOnX(&y_arrow_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(y_arrow_uniform);
     arrow_projections[4] = simd_make_float2(0,0);
@@ -188,7 +189,7 @@ void EditModelScheme::HandleSelection(simd_float2 loc) {
 
 void EditModelScheme::SetControlsOrigin() {
     if (selected_model != -1) {
-        controls_origin_ = scene_->GetModelUniforms(selected_model)->position;
+        controls_origin_ = scene_->GetModelUniforms(selected_model)->b.pos;
     } else {
         simd_float3 behind_camera;
         behind_camera.x = camera_->pos.x - camera_->vector.x*10;
@@ -236,24 +237,24 @@ void EditModelScheme::HandleMouseMovement(float x, float y, float dx, float dy) 
             
             // move
             ModelUniforms arrow_uniform = controls_model_uniforms_[selected_arrow];
-            float x_vec = 0;
-            float y_vec = 0;
-            float z_vec = 1;
-            // gimbal locked
-            
-            // around z axis
-            //x_vec = x_vec*cos(arrow_uniform.angle.z)-y_vec*sin(arrow_uniform.angle.z);
-            //y_vec = x_vec*sin(arrow_uniform.angle.z)+y_vec*cos(arrow_uniform.angle.z);
-            
-            // around y axis
-            float newx = x_vec*cos(arrow_uniform.angle.y)+z_vec*sin(arrow_uniform.angle.y);
-            z_vec = -x_vec*sin(arrow_uniform.angle.y)+z_vec*cos(arrow_uniform.angle.y);
-            x_vec = newx;
-            
-            // around x axis
-            float newy = y_vec*cos(arrow_uniform.angle.x)-z_vec*sin(arrow_uniform.angle.x);
-            z_vec = y_vec*sin(arrow_uniform.angle.x)+z_vec*cos(arrow_uniform.angle.x);
-            y_vec = newy;
+            float x_vec = arrow_uniform.b.z.x; // 0;
+            float y_vec = arrow_uniform.b.z.y;// 0;
+            float z_vec = arrow_uniform.b.z.z;// 1;
+//            // gimbal locked
+//
+//            // around z axis
+//            //x_vec = x_vec*cos(arrow_uniform.angle.z)-y_vec*sin(arrow_uniform.angle.z);
+//            //y_vec = x_vec*sin(arrow_uniform.angle.z)+y_vec*cos(arrow_uniform.angle.z);
+//
+//            // around y axis
+//            float newx = x_vec*cos(arrow_uniform.angle.y)+z_vec*sin(arrow_uniform.angle.y);
+//            z_vec = -x_vec*sin(arrow_uniform.angle.y)+z_vec*cos(arrow_uniform.angle.y);
+//            x_vec = newx;
+//
+//            // around x axis
+//            float newy = y_vec*cos(arrow_uniform.angle.x)-z_vec*sin(arrow_uniform.angle.x);
+//            z_vec = y_vec*sin(arrow_uniform.angle.x)+z_vec*cos(arrow_uniform.angle.x);
+//            y_vec = newy;
             
             x_vec *= 0.01*mvmt;
             y_vec *= 0.01*mvmt;
@@ -262,9 +263,9 @@ void EditModelScheme::HandleMouseMovement(float x, float y, float dx, float dy) 
             if (selected_model != -1) {
                 ModelUniforms *mu = scene_->GetModelUniforms(selected_model);
                 
-                mu->position.x += x_vec;
-                mu->position.y += y_vec;
-                mu->position.z += z_vec;
+                mu->b.pos.x += x_vec;
+                mu->b.pos.y += y_vec;
+                mu->b.pos.z += z_vec;
                 
                 mu->rotate_origin.x += x_vec;
                 mu->rotate_origin.y += y_vec;
@@ -325,50 +326,91 @@ void EditModelScheme::ModelEditMenu() {
     ImGui::SetCursorPos(ImVec2(50, 50));
     ImGui::Text("x: ");
     ImGui::SetCursorPos(ImVec2(70, 50));
-    std::string x_input = TextField(std::to_string(scene_->GetModelUniforms(selected_model)->position.x), "##modelx");
+    std::string x_input = TextField(std::to_string(scene_->GetModelUniforms(selected_model)->b.pos.x), "##modelx");
     if (isFloat(x_input)) {
         float new_x = std::stof(x_input);
-        scene_->GetModelUniforms(selected_model)->position.x = new_x;
+        scene_->GetModelUniforms(selected_model)->b.pos.x = new_x;
         scene_->GetModelUniforms(selected_model)->rotate_origin.x = new_x;
     }
     
     ImGui::SetCursorPos(ImVec2(50, 80));
     ImGui::Text("y: ");
     ImGui::SetCursorPos(ImVec2(70, 80));
-    std::string y_input = TextField(std::to_string(scene_->GetModelUniforms(selected_model)->position.y), "##modely");
+    std::string y_input = TextField(std::to_string(scene_->GetModelUniforms(selected_model)->b.pos.y), "##modely");
     if (isFloat(y_input)) {
         float new_y = std::stof(y_input);
-        scene_->GetModelUniforms(selected_model)->position.y = new_y;
+        scene_->GetModelUniforms(selected_model)->b.pos.y = new_y;
         scene_->GetModelUniforms(selected_model)->rotate_origin.y = new_y;
     }
     
     ImGui::SetCursorPos(ImVec2(50, 110));
     ImGui::Text("z: ");
     ImGui::SetCursorPos(ImVec2(70, 110));
-    std::string z_input = TextField(std::to_string(scene_->GetModelUniforms(selected_model)->position.z), "##modelz");
+    std::string z_input = TextField(std::to_string(scene_->GetModelUniforms(selected_model)->b.pos.z), "##modelz");
     if (isFloat(z_input)) {
         float new_z = std::stof(z_input);
-        scene_->GetModelUniforms(selected_model)->position.z = new_z;
+        scene_->GetModelUniforms(selected_model)->b.pos.z = new_z;
         scene_->GetModelUniforms(selected_model)->rotate_origin.z = new_z;
     }
     
-    ImGui::SetCursorPos(ImVec2(50, 140));
+    
+    ImGui::SetCursorPos(ImVec2(30, 140));
+    ImGui::Text("Rotate By");
+
+    ImGui::SetCursorPos(ImVec2(50, 170));
+    ImGui::Text("x: ");
+    ImGui::SetCursorPos(ImVec2(70, 170));
+    angle_input_x = TextField(angle_input_x, "##modelax");
+
+    ImGui::SetCursorPos(ImVec2(50, 200));
+    ImGui::Text("y: ");
+    ImGui::SetCursorPos(ImVec2(70, 200));
+    angle_input_y = TextField(angle_input_y, "##modelay");
+
+    ImGui::SetCursorPos(ImVec2(50, 230));
+    ImGui::Text("z: ");
+    ImGui::SetCursorPos(ImVec2(70, 230));
+    angle_input_z = TextField(angle_input_z, "##modelaz");
+    
+    ImGui::SetCursorPos(ImVec2(50, 250));
+    if (ImGui::Button("Rotate", ImVec2(80,30))) {
+        float new_x = 0;
+        float new_y = 0;
+        float new_z = 0;
+        if (isFloat(angle_input_x)) {
+            new_x = std::stof(angle_input_x);
+        }
+        if (isFloat(angle_input_y)) {
+            new_y = std::stof(angle_input_y);
+        }
+        if (isFloat(angle_input_z)) {
+            new_z = std::stof(angle_input_z);
+        }
+        
+        scene_->RotateModelBy(selected_model, new_x * M_PI / 180, new_y * M_PI / 180, new_z * M_PI / 180);
+        
+        angle_input_x = "0";
+        angle_input_y = "0";
+        angle_input_z = "0";
+    }
+    
+    ImGui::SetCursorPos(ImVec2(50, 280));
     ImGui::Text("Number of Animations: %u", scene_->GetModel(selected_model)->NumAnimations());
     
-    ImGui::SetCursorPos(ImVec2(70, 170));
+    ImGui::SetCursorPos(ImVec2(70, 310));
     ImGui::Text("play: ");
-    ImGui::SetCursorPos(ImVec2(110, 170));
+    ImGui::SetCursorPos(ImVec2(110, 310));
     std::string aid = TextField(std::to_string(wanted_aid), "##aid");
     if (isUnsignedLong(aid)) {
         wanted_aid = std::stoul(aid);
         
     }
-    ImGui::SetCursorPos(ImVec2(70, 200));
+    ImGui::SetCursorPos(ImVec2(70, 340));
     if (ImGui::Button("Play", ImVec2(100,30))) {
         scene_->GetModel(selected_model)->StartAnimation(wanted_aid);
     }
     
-    ImGui::SetCursorPos(ImVec2(70, 250));
+    ImGui::SetCursorPos(ImVec2(70, 370));
     if (ImGui::Button("New Animation", ImVec2(100,30))) {
         scene_->GetModel(selected_model)->MakeAnimation();
     }

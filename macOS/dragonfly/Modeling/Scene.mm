@@ -8,8 +8,6 @@
 #import <Foundation/Foundation.h>
 #include "Scene.h"
 
-using namespace DragonflyUtils;
-
 Scene::Scene() {
     CreateNewModel();
 }
@@ -46,17 +44,17 @@ void Scene::GetFromFolder(std::string path) {
             std::vector<float> vals = splitStringToFloats(line);
             
             ModelUniforms mu;
-            mu.position.x = vals[0];
-            mu.position.y = vals[1];
-            mu.position.z = vals[2];
-            
-            mu.rotate_origin.x = vals[3];
-            mu.rotate_origin.y = vals[4];
-            mu.rotate_origin.z = vals[5];
-            
-            mu.angle.x = vals[6];
-            mu.angle.y = vals[7];
-            mu.angle.z = vals[8];
+//            mu.position.x = vals[0];
+//            mu.position.y = vals[1];
+//            mu.position.z = vals[2];
+//
+//            mu.rotate_origin.x = vals[3];
+//            mu.rotate_origin.y = vals[4];
+//            mu.rotate_origin.z = vals[5];
+//
+//            mu.angle.x = vals[6];
+//            mu.angle.y = vals[7];
+//            mu.angle.z = vals[8];
             
             model_uniforms.push_back(mu);
             
@@ -108,32 +106,40 @@ simd_float3 Scene::GetModelPosition(unsigned long mid) {
         return NULL;
     }
     
-    return model_uniforms[mid].position;
+    return model_uniforms[mid].b.pos;
 }
 
-simd_float3 Scene::GetModelAngle(unsigned long mid) {
+Basis *Scene::GetModelBasis(unsigned long mid) {
     if (mid >= model_uniforms.size()) {
         return NULL;
     }
     
-    return model_uniforms[mid].angle;
+    return &model_uniforms[mid].b;
 }
+
+//simd_float3 Scene::GetModelAngle(unsigned long mid) {
+//    if (mid >= model_uniforms.size()) {
+//        return NULL;
+//    }
+//
+//    return model_uniforms[mid].angle;
+//}
 
 simd_float3 Scene::GetSlicePosition(unsigned long sid) {
     if (sid >= slice_uniforms.size()) {
         return NULL;
     }
     
-    return slice_uniforms[sid].position;
+    return slice_uniforms[sid].b.pos;
 }
 
-simd_float3 Scene::GetSliceAngle(unsigned long sid) {
-    if (sid >= slice_uniforms.size()) {
-        return NULL;
-    }
-    
-    return slice_uniforms[sid].angle;
-}
+//simd_float3 Scene::GetSliceAngle(unsigned long sid) {
+//    if (sid >= slice_uniforms.size()) {
+//        return NULL;
+//    }
+//    
+//    return slice_uniforms[sid].angle;
+//}
 
 void Scene::MoveModelBy(unsigned int mid, float dx, float dy, float dz) {
     if (mid < model_uniforms.size()) {
@@ -143,9 +149,9 @@ void Scene::MoveModelBy(unsigned int mid, float dx, float dy, float dz) {
             return;
         }
         
-        mu->position.x += dx;
-        mu->position.y += dy;
-        mu->position.z += dz;
+        mu->b.pos.x += dx;
+        mu->b.pos.y += dy;
+        mu->b.pos.z += dz;
         
         mu->rotate_origin.x += dx;
         mu->rotate_origin.y += dy;
@@ -156,14 +162,18 @@ void Scene::MoveModelBy(unsigned int mid, float dx, float dy, float dz) {
 void Scene::RotateModelBy(unsigned int mid, float dx, float dy, float dz) {
     if (mid < model_uniforms.size()) {
         ModelUniforms * mu = GetModelUniforms(mid);
-        
+
         if (mu == NULL) {
             return;
         }
+
+//        mu->angle.x += dx;
+//        mu->angle.y += dy;
+//        mu->angle.z += dz;
         
-        mu->angle.x += dx;
-        mu->angle.y += dy;
-        mu->angle.z += dz;
+        RotateBasisOnX(&mu->b, dx);
+        RotateBasisOnY(&mu->b, dy);
+        RotateBasisOnZ(&mu->b, dz);
     }
 }
 
@@ -175,29 +185,29 @@ void Scene::MoveModelTo(unsigned int mid, float x, float y, float z) {
             return;
         }
         
-        mu->rotate_origin.x += x - mu->position.x;
-        mu->rotate_origin.y += y - mu->position.y;
-        mu->rotate_origin.z += z - mu->position.z;
+        mu->rotate_origin.x += x - mu->b.pos.x;
+        mu->rotate_origin.y += y - mu->b.pos.y;
+        mu->rotate_origin.z += z - mu->b.pos.z;
         
-        mu->position.x = x;
-        mu->position.y = y;
-        mu->position.z = z;
+        mu->b.pos.x = x;
+        mu->b.pos.y = y;
+        mu->b.pos.z = z;
     }
 }
 
-void Scene::RotateModelTo(unsigned int mid, float x, float y, float z) {
-    if (mid < model_uniforms.size()) {
-        ModelUniforms * mu = GetModelUniforms(mid);
-        
-        if (mu == NULL) {
-            return;
-        }
-        
-        mu->angle.x = x;
-        mu->angle.y = y;
-        mu->angle.z = z;
-    }
-}
+//void Scene::RotateModelTo(unsigned int mid, float x, float y, float z) {
+//    if (mid < model_uniforms.size()) {
+//        ModelUniforms * mu = GetModelUniforms(mid);
+//
+//        if (mu == NULL) {
+//            return;
+//        }
+//
+//        mu->angle.x = x;
+//        mu->angle.y = y;
+//        mu->angle.z = z;
+//    }
+//}
 
 void Scene::MoveSliceBy(unsigned int sid, float dx, float dy, float dz) {
     if (sid < slice_uniforms.size()) {
@@ -207,9 +217,9 @@ void Scene::MoveSliceBy(unsigned int sid, float dx, float dy, float dz) {
             return;
         }
         
-        mu->position.x += dx;
-        mu->position.y += dy;
-        mu->position.z += dz;
+        mu->b.pos.x += dx;
+        mu->b.pos.y += dy;
+        mu->b.pos.z += dz;
         
         mu->rotate_origin.x += dx;
         mu->rotate_origin.y += dy;
@@ -217,19 +227,19 @@ void Scene::MoveSliceBy(unsigned int sid, float dx, float dy, float dz) {
     }
 }
 
-void Scene::RotateSliceBy(unsigned int sid, float dx, float dy, float dz) {
-    if (sid < slice_uniforms.size()) {
-        ModelUniforms * mu = GetSliceUniforms(sid);
-        
-        if (mu == NULL) {
-            return;
-        }
-        
-        mu->angle.x += dx;
-        mu->angle.y += dy;
-        mu->angle.z += dz;
-    }
-}
+//void Scene::RotateSliceBy(unsigned int sid, float dx, float dy, float dz) {
+//    if (sid < slice_uniforms.size()) {
+//        ModelUniforms * mu = GetSliceUniforms(sid);
+//        
+//        if (mu == NULL) {
+//            return;
+//        }
+//        
+//        mu->angle.x += dx;
+//        mu->angle.y += dy;
+//        mu->angle.z += dz;
+//    }
+//}
 
 void Scene::MoveSliceTo(unsigned int sid, float x, float y, float z) {
     if (sid < slice_uniforms.size()) {
@@ -239,38 +249,37 @@ void Scene::MoveSliceTo(unsigned int sid, float x, float y, float z) {
             return;
         }
         
-        mu->rotate_origin.x += x - mu->position.x;
-        mu->rotate_origin.y += y - mu->position.y;
-        mu->rotate_origin.z += z - mu->position.z;
+        mu->rotate_origin.x += x - mu->b.pos.x;
+        mu->rotate_origin.y += y - mu->b.pos.y;
+        mu->rotate_origin.z += z - mu->b.pos.z;
         
-        mu->position.x = x;
-        mu->position.y = y;
-        mu->position.z = z;
+        mu->b.pos.x = x;
+        mu->b.pos.y = y;
+        mu->b.pos.z = z;
     }
 }
 
-void Scene::RotateSliceTo(unsigned int sid, float x, float y, float z) {
-    if (sid < slice_uniforms.size()) {
-        ModelUniforms * mu = GetSliceUniforms(sid);
-        
-        if (mu == NULL) {
-            return;
-        }
-        
-        mu->angle.x = x;
-        mu->angle.y = y;
-        mu->angle.z = z;
-    }
-}
+//void Scene::RotateSliceTo(unsigned int sid, float x, float y, float z) {
+//    if (sid < slice_uniforms.size()) {
+//        ModelUniforms * mu = GetSliceUniforms(sid);
+//        
+//        if (mu == NULL) {
+//            return;
+//        }
+//        
+//        mu->angle.x = x;
+//        mu->angle.y = y;
+//        mu->angle.z = z;
+//    }
+//}
 
 void Scene::CreateNewModel() {
     Model *m = new Model(models.size());
     m->MakeCube();
     models.push_back(m);
     ModelUniforms new_uniform;
-    new_uniform.position = simd_make_float3(0, 0, 0);
+    new_uniform.b = Basis();
     new_uniform.rotate_origin = simd_make_float3(0, 0, 0);
-    new_uniform.angle = simd_make_float3(0, 0, 0);
     
     model_uniforms.push_back(new_uniform);
 }
@@ -280,9 +289,8 @@ void Scene::NewModelFromFile(std::string path) {
     m->FromFile(path);
     models.push_back(m);
     ModelUniforms new_uniform;
-    new_uniform.position = simd_make_float3(0, 0, 0);
+    new_uniform.b = Basis();
     new_uniform.rotate_origin = simd_make_float3(0, 0, 0);
-    new_uniform.angle = simd_make_float3(0, 0, 0);
     
     model_uniforms.push_back(new_uniform);
 }
@@ -294,9 +302,8 @@ void Scene::NewModelFromPointData(std::string path) {
     m->SetId(models.size());
     models.push_back(m);
     ModelUniforms new_uniform;
-    new_uniform.position = simd_make_float3(0, 0, 0);
+    new_uniform.b = Basis();
     new_uniform.rotate_origin = simd_make_float3(0, 0, 0);
-    new_uniform.angle = simd_make_float3(0, 0, 0);
     
     model_uniforms.push_back(new_uniform);
 }
@@ -305,9 +312,8 @@ void Scene::AddSlice(Slice *s) {
     slices.push_back(s);
     
     ModelUniforms new_uniform;
-    new_uniform.position = simd_make_float3(0, 0, 0);
+    new_uniform.b = Basis();
     new_uniform.rotate_origin = simd_make_float3(0, 0, 0);
-    new_uniform.angle = simd_make_float3(0, 0, 0);
     
     slice_uniforms.push_back(new_uniform);
 }
@@ -384,9 +390,9 @@ void Scene::SaveToFolder(std::string path) {
         
         ModelUniforms mu = model_uniforms.at(i);
         myfile << models.at(i)->GetName() << ".drgn ";
-        myfile << mu.position.x << " " << mu.position.y << " " << mu.position.z << " ";
-        myfile << mu.rotate_origin.x << " " << mu.rotate_origin.y << " " << mu.rotate_origin.z << " ";
-        myfile << mu.angle.x << " " << mu.angle.y << " " << mu.angle.z << std::endl;
+//        myfile << mu.position.x << " " << mu.position.y << " " << mu.position.z << " ";
+//        myfile << mu.rotate_origin.x << " " << mu.rotate_origin.y << " " << mu.rotate_origin.z << " ";
+//        myfile << mu.angle.x << " " << mu.angle.y << " " << mu.angle.z << std::endl;
     }
     
     myfile.close();

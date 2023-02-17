@@ -263,7 +263,7 @@ std::pair<int,float> Scheme::ControlModelClicked(simd_float2 loc) {
 
 void Scheme::MoveControlsModels() {
     for (int i = 0; i < controls_model_uniforms_.size(); i++) {
-        controls_model_uniforms_[i].position = controls_origin_;
+        controls_model_uniforms_[i].b.pos = controls_origin_;
         controls_model_uniforms_[i].rotate_origin = controls_origin_;
     }
 }

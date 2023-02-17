@@ -20,11 +20,13 @@
 #include "Model.h"
 #include "Slice.h"
 #include "../Utils/Project2D.h"
+#include "../Utils/Basis.h"
+
+using namespace DragonflyUtils;
 
 struct ModelUniforms {
-    simd_float3 position;
     simd_float3 rotate_origin;
-    simd_float3 angle; // euler angles zyx
+    Basis b;
 };
 
 class Scene {
@@ -49,22 +51,23 @@ public:
     ModelUniforms *GetSliceUniforms(unsigned long sid);
     
     simd_float3 GetModelPosition(unsigned long mid);
-    simd_float3 GetModelAngle(unsigned long mid);
+    Basis *GetModelBasis(unsigned long mid);
+//    simd_float3 GetModelAngle(unsigned long mid);
     
     simd_float3 GetSlicePosition(unsigned long sid);
-    simd_float3 GetSliceAngle(unsigned long sid);
+//    simd_float3 GetSliceAngle(unsigned long sid);
     
     void MoveModelBy(unsigned int mid, float dx, float dy, float dz);
     void RotateModelBy(unsigned int mid, float dx, float dy, float dz);
     
     void MoveModelTo(unsigned int mid, float x, float y, float z);
-    void RotateModelTo(unsigned int mid, float x, float y, float z);
+    //void RotateModelTo(unsigned int mid, float x, float y, float z);
     
     void MoveSliceBy(unsigned int sid, float dx, float dy, float dz);
-    void RotateSliceBy(unsigned int sid, float dx, float dy, float dz);
+//    void RotateSliceBy(unsigned int sid, float dx, float dy, float dz);
     
     void MoveSliceTo(unsigned int sid, float x, float y, float z);
-    void RotateSliceTo(unsigned int sid, float x, float y, float z);
+//    void RotateSliceTo(unsigned int sid, float x, float y, float z);
     
     void CreateNewModel();
     void NewModelFromFile(std::string path);

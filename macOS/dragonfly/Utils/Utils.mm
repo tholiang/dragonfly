@@ -103,12 +103,34 @@ float DragonflyUtils::WeightedZ (simd_float2 click, simd_float3 p1, simd_float3 
     return weightedZ;
 }
 
+float DragonflyUtils::Magnitude (simd_float3 v) {
+    return sqrt(pow(v.x, 2) + pow(v.y, 2) + pow(v.z, 2));
+}
+
 simd_float3 DragonflyUtils::CrossProduct (simd_float3 p1, simd_float3 p2) {
     simd_float3 cross;
     cross.x = p1.y*p2.z - p1.z*p2.y;
     cross.y = -(p1.x*p2.z - p1.z*p2.x);
     cross.z = p1.x*p2.y - p1.y*p2.x;
     return cross;
+}
+
+float DragonflyUtils::DotProduct (simd_float3 p1, simd_float3 p2) {
+    return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
+}
+
+simd_float3 DragonflyUtils::ScaleVector (simd_float3 v, float k) {
+    return simd_make_float3(v.x * k, v.y * k, v.z * k);
+}
+
+simd_float3 DragonflyUtils::AddVectors (simd_float3 v1, simd_float3 v2) {
+    return simd_make_float3(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
+}
+
+float DragonflyUtils::Projection (simd_float3 v1, simd_float3 v2) {
+    float dot = DotProduct(v1, v2);
+    float mag = Magnitude(v2);
+    return dot / mag;
 }
 
 simd_float3 DragonflyUtils::GetNormal (simd_float3 p1, simd_float3 p2, simd_float3 p3) {

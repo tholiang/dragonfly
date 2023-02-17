@@ -34,9 +34,8 @@ void EditFEVScheme::CreateControlsModels() {
     z_arrow = new Arrow(0);
     
     ModelUniforms z_arrow_uniform;
-    z_arrow_uniform.position = simd_make_float3(0, 0, 1);
+    z_arrow_uniform.b.pos = simd_make_float3(0, 0, 1);
     z_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 1);
-    z_arrow_uniform.angle = simd_make_float3(0, 0, 0);
     
     controls_model_uniforms_.push_back(z_arrow_uniform);
     arrow_projections[0] = simd_make_float2(0,0);
@@ -47,9 +46,10 @@ void EditFEVScheme::CreateControlsModels() {
     x_arrow = new Arrow(1, simd_make_float4(0, 1, 0, 1));
     
     ModelUniforms x_arrow_uniform;
-    x_arrow_uniform.position = simd_make_float3(0, 0, 1);
+    x_arrow_uniform.b.pos = simd_make_float3(0, 0, 1);
     x_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 1);
-    x_arrow_uniform.angle = simd_make_float3(M_PI_2, 0, 0);
+    //x_arrow_uniform.angle = simd_make_float3(M_PI_2, 0, 0);
+    RotateBasisOnY(&x_arrow_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(x_arrow_uniform);
     arrow_projections[2] = simd_make_float2(0,0);
@@ -60,9 +60,10 @@ void EditFEVScheme::CreateControlsModels() {
     y_arrow = new Arrow(2, simd_make_float4(0, 0, 1, 1));
     
     ModelUniforms y_arrow_uniform;
-    y_arrow_uniform.position = simd_make_float3(0, 0, 1);
+    y_arrow_uniform.b.pos = simd_make_float3(0, 0, 1);
     y_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 1);
-    y_arrow_uniform.angle = simd_make_float3(0, -M_PI_2, 0);
+//    y_arrow_uniform.angle = simd_make_float3(0, -M_PI_2, 0);
+    RotateBasisOnX(&y_arrow_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(y_arrow_uniform);
     arrow_projections[4] = simd_make_float2(0,0);
@@ -526,24 +527,24 @@ void EditFEVScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
             
             // move
             ModelUniforms arrow_uniform = controls_model_uniforms_[selected_arrow];
-            float x_vec = 0;
-            float y_vec = 0;
-            float z_vec = 1;
-            // gimbal locked
-            
-            // around z axis
-            //x_vec = x_vec*cos(arrow_uniform.angle.z)-y_vec*sin(arrow_uniform.angle.z);
-            //y_vec = x_vec*sin(arrow_uniform.angle.z)+y_vec*cos(arrow_uniform.angle.z);
-            
-            // around y axis
-            float newx = x_vec*cos(arrow_uniform.angle.y)+z_vec*sin(arrow_uniform.angle.y);
-            z_vec = -x_vec*sin(arrow_uniform.angle.y)+z_vec*cos(arrow_uniform.angle.y);
-            x_vec = newx;
-            
-            // around x axis
-            float newy = y_vec*cos(arrow_uniform.angle.x)-z_vec*sin(arrow_uniform.angle.x);
-            z_vec = y_vec*sin(arrow_uniform.angle.x)+z_vec*cos(arrow_uniform.angle.x);
-            y_vec = newy;
+            float x_vec = arrow_uniform.b.z.x; // 0;
+            float y_vec = arrow_uniform.b.z.y;// 0;
+            float z_vec = arrow_uniform.b.z.z;// 1;
+//            // gimbal locked
+//
+//            // around z axis
+//            //x_vec = x_vec*cos(arrow_uniform.angle.z)-y_vec*sin(arrow_uniform.angle.z);
+//            //y_vec = x_vec*sin(arrow_uniform.angle.z)+y_vec*cos(arrow_uniform.angle.z);
+//
+//            // around y axis
+//            float newx = x_vec*cos(arrow_uniform.angle.y)+z_vec*sin(arrow_uniform.angle.y);
+//            z_vec = -x_vec*sin(arrow_uniform.angle.y)+z_vec*cos(arrow_uniform.angle.y);
+//            x_vec = newx;
+//
+//            // around x axis
+//            float newy = y_vec*cos(arrow_uniform.angle.x)-z_vec*sin(arrow_uniform.angle.x);
+//            z_vec = y_vec*sin(arrow_uniform.angle.x)+z_vec*cos(arrow_uniform.angle.x);
+//            y_vec = newy;
             
             x_vec *= 0.01*mvmt;
             y_vec *= 0.01*mvmt;
@@ -578,15 +579,15 @@ void EditFEVScheme::AddVertexToFace (int fid, int mid) {
     Vertex v3 = scene_models_vertices_[vid3 + model->VertexStart()];
     
     ModelUniforms *mu = scene_->GetModelUniforms(selected_model);
-    v1.x -= mu->position.x;
-    v1.y -= mu->position.y;
-    v1.z -= mu->position.z;
-    v2.x -= mu->position.x;
-    v2.y -= mu->position.y;
-    v2.z -= mu->position.z;
-    v3.x -= mu->position.x;
-    v3.y -= mu->position.y;
-    v3.z -= mu->position.z;
+    v1.x -= mu->b.pos.x;
+    v1.y -= mu->b.pos.y;
+    v1.z -= mu->b.pos.z;
+    v2.x -= mu->b.pos.x;
+    v2.y -= mu->b.pos.y;
+    v2.z -= mu->b.pos.z;
+    v3.x -= mu->b.pos.x;
+    v3.y -= mu->b.pos.y;
+    v3.z -= mu->b.pos.z;
     
     Vertex new_v = TriAvg(v1, v2, v3);
     unsigned new_vid = model->MakeVertex(new_v.x, new_v.y, new_v.z);
@@ -618,12 +619,12 @@ void EditFEVScheme::AddVertexToEdge (int vid1, int vid2, int mid) {
     
     Vertex v1 = scene_models_vertices_[vid1];
     Vertex v2 = scene_models_vertices_[vid2];
-    v1.x -= mu->position.x;
-    v1.y -= mu->position.y;
-    v1.z -= mu->position.z;
-    v2.x -= mu->position.x;
-    v2.y -= mu->position.y;
-    v2.z -= mu->position.z;
+    v1.x -= mu->b.pos.x;
+    v1.y -= mu->b.pos.y;
+    v1.z -= mu->b.pos.z;
+    v2.x -= mu->b.pos.x;
+    v2.y -= mu->b.pos.y;
+    v2.z -= mu->b.pos.z;
     Vertex new_v = BiAvg(v1, v2);
     unsigned new_vid = model->MakeVertex(new_v.x, new_v.y, new_v.z);
     

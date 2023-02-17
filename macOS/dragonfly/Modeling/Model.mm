@@ -10,8 +10,6 @@
 #include <cstddef>
 #include <iostream>
 
-using namespace DragonflyUtils;
-
 Animation::Animation(Model *model) {
     model_ = model;
     
@@ -79,7 +77,7 @@ void Animation::AddNode() {
     node_animations.push_back(new std::vector<NodeKeyFrame *>());
 }
 
-void Animation::SetKeyFrame(uint32_t nid, float time, simd_float3 pos, simd_float3 angle) {
+void Animation::SetKeyFrame(uint32_t nid, float time, Basis basis) {
     if (time > length) {
         length = time;
     }
@@ -89,8 +87,7 @@ void Animation::SetKeyFrame(uint32_t nid, float time, simd_float3 pos, simd_floa
     NodeKeyFrame *to_insert = new NodeKeyFrame();
     to_insert->nid = nid;
     to_insert->time = time;
-    to_insert->pos = pos;
-    to_insert->angle = angle;
+    to_insert->b = basis;
 
     if (insert_loc.first < 0) {
         frames->insert(frames->begin(), to_insert);
@@ -124,18 +121,17 @@ void Animation::SetAtTime(float time) {
 
             float weight = (time - prev->time) / (next->time - prev->time);
 
-            node->pos.x = (prev->pos.x * (1-weight)) + (next->pos.x * (weight));
-            node->pos.y = (prev->pos.y * (1-weight)) + (next->pos.y * (weight));
-            node->pos.z = (prev->pos.z * (1-weight)) + (next->pos.z * (weight));
+//            node->pos.x = (prev->pos.x * (1-weight)) + (next->pos.x * (weight));
+//            node->pos.y = (prev->pos.y * (1-weight)) + (next->pos.y * (weight));
+//            node->pos.z = (prev->pos.z * (1-weight)) + (next->pos.z * (weight));
 
-            node->angle.x = (prev->angle.x * (1-weight)) + (next->angle.x * weight);
-            node->angle.y = (prev->angle.y * (1-weight)) + (next->angle.y * weight);
-            node->angle.z = (prev->angle.z * (1-weight)) + (next->angle.z * weight);
+//            node->angle.x = (prev->angle.x * (1-weight)) + (next->angle.x * weight);
+//            node->angle.y = (prev->angle.y * (1-weight)) + (next->angle.y * weight);
+//            node->angle.z = (prev->angle.z * (1-weight)) + (next->angle.z * weight);
         } else {
             NodeKeyFrame *curr = node_animations.at(i)->at(loc.first);
 
-            node->pos = curr->pos;
-            node->angle = curr->angle;
+            node->b = curr->b;
         }
     }
 }
@@ -160,7 +156,7 @@ void Animation::FromFile(std::ifstream &file) {
             float time, posx, posy, posz, angx, angy, angz;
             
             sscanf(line.c_str(), "%f %f %f %f %f %f %f", &time, &posx, &posy, &posz, &angx, &angy, &angz);
-            SetKeyFrame(i, time, simd_make_float3(posx, posy, posz), simd_make_float3(angx, angy, angz));
+            //SetKeyFrame(i, time, simd_make_float3(posx, posy, posz), simd_make_float3(angx, angy, angz));
         }
     }
 }
@@ -171,12 +167,12 @@ void Animation::AddToFile(std::ofstream &file) {
         file << node_animations[i]->size() << " keys" << std::endl;
         for (int j = 0; j < node_animations[i]->size(); j++) {
             file << node_animations[i]->at(j)->time << " ";
-            file << node_animations[i]->at(j)->pos.x << " ";
-            file << node_animations[i]->at(j)->pos.y << " ";
-            file << node_animations[i]->at(j)->pos.z << " ";
-            file << node_animations[i]->at(j)->angle.x << " ";
-            file << node_animations[i]->at(j)->angle.y << " ";
-            file << node_animations[i]->at(j)->angle.z << std::endl;
+//            file << node_animations[i]->at(j)->pos.x << " ";
+//            file << node_animations[i]->at(j)->pos.y << " ";
+//            file << node_animations[i]->at(j)->pos.z << " ";
+//            file << node_animations[i]->at(j)->angle.x << " ";
+//            file << node_animations[i]->at(j)->angle.y << " ";
+//            file << node_animations[i]->at(j)->angle.z << std::endl;
         }
     }
 }
@@ -189,8 +185,7 @@ Model::Model(uint32 mid) : modelID(mid) {
     node_start = 0;
     
     Node *node = new Node();
-    node->pos = simd_make_float3(0, 0, 0);
-    node->angle = simd_make_float3(0, 0, 0);
+    node->b = Basis();
     nodes.push_back(node);
 }
 
@@ -237,8 +232,8 @@ unsigned Model::MakeFaceWithLighting(unsigned v0, unsigned v1, unsigned v2, simd
 
 unsigned Model::MakeNode(float x, float y, float z) {
     Node *node = new Node();
-    node->pos = simd_make_float3(x, y, z);
-    node->angle = simd_make_float3(0, 0, 0);
+    node->b = Basis();
+    node->b.pos = simd_make_float3(x, y, z);
     nodes.push_back(node);
     
     for (int i = 0; i < animations.size(); i++) {
@@ -265,12 +260,13 @@ void Model::LinkNodeAndVertex(unsigned long vid, unsigned long nid) {
     
     NodeVertexLink *nvlink = nvlinks[setIndex];
     nvlink->nid = nid;
-    nvlink->vector.x = vertex.x - node->pos.x;
-    nvlink->vector.y = vertex.y - node->pos.y;
-    nvlink->vector.z = vertex.z - node->pos.z;
+    nvlink->vector.x = vertex.x - node->b.pos.x;
+    nvlink->vector.y = vertex.y - node->b.pos.y;
+    nvlink->vector.z = vertex.z - node->b.pos.z;
     
-    simd_float3 reverse_angle = simd_make_float3(-node->angle.x, -node->angle.y, -node->angle.z);
-    nvlink->vector = RotateAround(nvlink->vector, simd_make_float3(0, 0, 0), reverse_angle);
+//    simd_float3 reverse_angle = simd_make_float3(-node->angle.x, -node->angle.y, -node->angle.z);
+//    nvlink->vector = RotateAround(nvlink->vector, simd_make_float3(0, 0, 0), reverse_angle);
+    nvlink->vector = TranslatePointToStandard(&node->b, vertex);
     nvlink->weight = 1;
     nvlinks[setIndex] = nvlink;
     
@@ -369,11 +365,9 @@ void Model::FromFile(std::string path) {
             Node *n = new Node();
             float posx, posy, posz, angx, angy, angz;
             sscanf(line.c_str(), "%f %f %f %f %f %f", &posx, &posy, &posz, &angx, &angy, &angz);
-            n->pos = simd_make_float3(posx, posy, posz);
-            n->angle = simd_make_float3(angx, angy, angz);
+            n->b.pos = simd_make_float3(posx, posy, posz);
+            //n->angle = simd_make_float3(angx, angy, angz);
             n->locked_to = -1;
-            
-            std::cout<<n->pos.x<<" "<<n->pos.y<<" "<<n->pos.y<<std::endl;
             
             nodes.push_back(n);
         }
@@ -473,28 +467,28 @@ void Model::MoveVertexBy(unsigned vid, float dx, float dy, float dz) {
 }
 
 void Model::MoveNodeBy(unsigned nid, float dx, float dy, float dz) {
-    float new_x = nodes[nid]->pos.x + dx;
-    float new_y = nodes[nid]->pos.y + dy;
-    float new_z = nodes[nid]->pos.z + dz;
+    float new_x = nodes[nid]->b.pos.x + dx;
+    float new_y = nodes[nid]->b.pos.y + dy;
+    float new_z = nodes[nid]->b.pos.z + dz;
     
     if (nodes[nid]->locked_to == -1) {
-        nodes[nid]->pos.x = new_x;
-        nodes[nid]->pos.y = new_y;
-        nodes[nid]->pos.z = new_z;
+        nodes[nid]->b.pos.x = new_x;
+        nodes[nid]->b.pos.y = new_y;
+        nodes[nid]->b.pos.z = new_z;
     } else {
-        float curr_dist = dist3to3(nodes[nid]->pos, nodes[nodes[nid]->locked_to]->pos);
-        float new_dist = dist3to3(simd_make_float3(new_x, new_y, new_z), nodes[nodes[nid]->locked_to]->pos);
-        nodes[nid]->pos.x = new_x * curr_dist / new_dist;
-        nodes[nid]->pos.y = new_y * curr_dist / new_dist;
-        nodes[nid]->pos.z = new_z * curr_dist / new_dist;
+        float curr_dist = dist3to3(nodes[nid]->b.pos, nodes[nodes[nid]->locked_to]->b.pos);
+        float new_dist = dist3to3(simd_make_float3(new_x, new_y, new_z), nodes[nodes[nid]->locked_to]->b.pos);
+        nodes[nid]->b.pos.x = new_x * curr_dist / new_dist;
+        nodes[nid]->b.pos.y = new_y * curr_dist / new_dist;
+        nodes[nid]->b.pos.z = new_z * curr_dist / new_dist;
     }
 }
 
 void Model::MoveVertexTo(unsigned vid, float x, float y, float z) {
     int nid1 = nvlinks[vid*2]->nid;
-    float dx = x - (nodes[nid1]->pos.x + nvlinks[vid*2]->vector.x);
-    float dy = y - (nodes[nid1]->pos.y + nvlinks[vid*2]->vector.y);
-    float dz = z - (nodes[nid1]->pos.z + nvlinks[vid*2]->vector.z);
+    float dx = x - (nodes[nid1]->b.pos.x + nvlinks[vid*2]->vector.x);
+    float dy = y - (nodes[nid1]->b.pos.y + nvlinks[vid*2]->vector.y);
+    float dz = z - (nodes[nid1]->b.pos.z + nvlinks[vid*2]->vector.z);
     
     nvlinks[vid*2]->vector.x += dx;
     nvlinks[vid*2]->vector.y += dy;
@@ -507,15 +501,15 @@ void Model::MoveVertexTo(unsigned vid, float x, float y, float z) {
 
 void Model::MoveNodeTo(unsigned nid, float x, float y, float z) {
     if (nodes[nid]->locked_to == -1) {
-        nodes[nid]->pos.x = x;
-        nodes[nid]->pos.y = y;
-        nodes[nid]->pos.z = z;
+        nodes[nid]->b.pos.x = x;
+        nodes[nid]->b.pos.y = y;
+        nodes[nid]->b.pos.z = z;
     } else {
-        float curr_dist = dist3to3(nodes[nid]->pos, nodes[nodes[nid]->locked_to]->pos);
-        float new_dist = dist3to3(simd_make_float3(x, y, z), nodes[nodes[nid]->locked_to]->pos);
-        nodes[nid]->pos.x = x * new_dist / curr_dist;
-        nodes[nid]->pos.y = y * new_dist / curr_dist;
-        nodes[nid]->pos.z = z * new_dist / curr_dist;
+        float curr_dist = dist3to3(nodes[nid]->b.pos, nodes[nodes[nid]->locked_to]->b.pos);
+        float new_dist = dist3to3(simd_make_float3(x, y, z), nodes[nodes[nid]->locked_to]->b.pos);
+        nodes[nid]->b.pos.x = x * new_dist / curr_dist;
+        nodes[nid]->b.pos.y = y * new_dist / curr_dist;
+        nodes[nid]->b.pos.z = z * new_dist / curr_dist;
     }
 }
 
@@ -566,7 +560,7 @@ void Model::SetKeyFrame(int aid, int nid, float time) {
     Animation *anim = animations.at(aid);
     Node *n = nodes.at(nid);
     
-    anim->SetKeyFrame(nid, time, n->pos, n->angle);
+    anim->SetKeyFrame(nid, time, n->b);
 }
 
 void Model::UpdateAnimation(float dt) {
@@ -598,8 +592,10 @@ Vertex Model::GetVertex(unsigned long vid) {
     if (link1->nid != -1) {
         Node *n = nodes[link1->nid];
         
-        Vertex desired1 = simd_make_float3(n->pos.x + link1->vector.x, n->pos.y + link1->vector.y, n->pos.z + link1->vector.z);
-        desired1 = RotateAround(desired1, n->pos, n->angle);
+//        Vertex desired1 = simd_make_float3(n->pos.x + link1->vector.x, n->pos.y + link1->vector.y, n->pos.z + link1->vector.z);
+//        desired1 = RotateAround(desired1, n->pos, n->b);
+        
+        Vertex desired1 = TranslatePoint(&n->b, link1->vector);
         
         ret.x += link1->weight*desired1.x;
         ret.y += link1->weight*desired1.y;
@@ -609,8 +605,10 @@ Vertex Model::GetVertex(unsigned long vid) {
     if (link2->nid != -1) {
         Node *n = nodes[link2->nid];
         
-        Vertex desired2 = simd_make_float3(n->pos.x + link2->vector.x, n->pos.y + link2->vector.y, n->pos.z + link2->vector.z);
-        desired2 = RotateAround(desired2, n->pos, n->angle);
+//        Vertex desired2 = simd_make_float3(n->pos.x + link2->vector.x, n->pos.y + link2->vector.y, n->pos.z + link2->vector.z);
+//        desired2 = TranslatePoint(desired2, n->pos, n->b);
+        
+        Vertex desired2 = TranslatePoint(&n->b, link2->vector);
         
         ret.x += link2->weight*desired2.x;
         ret.y += link2->weight*desired2.y;
@@ -704,8 +702,7 @@ void Model::AddToBuffers(std::vector<Face> &faceBuffer, std::vector<Node> &nodeB
     for (int i = 0; i < nodes.size(); i++) {
         Node *og = nodes[i];
         Node node;
-        node.pos = og->pos;
-        node.angle = og->angle;
+        node.b = og->b;
         nodeBuffer.push_back(node);
         node_modelIDs.push_back(modelID);
     }
@@ -727,12 +724,7 @@ void Model::AddToBuffers(std::vector<Face> &faceBuffer, std::vector<Node> &nodeB
 void Model::UpdateNodeBuffers(std::vector<Node> &nodeBuffer) {
     for (int i = 0; i < nodes.size(); i++) {
         Node *node = &nodeBuffer.at(i+node_start);
-        node->pos.x = nodes[i]->pos.x;
-        node->pos.y = nodes[i]->pos.y;
-        node->pos.z = nodes[i]->pos.z;
-        node->angle.x = nodes[i]->angle.x;
-        node->angle.y = nodes[i]->angle.y;
-        node->angle.z = nodes[i]->angle.z;
+        node->b = nodes[i]->b;
     }
 }
 
@@ -783,8 +775,8 @@ void Model::SaveToFile(std::string path) {
     myfile << nodes.size() << " nodes" << std::endl;
     for (int i = 0; i < nodes.size(); i++) {
         Node *n = nodes[i];
-        myfile << n->pos.x << " " << n->pos.y << " " << n->pos.z << " ";
-        myfile << n->angle.x << " " << n->angle.y << " " << n->angle.z << std::endl;
+//        myfile << n->pos.x << " " << n->pos.y << " " << n->pos.z << " ";
+//        myfile << n->angle.x << " " << n->angle.y << " " << n->angle.z << std::endl;
     }
     
     myfile << nvlinks.size() << " vertices" << std::endl;

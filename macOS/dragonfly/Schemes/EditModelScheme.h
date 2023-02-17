@@ -37,6 +37,10 @@ private:
     
     unsigned long wanted_aid = 0;
     
+    std::string angle_input_x = "0";
+    std::string angle_input_y = "0";
+    std::string angle_input_z = "0";
+    
     void CreateControlsModels();
     
     std::pair<int, float> ModelClicked(simd_float2 loc);
