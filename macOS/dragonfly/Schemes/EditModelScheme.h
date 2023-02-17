@@ -10,10 +10,18 @@
 
 #include "Scheme.h"
 #include "../UserActions/ModelMoveAction.h"
+#include "../Utils/Normals.h"
 
 class EditModelScheme : public Scheme {
 private:
     int right_menu_width_ = 300;
+    
+    bool render_rightclick_popup_ = false;
+    simd_float2 rightclick_popup_loc_;
+    int num_right_click_buttons_ = 0;
+    ImVec2 button_size_;
+    simd_float2 rightclick_popup_size_;
+    bool rightclick_popup_clicked_ = false;
     
     Arrow *z_arrow;
     Arrow *x_arrow;
@@ -31,8 +39,6 @@ private:
     
     void CreateControlsModels();
     
-    void HandleMouseUp(simd_float2 loc, bool left);
-    
     std::pair<int, float> ModelClicked(simd_float2 loc);
     
     bool ClickOnScene(simd_float2 loc);
@@ -45,12 +51,18 @@ private:
     
     void SetArrowProjections();
     
+    void RightClickPopup();
+    
     void RightMenu();
     void MainWindow();
 public:
     EditModelScheme();
     
     ~EditModelScheme();
+    
+    void HandleMouseDown(simd_float2 loc, bool left);
+    void HandleMouseUp(simd_float2 loc, bool left);
+    
     void SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf);
     void BuildUI();
     

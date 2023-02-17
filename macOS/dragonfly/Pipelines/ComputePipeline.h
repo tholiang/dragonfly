@@ -31,13 +31,22 @@ private:
     id <MTLComputePipelineState> compute_vertex_pipeline_state;
     id <MTLComputePipelineState> compute_projected_vertices_pipeline_state;
     id <MTLComputePipelineState> compute_projected_nodes_pipeline_state;
+    id <MTLComputePipelineState> compute_lighting_pipeline_state;
+    id <MTLComputePipelineState> compute_scaled_dots_pipeline_state;
     
     // buffers for scene compute
     id <MTLBuffer> camera_buffer;
     
+    id <MTLBuffer> scene_light_buffer;
+    
     id <MTLBuffer> scene_vertex_buffer;
     id <MTLBuffer> scene_projected_vertex_buffer;
     id <MTLBuffer> scene_face_buffer;
+    id <MTLBuffer> scene_lit_face_buffer;
+    
+    id <MTLBuffer> scene_dot_buffer;
+    id <MTLBuffer> scene_projected_dot_buffer;
+    id <MTLBuffer> scene_line_buffer;
 
     id <MTLBuffer> scene_node_model_id_buffer;
 
@@ -51,6 +60,8 @@ private:
     id <MTLBuffer> scene_vertex_render_uniforms_buffer;
     id <MTLBuffer> scene_selected_vertices_buffer;
     id <MTLBuffer> scene_node_render_uniforms_buffer;
+    
+    id <MTLBuffer> scene_slice_attributes_buffer;
     
     // buffers for controls models compute
     id <MTLBuffer> controls_vertex_buffer;
@@ -71,6 +82,9 @@ private:
     unsigned int num_scene_faces = 0;
     unsigned int num_controls_vertices = 0;
     unsigned int num_controls_faces = 0;
+    
+    unsigned int num_scene_dots = 0;
+    unsigned int num_scene_lines = 0;
 public:
     void init();
     void SetScheme(Scheme *sch);

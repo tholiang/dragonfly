@@ -13,10 +13,13 @@ using namespace DragonflyUtils;
 EditModelScheme::EditModelScheme() {
     type = SchemeType::EditModel;
     
+    button_size_ = ImVec2(100, 30);
+    
     should_render.faces = true;
     should_render.edges = false;
     should_render.vertices = false;
     should_render.nodes = false;
+    should_render.slices = false;
     
     CreateControlsModels();
 }
@@ -66,11 +69,34 @@ void EditModelScheme::CreateControlsModels() {
     controls_models_.push_back(y_arrow);
 }
 
+void EditModelScheme::HandleMouseDown(simd_float2 loc, bool left) {
+    Scheme::HandleMouseDown(loc, left);
+    
+    loc.x = ((float) loc.x / (float) window_width_)*2 - 1;
+    loc.y = -(((float) loc.y / (float) window_height_)*2 - 1);
+    
+    if (!left) {
+        if (selected_model > -1) {
+            rightclick_popup_loc_ = loc;
+            render_rightclick_popup_ = true;
+        } else {
+            render_rightclick_popup_ = false;
+        }
+    }
+}
+
 void EditModelScheme::HandleMouseUp(simd_float2 loc, bool left) {
     Scheme::HandleMouseUp(loc, left);
     
+    loc.x = ((float) loc.x / (float) window_width_)*2 - 1;
+    loc.y = -(((float) loc.y / (float) window_height_)*2 - 1);
+    
     if (left) {
         selected_arrow = -1;
+        
+        if (!(render_rightclick_popup_ && InRectangle(rightclick_popup_loc_, rightclick_popup_size_, loc))) {
+            render_rightclick_popup_ = false;
+        }
     }
     
     if (current_action != NULL) {
@@ -81,6 +107,10 @@ void EditModelScheme::HandleMouseUp(simd_float2 loc, bool left) {
 }
 
 bool EditModelScheme::ClickOnScene(simd_float2 loc) {
+    if (render_rightclick_popup_ && InRectangle(rightclick_popup_loc_, rightclick_popup_size_, loc)) {
+        return false;
+    }
+    
     int pixelX = window_width_ * (loc.x+1)/2;
     int pixelY = window_height_ * (loc.y+1)/2;
     
@@ -88,7 +118,7 @@ bool EditModelScheme::ClickOnScene(simd_float2 loc) {
         return false;
     }
     
-    if (pixelY < UI_start_.y || pixelY > UI_start_.y + window_height_) {
+    if (pixelY < 0 || pixelY > window_height_ - UI_start_.y) {
         return false;
     }
     
@@ -240,7 +270,7 @@ void EditModelScheme::HandleMouseMovement(float x, float y, float dx, float dy) 
                 mu->rotate_origin.y += y_vec;
                 mu->rotate_origin.z += z_vec;
                 
-                should_reset_static_buffers = true;
+                //should_reset_static_buffers = true;
             }
         }
     }
@@ -254,8 +284,40 @@ void EditModelScheme::SaveSelectedModelToFile(std::string path) {
     scene_->GetModel(selected_model)->SaveToFile(path);
 }
 
+void EditModelScheme::RightClickPopup() {
+    ImVec2 pixel_loc = ImVec2(window_width_ * (rightclick_popup_loc_.x+1)/2 - UI_start_.x, window_height_ * (2-(rightclick_popup_loc_.y+1))/2 - UI_start_.y);
+    ImGui::SetCursorPos(pixel_loc);
+    
+    num_right_click_buttons_ = 0;
+    
+    if (selected_model != -1) {
+        num_right_click_buttons_++;
+        if (ImGui::Button("Generate Normals", ImVec2(button_size_.x, button_size_.y))) {
+            render_rightclick_popup_ = false;
+            DragonflyUtils::FindNormals(scene_->GetModel(selected_model));
+            should_reset_static_buffers = true;
+        }
+        pixel_loc.y += button_size_.y;
+        ImGui::SetCursorPos(ImVec2(pixel_loc.x, pixel_loc.y));
+    }
+    
+    if (selected_model != -1) {
+        num_right_click_buttons_++;
+        if (ImGui::Button("Flip Normals", ImVec2(button_size_.x, button_size_.y))) {
+            render_rightclick_popup_ = false;
+            DragonflyUtils::ReverseNormals(scene_->GetModel(selected_model));
+            should_reset_static_buffers = true;
+        }
+        pixel_loc.y += button_size_.y;
+        ImGui::SetCursorPos(ImVec2(pixel_loc.x, pixel_loc.y));
+    }
+    
+    rightclick_popup_size_ = simd_make_float2((button_size_.x)/(float)(window_width_/2), (button_size_.y * num_right_click_buttons_)/(float)(window_height_/2));
+}
+
+
 void EditModelScheme::ModelEditMenu() {
-    ImGui::Text("Selected Model ID: %i", selected_model - 3);
+    ImGui::Text("Selected Model ID: %i", selected_model);
     
     ImGui::SetCursorPos(ImVec2(30, 30));
     ImGui::Text("Location: ");
@@ -340,6 +402,10 @@ void EditModelScheme::MainWindow() {
     ImGui::SetCursorPos(ImVec2(5, 10));
     ImGui::Text("%.1f FPS", ImGui::GetIO().Framerate);
     ImGui::PopStyleColor();
+    
+    if (render_rightclick_popup_) {
+        RightClickPopup();
+    }
     
     ImGui::End();
 }

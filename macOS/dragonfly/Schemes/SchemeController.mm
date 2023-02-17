@@ -38,6 +38,20 @@ void SchemeController::MenuBar() {
             if (ImGui::MenuItem("New Model", "")) {
                 scheme_->CreateNewModel();
             }
+            if (ImGui::MenuItem("New Slice", "")) {
+                Slice *s = new Slice(scheme_->GetScene()->NumSlices());
+                scheme_->GetScene()->AddSlice(s);
+                
+                Scene *scene = scheme_->GetScene();
+                Camera *camera = scheme_->GetCamera();
+                
+                delete scheme_;
+                EditSliceScheme *slicescheme = new EditSliceScheme();
+                slicescheme->SetScene(scene);
+                slicescheme->SetCamera(camera);
+                slicescheme->SetSliceID(scene->NumSlices()-1);
+                scheme_ = slicescheme;
+            }
             if (ImGui::MenuItem("Save Selected Model", "")) {
                 if (scheme_->GetType() == SchemeType::EditModel) {
                     scheme_->EnableInput(false);
@@ -110,9 +124,17 @@ void SchemeController::MenuBar() {
                 scheme_->SetScene(scene);
                 scheme_->SetCamera(camera);
             }
+            if (ImGui::MenuItem("Toggle Lighting", ""))   {
+                scheme_->EnableLighting(!scheme_->LightingEnabled());
+            }
+
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
+        
+        if (!(importing_model || importing_pointdata || importing_scene || saving_model || saving_scene)) {
+            scheme_->EnableInput(!using_menu_bar);
+        }
     }
 }
 

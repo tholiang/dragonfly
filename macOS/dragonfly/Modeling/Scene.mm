@@ -18,6 +18,10 @@ Scene::~Scene() {
     for (int i = 0; i < models.size(); i++) {
         delete models[i];
     }
+    
+    for (int i = 0; i < slices.size(); i++) {
+        delete slices[i];
+    }
 }
 
 void Scene::GetFromFolder(std::string path) {
@@ -83,6 +87,22 @@ ModelUniforms * Scene::GetModelUniforms(unsigned long mid) {
     return &model_uniforms[mid];
 }
 
+Slice * Scene::GetSlice(unsigned long sid) {
+    if (sid >= slices.size()) {
+        return NULL;
+    }
+    
+    return slices[sid];
+}
+
+ModelUniforms * Scene::GetSliceUniforms(unsigned long sid) {
+    if (sid >= slice_uniforms.size()) {
+        return NULL;
+    }
+    
+    return &slice_uniforms[sid];
+}
+
 simd_float3 Scene::GetModelPosition(unsigned long mid) {
     if (mid >= model_uniforms.size()) {
         return NULL;
@@ -97,6 +117,22 @@ simd_float3 Scene::GetModelAngle(unsigned long mid) {
     }
     
     return model_uniforms[mid].angle;
+}
+
+simd_float3 Scene::GetSlicePosition(unsigned long sid) {
+    if (sid >= slice_uniforms.size()) {
+        return NULL;
+    }
+    
+    return slice_uniforms[sid].position;
+}
+
+simd_float3 Scene::GetSliceAngle(unsigned long sid) {
+    if (sid >= slice_uniforms.size()) {
+        return NULL;
+    }
+    
+    return slice_uniforms[sid].angle;
 }
 
 void Scene::MoveModelBy(unsigned int mid, float dx, float dy, float dz) {
@@ -163,6 +199,70 @@ void Scene::RotateModelTo(unsigned int mid, float x, float y, float z) {
     }
 }
 
+void Scene::MoveSliceBy(unsigned int sid, float dx, float dy, float dz) {
+    if (sid < slice_uniforms.size()) {
+        ModelUniforms * mu = GetSliceUniforms(sid);
+        
+        if (mu == NULL) {
+            return;
+        }
+        
+        mu->position.x += dx;
+        mu->position.y += dy;
+        mu->position.z += dz;
+        
+        mu->rotate_origin.x += dx;
+        mu->rotate_origin.y += dy;
+        mu->rotate_origin.z += dz;
+    }
+}
+
+void Scene::RotateSliceBy(unsigned int sid, float dx, float dy, float dz) {
+    if (sid < slice_uniforms.size()) {
+        ModelUniforms * mu = GetSliceUniforms(sid);
+        
+        if (mu == NULL) {
+            return;
+        }
+        
+        mu->angle.x += dx;
+        mu->angle.y += dy;
+        mu->angle.z += dz;
+    }
+}
+
+void Scene::MoveSliceTo(unsigned int sid, float x, float y, float z) {
+    if (sid < slice_uniforms.size()) {
+        ModelUniforms * mu = GetSliceUniforms(sid);
+        
+        if (mu == NULL) {
+            return;
+        }
+        
+        mu->rotate_origin.x += x - mu->position.x;
+        mu->rotate_origin.y += y - mu->position.y;
+        mu->rotate_origin.z += z - mu->position.z;
+        
+        mu->position.x = x;
+        mu->position.y = y;
+        mu->position.z = z;
+    }
+}
+
+void Scene::RotateSliceTo(unsigned int sid, float x, float y, float z) {
+    if (sid < slice_uniforms.size()) {
+        ModelUniforms * mu = GetSliceUniforms(sid);
+        
+        if (mu == NULL) {
+            return;
+        }
+        
+        mu->angle.x = x;
+        mu->angle.y = y;
+        mu->angle.z = z;
+    }
+}
+
 void Scene::CreateNewModel() {
     Model *m = new Model(models.size());
     m->MakeCube();
@@ -201,11 +301,30 @@ void Scene::NewModelFromPointData(std::string path) {
     model_uniforms.push_back(new_uniform);
 }
 
+void Scene::AddSlice(Slice *s) {
+    slices.push_back(s);
+    
+    ModelUniforms new_uniform;
+    new_uniform.position = simd_make_float3(0, 0, 0);
+    new_uniform.rotate_origin = simd_make_float3(0, 0, 0);
+    new_uniform.angle = simd_make_float3(0, 0, 0);
+    
+    slice_uniforms.push_back(new_uniform);
+}
 
 void Scene::RemoveModel(unsigned long mid) {
     if (mid < models.size()) {
+        delete models[mid];
         models.erase(models.begin() + mid);
         model_uniforms.erase(model_uniforms.begin() + mid);
+    }
+}
+
+void Scene::RemoveSlice(unsigned long sid) {
+    if (sid < slices.size()) {
+        delete slices[sid];
+        slices.erase(slices.begin() + sid);
+        slice_uniforms.erase(slice_uniforms.begin() + sid);
     }
 }
 
@@ -213,11 +332,29 @@ unsigned long Scene::NumModels() {
     return models.size();
 }
 
+unsigned long Scene::NumSlices() {
+    return slices.size();
+}
+
 std::vector<Model *> * Scene::GetModels() {
     return &models;
 }
 std::vector<ModelUniforms> * Scene::GetAllModelUniforms() {
     return &model_uniforms;
+}
+
+std::vector<Slice *> * Scene::GetSlices() {
+    return &slices;
+}
+std::vector<ModelUniforms> * Scene::GetAllSliceUniforms() {
+    return &slice_uniforms;
+}
+std::vector<SliceAttributes> Scene::GetAllSliceAttributes() {
+    std::vector<SliceAttributes> attr;
+    for (int i = 0; i < slices.size(); i++) {
+        attr.push_back(slices[i]->GetAttributes());
+    }
+    return attr;
 }
 
 std::string Scene::GetName() {

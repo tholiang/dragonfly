@@ -12,7 +12,7 @@ constant float pi = 3.14159265358979;
 constant float render_dist = 50;
 
 typedef simd_float3 Vertex;
-typedef simd_float3 Joint;
+typedef simd_float2 Dot;
 
 struct Camera {
     vector_float3 pos;
@@ -24,6 +24,10 @@ struct Camera {
 struct Face {
     unsigned int vertices[3];
     vector_float4 color;
+    
+    bool normal_reversed;
+    simd_float3 lighting_offset; // if there were a light source directly in front of the face, this is the rotation to get to its brightest orientation
+    float shading_multiplier;
 };
 
 struct Node {
@@ -62,6 +66,15 @@ struct VertexRenderUniforms {
 struct NodeRenderUniforms {
     float screen_ratio;
     int selected_node;
+};
+
+struct SliceAttributes {
+    float width;
+    float height;
+};
+
+struct Line {
+    unsigned int did[2];
 };
 
 /*struct EdgeRenderUniforms {
@@ -166,6 +179,43 @@ vector_float3 RotateAround (vector_float3 point, vector_float3 origin, vector_fl
     return point;
 }
 
+vector_float3 cross_product (vector_float3 p1, vector_float3 p2, vector_float3 p3) {
+    vector_float3 u = vector_float3(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
+    vector_float3 v = vector_float3(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
+    
+    return vector_float3(u.y*v.z - u.z*v.y, u.z*v.x - u.x*v.z, u.x*v.y - u.y*v.x);
+}
+
+vector_float3 cross_vectors(vector_float3 p1, vector_float3 p2) {
+    vector_float3 cross;
+    cross.x = p1.y*p2.z - p1.z*p2.y;
+    cross.y = -(p1.x*p2.z - p1.z*p2.x);
+    cross.z = p1.x*p2.y - p1.y*p2.x;
+    return cross;
+}
+
+vector_float3 TriAvg (vector_float3 p1, vector_float3 p2, vector_float3 p3) {
+    float x = (p1.x + p2.x + p3.x)/3;
+    float y = (p1.y + p2.y + p3.y)/3;
+    float z = (p1.z + p2.z + p3.z)/3;
+    
+    return vector_float3(x, y, z);
+}
+
+float acos2(vector_float3 v1, vector_float3 v2) {
+    float dot = v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
+    simd_float3 cross = cross_vectors(v1, v2);
+    float det = sqrt(pow(cross.x, 2) + pow(cross.y, 2) + pow(cross.z, 2));
+    return atan2(det, dot);
+}
+
+float angle_between (vector_float3 v1, vector_float3 v2) {
+    float mag1 = sqrt(pow(v1.x, 2) + pow(v1.y, 2) + pow(v1.z, 2));
+    float mag2 = sqrt(pow(v2.x, 2) + pow(v2.y, 2) + pow(v2.z, 2));
+    
+    return acos((v1.x*v2.x + v1.y*v2.y + v1.z*v2.z) / (mag1 * mag2));
+}
+
 kernel void ResetVertices (device Vertex *vertices [[buffer(0)]], unsigned int vid [[thread_position_in_grid]]) {
     vertices[vid] = vector_float3(0,0,0);
 }
@@ -221,6 +271,40 @@ kernel void CalculateProjectedNodes(device vector_float3 *output [[buffer(0)]], 
     output[vid] = PointToPixel(nodes[vid].pos, camera);
 }
 
+kernel void CalculateFaceLighting(device Face *output [[buffer(0)]], const constant Face *faces[[buffer(1)]], const constant Vertex *vertices [[buffer(2)]], const constant Vertex *light[[buffer(3)]], unsigned int fid[[thread_position_in_grid]]) {
+    Face f = faces[fid];
+    vector_float3 f_norm = cross_product(vertices[f.vertices[0]], vertices[f.vertices[1]], vertices[f.vertices[2]]);
+    if (f.normal_reversed) {
+        f_norm.x *= -1;
+        f_norm.y *= -1;
+        f_norm.z *= -1;
+    }
+    Vertex center = TriAvg(vertices[f.vertices[0]], vertices[f.vertices[1]], vertices[f.vertices[2]]);
+    vector_float3 vec_to = vector_float3(light->x - center.x, light->y - center.y, light->z - center.z);
+    float ang = abs(acos2(f_norm, vec_to));
+    f.color.x /= ang * f.shading_multiplier;
+    f.color.y /= ang * f.shading_multiplier;
+    f.color.z /= ang * f.shading_multiplier;
+    
+    output[fid] = f;
+}
+
+kernel void CalculateScaledDots(device Vertex *output [[buffer(0)]], const constant Dot *dots[[buffer(1)]], const constant SliceAttributes *attr[[buffer(2)]], const constant VertexRenderUniforms *uniforms [[buffer(3)]], unsigned int did [[thread_position_in_grid]]) {
+    float scale = attr->height / 2;
+    if (attr->height > attr->width) {
+        scale = attr->width / 2;
+    }
+    
+    if (uniforms->screen_ratio < 1) {
+        output[did].x = dots[did].x / scale;
+        output[did].y = uniforms->screen_ratio * dots[did].y / scale;
+    } else {
+        output[did].x = (dots[did].x / scale) / uniforms->screen_ratio;
+        output[did].y =  dots[did].y / scale;
+    }
+    output[did].z = 0.5;
+}
+
 vertex VertexOut DefaultVertexShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant Face *face_array[[buffer(1)]], unsigned int vid [[vertex_id]]) {
     Face currentFace = face_array[vid/3];
     vector_float3 currentVertex = vertex_array[currentFace.vertices[vid%3]];
@@ -244,6 +328,16 @@ vertex VertexOut VertexEdgeShader (const constant vector_float3 *vertex_array [[
     if (uniforms->selected_edge.y == currentFace.vertices[(vid)%3] && uniforms->selected_edge.x == currentFace.vertices[(vid-1)%3]) {
         output.color = vector_float4(1, 0.5, 0, 1);
     }*/
+    return output;
+}
+
+vertex VertexOut LineShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant Line *line_array[[buffer(1)]], unsigned int vid [[vertex_id]]) {
+    Line currentLine = line_array[vid/2];
+    vector_float3 currentVertex = vertex_array[currentLine.did[vid%2]];
+    VertexOut output;
+    output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z-0.0001, 1);
+    output.color = vector_float4(0, 0, 1, 1);
+    
     return output;
 }
 

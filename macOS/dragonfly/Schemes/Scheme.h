@@ -30,7 +30,8 @@
 enum SchemeType {
     EditModel,
     EditFEV,
-    EditNode
+    EditNode,
+    EditSlice
 };
 
 struct VertexRenderUniforms {
@@ -61,6 +62,7 @@ struct ShouldRender {
     bool edges = false;
     bool vertices = false;
     bool nodes = false;
+    bool slices = false;
 };
 
 struct Camera {
@@ -77,9 +79,19 @@ protected:
     Camera *camera_;
     
     Scene *scene_;
+    
+    // for creating empty buffers in compute pipeline - calculate with CalculateNum____() and get with Num______()
     unsigned long scene_vertex_length_;
     unsigned long scene_face_length_;
     unsigned long scene_node_length_;
+    unsigned long scene_dot_length_;
+    unsigned long scene_line_length_;
+    
+    unsigned long controls_vertex_length_;
+    unsigned long controls_face_length_;
+    unsigned long controls_node_length_;
+    
+    // given by compute pipeline with SetBufferContents() - used in handling clicks
     Vertex * scene_models_vertices_;
     Vertex * scene_models_projected_vertices_;
     Face * scene_models_faces_;
@@ -87,33 +99,40 @@ protected:
     Node * scene_models_nodes_;
     Vertex * scene_models_projected_nodes_;
     
-    std::vector<Model *> controls_models_;
-    std::vector<ModelUniforms> controls_model_uniforms_;
-    unsigned long controls_vertex_length_;
-    unsigned long controls_face_length_;
-    unsigned long controls_node_length_;
     Vertex * control_models_vertices_;
     Vertex * control_models_projected_vertices_;
     Face * control_models_faces_;
+    
+    // actual model data for controls models (arrows, etc)
+    std::vector<Model *> controls_models_;
+    std::vector<ModelUniforms> controls_model_uniforms_;
+    
+    // where to put the controls models - usually whatever is being edited
     simd_float3 controls_origin_;
     
+    // what the renderer should show
     ShouldRender should_render;
     
     float fps = 0;
     
+    // beginning of the scheme UI - after menu bar
     simd_int2 UI_start_;
     
+    // last click location
     simd_float2 click_loc_;
+    // current mouse location
     simd_float2 mouse_loc_;
     
     float x_sens_ = 0.1;
     float y_sens_ = 0.1;
     
     bool input_enabled = true;
+    bool lighting_enabled = false;
     
     bool left_mouse_down_ = false;
     bool right_mouse_down_ = false;
     
+    // contains data on whether certain keys are currently being pressed
     KeyPresses keypresses_;
     
     float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
@@ -124,14 +143,18 @@ protected:
     
     bool show_UI = true;
     
+    // for renderer - also contains list of selected vertices
     VertexRenderUniforms vertex_render_uniforms;
     
+    // for renderer - also contains the selected node
     NodeRenderUniforms node_render_uniforms_;
     
+    // whether the compute pipeline should reset empty buffers (usually when something is created or deleted)
     bool should_reset_empty_buffers = true;
+    // whether the compute pipeline should reset static buffers (usually when a static buffer item is moved - like a vertex)
     bool should_reset_static_buffers = true;
     
-    // action variables
+    // action variables - for undo
     UserAction *current_action = NULL;
     std::deque<UserAction *> past_actions;
     
@@ -149,11 +172,14 @@ protected:
     
     virtual void MainWindow();
     
+    // call all following calculate functions - usually when something is created or deleted
     void CalculateCounts();
     
     void CalculateNumSceneVertices();
     void CalculateNumSceneFaces();
     void CalculateNumSceneNodes();
+    void CalculateNumSceneDots();
+    void CalculateNumSceneLines();
     void CalculateNumControlsVertices();
     void CalculateNumControlsFaces();
     void CalculateNumControlsNodes();
@@ -171,10 +197,17 @@ public:
     
     Camera *GetCamera();
     Scene *GetScene();
+    virtual std::vector<Model *> *GetModels();
+    virtual std::vector<ModelUniforms> *GetModelUniforms();
+    virtual std::vector<Slice *> *GetSlices();
+    virtual std::vector<SliceAttributes> GetSliceAttributes();
     std::vector<Model *> *GetControlsModels();
     std::vector<ModelUniforms> *GetControlsModelUniforms();
     
     void EnableInput(bool enabled);
+    bool IsInputEnabled();
+    
+    void EnableLighting(bool enabled);
     
     virtual void HandleMouseMovement(float x, float y, float dx, float dy);
     virtual void HandleKeyPresses(int key, bool keydown);
@@ -198,9 +231,13 @@ public:
     bool ShouldResetEmptyBuffers();
     bool ShouldResetStaticBuffers();
     
+    bool LightingEnabled();
+    
     unsigned long NumSceneVertices();
     unsigned long NumSceneFaces();
     unsigned long NumSceneNodes();
+    unsigned long NumSceneDots();
+    unsigned long NumSceneLines();
     unsigned long NumControlsVertices();
     unsigned long NumControlsFaces();
     unsigned long NumControlsNodes();
@@ -209,6 +246,7 @@ public:
     bool ShouldRenderEdges();
     bool ShouldRenderVertices();
     bool ShouldRenderNodes();
+    bool ShouldRenderSlices();
     
     virtual void Update();
     

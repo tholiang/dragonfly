@@ -21,6 +21,7 @@ EditFEVScheme::EditFEVScheme() {
     should_render.edges = true;
     should_render.vertices = true;
     should_render.nodes = false;
+    should_render.slices = false;
     
     CreateControlsModels();
 }
@@ -772,6 +773,21 @@ void EditFEVScheme::RightClickPopup() {
             
             should_reset_empty_buffers = true;
             should_reset_static_buffers = true;
+        }
+        pixel_loc.y += button_size_.y;
+        ImGui::SetCursorPos(ImVec2(pixel_loc.x, pixel_loc.y));
+    }
+    
+    if (selected_face != -1) {
+        num_right_click_buttons_++;
+        if (ImGui::Button("Flip Normal", ImVec2(button_size_.x, button_size_.y))) {
+            render_rightclick_popup_ = false;
+            
+            Model* m = scene_->GetModel(selected_model);
+            if (selected_face != -1) {
+                m->GetFace(selected_face - m->FaceStart())->normal_reversed = !m->GetFace(selected_face - m->FaceStart())->normal_reversed;
+                should_reset_static_buffers = true;
+            }
         }
         pixel_loc.y += button_size_.y;
         ImGui::SetCursorPos(ImVec2(pixel_loc.x, pixel_loc.y));

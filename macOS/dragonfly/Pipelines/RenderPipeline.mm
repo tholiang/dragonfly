@@ -44,8 +44,8 @@ int RenderPipeline::init () {
     // get screen size
     SDL_DisplayMode DM;
     SDL_GetCurrentDisplayMode(0, &DM);
-    auto width = 1080; //DM.w;
-    auto height = 700; //DM.h;
+    auto width = DM.w;
+    auto height = DM.h;
     
     std::cout<<width<<" "<<height<<std::endl;
     window = SDL_CreateWindow("dragonfly", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
@@ -77,7 +77,7 @@ int RenderPipeline::init () {
     
     SetPipeline();
     
-    SDL_SetWindowSize(window, window_width, window_height);
+    SDL_SetWindowSize(window, 1080, 700);
     
     return SDL_GetWindowID(window);
 }
@@ -90,10 +90,12 @@ void RenderPipeline::SetSchemeController(SchemeController *sctr) {
     scheme_controller = sctr;
 }
 
-void RenderPipeline::SetBuffers(id<MTLBuffer> spv, id<MTLBuffer> sf, id<MTLBuffer> spn, id<MTLBuffer> svru, id<MTLBuffer> ssv, id<MTLBuffer> snru, id<MTLBuffer> cpv, id<MTLBuffer> cf) {
+void RenderPipeline::SetBuffers(id<MTLBuffer> spv, id<MTLBuffer> sf, id<MTLBuffer> spn, id<MTLBuffer> spd, id<MTLBuffer> ssl, id<MTLBuffer> svru, id<MTLBuffer> ssv, id<MTLBuffer> snru, id<MTLBuffer> cpv, id<MTLBuffer> cf) {
     scene_projected_vertex_buffer = spv;
     scene_face_buffer = sf;
     scene_projected_node_buffer = spn;
+    scene_projected_dot_buffer = spd;
+    scene_line_buffer = ssl;
     scene_vertex_render_uniforms_buffer = svru;
     scene_selected_vertices_buffer = ssv;
     scene_node_render_uniforms_buffer = snru;
@@ -124,6 +126,13 @@ void RenderPipeline::SetPipeline () {
     edge_render_pipeline_descriptor.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
     edge_render_pipeline_descriptor.colorAttachments[0].pixelFormat = layer.pixelFormat;
     
+    MTLRenderPipelineDescriptor *line_render_pipeline_descriptor = [[MTLRenderPipelineDescriptor alloc] init];
+    
+    line_render_pipeline_descriptor.vertexFunction = [library newFunctionWithName:@"LineShader"];
+    line_render_pipeline_descriptor.fragmentFunction = [library newFunctionWithName:@"FragmentShader"];
+    line_render_pipeline_descriptor.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
+    line_render_pipeline_descriptor.colorAttachments[0].pixelFormat = layer.pixelFormat;
+    
     MTLRenderPipelineDescriptor *scene_point_render_pipeline_descriptor = [[MTLRenderPipelineDescriptor alloc] init];
     
     scene_point_render_pipeline_descriptor.vertexFunction = [library newFunctionWithName:@"VertexPointShader"];
@@ -140,6 +149,7 @@ void RenderPipeline::SetPipeline () {
     
     face_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:render_pipeline_descriptor error:nil];
     scene_edge_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:edge_render_pipeline_descriptor error:nil];
+    scene_line_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:line_render_pipeline_descriptor error:nil];
     scene_point_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:scene_point_render_pipeline_descriptor error:nil];
     scene_node_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:scene_node_render_pipeline_descriptor error:nil];
     MTLDepthStencilDescriptor *depth_descriptor = [[MTLDepthStencilDescriptor alloc] init];
@@ -215,6 +225,31 @@ void RenderPipeline::Render() {
             for (int i = 0; i < num_nodes*40; i+=4) {
                 [render_encoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:i vertexCount:4];
             }
+        }
+    }
+    
+    unsigned long num_dots = scheme->NumSceneDots();
+    
+    if (num_dots > 0) {
+        if (scheme->ShouldRenderSlices()) {
+            [render_encoder setRenderPipelineState:scene_point_render_pipeline_state];
+            [render_encoder setVertexBuffer:scene_projected_dot_buffer offset:0 atIndex:0];
+            [render_encoder setVertexBuffer:scene_vertex_render_uniforms_buffer offset:0 atIndex:1];
+            [render_encoder setVertexBuffer:scene_selected_vertices_buffer offset:0 atIndex:2];
+            for (int i = 0; i < num_dots*4; i+=4) {
+                [render_encoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:i vertexCount:4];
+            }
+        }
+    }
+    
+    unsigned long num_slice_edges = scheme->NumSceneLines();
+    
+    if (num_slice_edges > 0) {
+        if (scheme->ShouldRenderSlices()) {
+            [render_encoder setRenderPipelineState:scene_line_render_pipeline_state];
+            [render_encoder setVertexBuffer:scene_projected_dot_buffer offset:0 atIndex:0];
+            [render_encoder setVertexBuffer:scene_line_buffer offset:0 atIndex:1];
+            [render_encoder drawPrimitives:MTLPrimitiveTypeLine vertexStart:0 vertexCount:num_slice_edges*2];
         }
     }
     

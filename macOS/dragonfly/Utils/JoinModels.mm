@@ -234,6 +234,6 @@ void DragonflyUtils::JoinModels(Model *A, Model *B, ModelUniforms *muA, ModelUni
             }
         }
         
-        A->MakeFace(newvids[0], newvids[1], newvids[2], simd_make_float4(1, 1, 1, 1));
+        A->MakeFaceWithLighting(newvids[0], newvids[1], newvids[2], f->color, f->normal_reversed, f->lighting_offset, f->shading_multiplier);
     }
 }

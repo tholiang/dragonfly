@@ -17,6 +17,7 @@ EditNodeScheme::EditNodeScheme() {
     should_render.edges = true;
     should_render.vertices = false;
     should_render.nodes = true;
+    should_render.slices = false;
     
     CreateControlsModels();
 }
@@ -112,7 +113,7 @@ void EditNodeScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
             
             if (selected_node_ != -1) {
                 Model *model = scene_->GetModel(selected_model_);
-                unsigned long modelNodeId = selected_node_ - model->FaceStart();
+                unsigned long modelNodeId = selected_node_ - model->NodeStart();
                 if (modelNodeId > 0) {
                     model->MoveNodeBy(modelNodeId, x_vec, y_vec, z_vec);
                 }

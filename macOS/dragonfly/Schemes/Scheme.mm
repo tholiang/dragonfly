@@ -63,6 +63,21 @@ Scene * Scheme::GetScene() {
     return scene_;
 }
 
+std::vector<Model *> *Scheme::GetModels() {
+    return scene_->GetModels();
+}
+
+std::vector<ModelUniforms> *Scheme::GetModelUniforms() {
+    return scene_->GetAllModelUniforms();
+}
+
+std::vector<Slice *> *Scheme::GetSlices() {
+    return scene_->GetSlices();
+}
+
+std::vector<SliceAttributes> Scheme::GetSliceAttributes() {
+    return scene_->GetAllSliceAttributes();
+}
 
 std::vector<Model *> * Scheme::GetControlsModels() {
     return &controls_models_;
@@ -74,6 +89,14 @@ std::vector<ModelUniforms> * Scheme::GetControlsModelUniforms() {
 
 void Scheme::EnableInput(bool enabled) {
     input_enabled = enabled;
+}
+
+bool Scheme::IsInputEnabled() {
+    return input_enabled;
+}
+
+void Scheme::EnableLighting(bool enabled) {
+    lighting_enabled = enabled;
 }
 
 void Scheme::HandleMouseMovement(float x, float y, float dx, float dy) {
@@ -342,10 +365,16 @@ bool Scheme::ShouldResetStaticBuffers() {
     return should_reset_static_buffers;
 }
 
+bool Scheme::LightingEnabled() {
+    return lighting_enabled;
+}
+
 void Scheme::CalculateCounts() {
     CalculateNumSceneVertices();
     CalculateNumSceneFaces();
     CalculateNumSceneNodes();
+    CalculateNumSceneDots();
+    CalculateNumSceneLines();
     CalculateNumControlsVertices();
     CalculateNumControlsFaces();
     CalculateNumControlsNodes();
@@ -375,6 +404,22 @@ void Scheme::CalculateNumSceneNodes() {
     scene_node_length_ = sum;
 }
 
+void Scheme::CalculateNumSceneDots() {
+    int sum = 0;
+    for (int i = 0; i < scene_->NumSlices(); i++) {
+        sum += scene_->GetSlice(i)->NumDots();
+    }
+    scene_dot_length_ = sum;
+}
+
+void Scheme::CalculateNumSceneLines() {
+    int sum = 0;
+    for (int i = 0; i < scene_->NumSlices(); i++) {
+        sum += scene_->GetSlice(i)->NumLines();
+    }
+    scene_line_length_ = sum;
+}
+
 void Scheme::CalculateNumControlsVertices() {
     int sum = 0;
     for (int i = 0; i < controls_models_.size(); i++) {
@@ -391,7 +436,6 @@ void Scheme::CalculateNumControlsFaces() {
     controls_face_length_ = sum;
 }
 
-
 void Scheme::CalculateNumControlsNodes() {
     int sum = 0;
     for (int i = 0; i < controls_models_.size(); i++) {
@@ -399,6 +443,7 @@ void Scheme::CalculateNumControlsNodes() {
     }
     controls_node_length_ = sum;
 }
+
 unsigned long Scheme::NumSceneVertices() {
     return scene_vertex_length_;
 }
@@ -409,6 +454,14 @@ unsigned long Scheme::NumSceneFaces() {
 
 unsigned long Scheme::NumSceneNodes() {
     return scene_node_length_;
+}
+
+unsigned long Scheme::NumSceneDots() {
+    return scene_dot_length_;
+}
+
+unsigned long Scheme::NumSceneLines() {
+    return scene_line_length_;
 }
 
 unsigned long Scheme::NumControlsVertices() {
@@ -437,6 +490,10 @@ bool Scheme::ShouldRenderVertices() {
 
 bool Scheme::ShouldRenderNodes() {
     return should_render.nodes;
+}
+
+bool Scheme::ShouldRenderSlices() {
+    return should_render.slices;
 }
 
 void Scheme::Update() {

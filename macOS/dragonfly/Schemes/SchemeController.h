@@ -17,6 +17,7 @@
 #include "EditModelScheme.h"
 #include "EditFEVScheme.h"
 #include "EditNodeScheme.h"
+#include "EditSliceScheme.h"
 
 class SchemeController {
 private:

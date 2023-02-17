@@ -152,17 +152,15 @@ void Animation::FromFile(std::ifstream &file) {
         int numkeys;
         sscanf(line.c_str(), "%d keys", &numkeys);
         
+        std::cout<<i<<" "<<nodeid<<" "<<numkeys<<" keys"<<std::endl;
+        
         std::vector<NodeKeyFrame *> *frames = node_animations[i];
-        for (int i = 0; i < numkeys; i++) {
+        for (int j = 0; j < numkeys; j++) {
+            getline(file, line);
             float time, posx, posy, posz, angx, angy, angz;
             
             sscanf(line.c_str(), "%f %f %f %f %f %f %f", &time, &posx, &posy, &posz, &angx, &angy, &angz);
-            NodeKeyFrame *nkf = new NodeKeyFrame();
-            nkf->time = time;
-            nkf->pos = simd_make_float3(posx, posy, posz);
-            nkf->angle = simd_make_float3(angx, angy, angz);
-            
-            frames->push_back(nkf);
+            SetKeyFrame(i, time, simd_make_float3(posx, posy, posz), simd_make_float3(angx, angy, angz));
         }
     }
 }
@@ -217,6 +215,22 @@ unsigned Model::MakeFace(unsigned v0, unsigned v1, unsigned v2, simd_float4 colo
     f->vertices[1] = v1;
     f->vertices[2] = v2;
     f->color = color;
+    f->normal_reversed = false;
+    f->lighting_offset = {0,0,0};
+    f->shading_multiplier = 0.6;
+    faces.push_back(f);
+    return faces.size()-1;
+}
+
+unsigned Model::MakeFaceWithLighting(unsigned v0, unsigned v1, unsigned v2, simd_float4 color, bool normal_reversed, simd_float3 lighting_offset, float shading_multiplier) {
+    Face *f = new Face();
+    f->vertices[0] = v0;
+    f->vertices[1] = v1;
+    f->vertices[2] = v2;
+    f->color = color;
+    f->normal_reversed = normal_reversed;
+    f->lighting_offset = lighting_offset;
+    f->shading_multiplier = shading_multiplier;
     faces.push_back(f);
     return faces.size()-1;
 }
@@ -321,7 +335,7 @@ void Model::MakeCube() {
     MakeVertex(0, 1, 1);
     MakeVertex(1, 1, 1);
     
-    MakeFace(1, 0, 2, {1, 1, 0, 1});
+    MakeFace(1, 0, 2, {1, 1, 1, 1});
     MakeFace(2, 3, 1, {1, 1, 1, 1});
     
     MakeFace(1, 0, 4, {1, 1, 1, 1});
@@ -345,6 +359,9 @@ void Model::FromFile(std::string path) {
     std::ifstream myfile (path);
     if (myfile.is_open()) {
         getline(myfile, line);
+        delete nodes[0];
+        nodes.erase(nodes.begin());
+        
         int num_nodes;
         sscanf(line.c_str(), "%d nodes", &num_nodes);
         for (int i = 0; i < num_nodes; i++) {
@@ -354,6 +371,7 @@ void Model::FromFile(std::string path) {
             sscanf(line.c_str(), "%f %f %f %f %f %f", &posx, &posy, &posz, &angx, &angy, &angz);
             n->pos = simd_make_float3(posx, posy, posz);
             n->angle = simd_make_float3(angx, angy, angz);
+            n->locked_to = -1;
             
             std::cout<<n->pos.x<<" "<<n->pos.y<<" "<<n->pos.y<<std::endl;
             
@@ -385,11 +403,17 @@ void Model::FromFile(std::string path) {
             Face *f = new Face();
             int v1, v2, v3;
             float cx, cy, cz, cw;
-            sscanf(line.c_str(), "%d %d %d %f %f %f %f", &v1, &v2, &v3, &cx, &cy, &cz, &cw);
+            int nr;
+            float sm;
+            float lx, ly, lz;
+            sscanf(line.c_str(), "%d %d %d %f %f %f %f %d %f %f %f %f", &v1, &v2, &v3, &cx, &cy, &cz, &cw, &nr, &sm, &lx, &ly, &lz);
             f->vertices[0] = v1;
             f->vertices[1] = v2;
             f->vertices[2] = v3;
             f->color = simd_make_float4(cx, cy, cz, cw);
+            f->normal_reversed = nr == 1;
+            f->shading_multiplier = sm;
+            f->lighting_offset = simd_make_float3(lx, ly, lz);
             
             faces.push_back(f);
         }
@@ -398,7 +422,7 @@ void Model::FromFile(std::string path) {
         int num_anims;
         sscanf(line.c_str(), "%d animations", &num_anims);
         for (int i = 0; i < num_anims; i++) {
-            getline(myfile, line);
+            //getline(myfile, line);
             Animation *anim = new Animation(this);
             
             anim->FromFile(myfile);
@@ -669,6 +693,9 @@ void Model::AddToBuffers(std::vector<Face> &faceBuffer, std::vector<Node> &nodeB
         face.vertices[0] = og->vertices[0]+vertex_start;
         face.vertices[1] = og->vertices[1]+vertex_start;
         face.vertices[2] = og->vertices[2]+vertex_start;
+        face.normal_reversed = og->normal_reversed;
+        face.lighting_offset = og->lighting_offset;
+        face.shading_multiplier = og->shading_multiplier;
         faceBuffer.push_back(face);
     }
     
@@ -772,7 +799,9 @@ void Model::SaveToFile(std::string path) {
     for (int i = 0; i < faces.size(); i++) {
         Face *f = faces[i];
         myfile << f->vertices[0] << " " << f->vertices[1] << " " << f->vertices[2] << " ";
-        myfile << f->color.x << " " << f->color.y << " " << f->color.z << " " << f->color.w << std::endl;
+        myfile << f->color.x << " " << f->color.y << " " << f->color.z << " " << f->color.w << " ";
+        myfile << f->normal_reversed << " " << f->shading_multiplier << " ";
+        myfile << f->lighting_offset.x << " " << f->lighting_offset.y << " " << f->lighting_offset.z << std::endl;
     }
     
     myfile << animations.size() << " animations" << std::endl;

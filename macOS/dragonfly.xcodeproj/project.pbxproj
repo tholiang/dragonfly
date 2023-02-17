@@ -30,6 +30,8 @@
 		D20C0B3F2845D68900F5DC08 /* FaceAddVertexAction.mm in Sources */ = {isa = PBXBuildFile; fileRef = D20C0B3E2845D68900F5DC08 /* FaceAddVertexAction.mm */; };
 		D20C0B422845E20400F5DC08 /* EdgeAddVertexAction.mm in Sources */ = {isa = PBXBuildFile; fileRef = D20C0B412845E20400F5DC08 /* EdgeAddVertexAction.mm */; };
 		D224A4662791464D0099CF9D /* Processing.metal in Sources */ = {isa = PBXBuildFile; fileRef = D224A4652791464D0099CF9D /* Processing.metal */; };
+		D2522490298A2AC400D1AB3C /* EditSliceScheme.mm in Sources */ = {isa = PBXBuildFile; fileRef = D252248E298A2AC400D1AB3C /* EditSliceScheme.mm */; };
+		D284008A29903A7200DD3B72 /* Slice.mm in Sources */ = {isa = PBXBuildFile; fileRef = D284008829903A7200DD3B72 /* Slice.mm */; };
 		D28B7D852793B4AC00C0E47F /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D28B7D842793B4AC00C0E47F /* SDL2.framework */; };
 		D28B7D862793B4AC00C0E47F /* SDL2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D28B7D842793B4AC00C0E47F /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D2A99F7E2792BF7D00E85036 /* Model.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2A99F7D2792BF7D00E85036 /* Model.mm */; };
@@ -52,6 +54,7 @@
 		D2EAF77427914119002DE553 /* dragonflyUITestsLaunchTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D2EAF77327914119002DE553 /* dragonflyUITestsLaunchTests.m */; };
 		D2EAF92427914191002DE553 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2EAF92327914191002DE553 /* Metal.framework */; platformFilter = maccatalyst; };
 		D2EAF92627914197002DE553 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2EAF92527914197002DE553 /* QuartzCore.framework */; platformFilter = maccatalyst; };
+		D2EF6E8D29779E2C002BE578 /* Normals.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2EF6E8B29779E2C002BE578 /* Normals.mm */; };
 		D2F0B0CF28985CF700057FD6 /* Engine.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2F0B0CE28985CF200057FD6 /* Engine.mm */; };
 		D2F0B0D2289878F600057FD6 /* SchemeController.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2F0B0D1289878F300057FD6 /* SchemeController.mm */; };
 /* End PBXBuildFile section */
@@ -126,6 +129,10 @@
 		D2145B3F284D71F100C25502 /* imfilebrowser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = imfilebrowser.h; path = dragonfly/imfilebrowser.h; sourceTree = "<group>"; };
 		D2145B40284D71F200C25502 /* imfilebrowser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imfilebrowser.h; sourceTree = "<group>"; };
 		D224A4652791464D0099CF9D /* Processing.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = Processing.metal; sourceTree = "<group>"; };
+		D252248E298A2AC400D1AB3C /* EditSliceScheme.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = EditSliceScheme.mm; sourceTree = "<group>"; };
+		D252248F298A2AC400D1AB3C /* EditSliceScheme.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EditSliceScheme.h; sourceTree = "<group>"; };
+		D284008829903A7200DD3B72 /* Slice.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Slice.mm; sourceTree = "<group>"; };
+		D284008929903A7200DD3B72 /* Slice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Slice.h; sourceTree = "<group>"; };
 		D28B7D832793B45500C0E47F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		D28B7D842793B4AC00C0E47F /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
 		D2A99F7C2792BCF100E85036 /* Model.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; path = Model.h; sourceTree = "<group>"; };
@@ -165,6 +172,8 @@
 		D2EAF77327914119002DE553 /* dragonflyUITestsLaunchTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = dragonflyUITestsLaunchTests.m; sourceTree = "<group>"; };
 		D2EAF92327914191002DE553 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		D2EAF92527914197002DE553 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		D2EF6E8B29779E2C002BE578 /* Normals.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Normals.mm; sourceTree = "<group>"; };
+		D2EF6E8C29779E2C002BE578 /* Normals.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Normals.h; sourceTree = "<group>"; };
 		D2F0B0CD28985CE200057FD6 /* Engine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Engine.h; sourceTree = "<group>"; };
 		D2F0B0CE28985CF200057FD6 /* Engine.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Engine.mm; sourceTree = "<group>"; };
 		D2F0B0D0289878E300057FD6 /* SchemeController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SchemeController.h; sourceTree = "<group>"; };
@@ -281,6 +290,8 @@
 				D2A99F7D2792BF7D00E85036 /* Model.mm */,
 				D203034F27D466F4006667BA /* Arrow.h */,
 				D203035027D4670E006667BA /* Arrow.mm */,
+				D284008929903A7200DD3B72 /* Slice.h */,
+				D284008829903A7200DD3B72 /* Slice.mm */,
 				D2E399A72874B3AF003381DD /* Scene.h */,
 				D2E399A52874B399003381DD /* Scene.mm */,
 			);
@@ -300,6 +311,8 @@
 				D2E399B52874E997003381DD /* EditFEVScheme.mm */,
 				D2E399B92874EDAE003381DD /* EditNodeScheme.h */,
 				D2E399B72874EDA5003381DD /* EditNodeScheme.mm */,
+				D252248F298A2AC400D1AB3C /* EditSliceScheme.h */,
+				D252248E298A2AC400D1AB3C /* EditSliceScheme.mm */,
 			);
 			path = Schemes;
 			sourceTree = "<group>";
@@ -324,6 +337,8 @@
 				D2E79A7C2950103000051DDF /* Project2D.mm */,
 				D2B08AD6296D240800CA5FFC /* JoinModels.h */,
 				D2B08AD5296D240800CA5FFC /* JoinModels.mm */,
+				D2EF6E8C29779E2C002BE578 /* Normals.h */,
+				D2EF6E8B29779E2C002BE578 /* Normals.mm */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -547,6 +562,7 @@
 				D2EAF75D27914119002DE553 /* main.mm in Sources */,
 				D2E399A62874B399003381DD /* Scene.mm in Sources */,
 				D2047B522793B1A000B4B442 /* imgui_impl_metal.mm in Sources */,
+				D2522490298A2AC400D1AB3C /* EditSliceScheme.mm in Sources */,
 				D2E399B62874E998003381DD /* EditFEVScheme.mm in Sources */,
 				D2047B622793B1A000B4B442 /* imgui_impl_sdl.cpp in Sources */,
 				D2E399B82874EDA5003381DD /* EditNodeScheme.mm in Sources */,
@@ -565,7 +581,9 @@
 				D2E399B02874DEC4003381DD /* RenderPipeline.mm in Sources */,
 				D2047BDD2793B1A000B4B442 /* imgui_demo.cpp in Sources */,
 				D2F0B0D2289878F600057FD6 /* SchemeController.mm in Sources */,
+				D284008A29903A7200DD3B72 /* Slice.mm in Sources */,
 				D20C0B3628453C2C00F5DC08 /* VertexMoveAction.mm in Sources */,
+				D2EF6E8D29779E2C002BE578 /* Normals.mm in Sources */,
 				D2EAF75327914118002DE553 /* AppDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

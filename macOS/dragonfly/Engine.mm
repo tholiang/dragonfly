@@ -98,50 +98,54 @@ void Engine::run() {
 }
 
 void Engine::HandleKeyboardEvents(SDL_Event event) {
-    if (event.type == SDL_KEYDOWN) {
-        SDL_Keysym keysym = event.key.keysym;
-        scheme->HandleKeyPresses(keysym.sym, true);
-    } else if (event.type == SDL_KEYUP) {
-        SDL_Keysym keysym = event.key.keysym;
-        scheme->HandleKeyPresses(keysym.sym, false);
+    if (scheme->IsInputEnabled()) {
+        if (event.type == SDL_KEYDOWN) {
+            SDL_Keysym keysym = event.key.keysym;
+            scheme->HandleKeyPresses(keysym.sym, true);
+        } else if (event.type == SDL_KEYUP) {
+            SDL_Keysym keysym = event.key.keysym;
+            scheme->HandleKeyPresses(keysym.sym, false);
+        }
     }
 }
 
 void Engine::HandleMouseEvents(SDL_Event event) {
-    int x;
-    int y;
-    SDL_GetMouseState(&x, &y);
-    
-    simd_float2 loc;
-    
-    loc.x = (float) x;
-    loc.y = (float) y;
-    
-    if (event.type == SDL_MOUSEBUTTONDOWN) {
-        switch (event.button.button) {
-            case SDL_BUTTON_LEFT:
-                scheme->HandleMouseDown(loc, true);
-                break;
-            case SDL_BUTTON_RIGHT:
-                scheme->HandleMouseDown(loc, false);
-                break;
-            default:
-                break;
+    if (scheme->IsInputEnabled()) {
+        int x;
+        int y;
+        SDL_GetMouseState(&x, &y);
+        
+        simd_float2 loc;
+        
+        loc.x = (float) x;
+        loc.y = (float) y;
+        
+        if (event.type == SDL_MOUSEBUTTONDOWN) {
+            switch (event.button.button) {
+                case SDL_BUTTON_LEFT:
+                    scheme->HandleMouseDown(loc, true);
+                    break;
+                case SDL_BUTTON_RIGHT:
+                    scheme->HandleMouseDown(loc, false);
+                    break;
+                default:
+                    break;
+            }
+        } else if (event.type == SDL_MOUSEBUTTONUP) {
+            switch (event.button.button) {
+                case SDL_BUTTON_LEFT:
+                    scheme->HandleMouseUp(loc, true);
+                    break;
+                case SDL_BUTTON_RIGHT:
+                    scheme->HandleMouseUp(loc, false);
+                    break;
+                default:
+                    break;
+            }
         }
-    } else if (event.type == SDL_MOUSEBUTTONUP) {
-        switch (event.button.button) {
-            case SDL_BUTTON_LEFT:
-                scheme->HandleMouseUp(loc, true);
-                break;
-            case SDL_BUTTON_RIGHT:
-                scheme->HandleMouseUp(loc, false);
-                break;
-            default:
-                break;
+        
+        if (event.type == SDL_MOUSEMOTION) {
+            scheme->HandleMouseMovement(x, y, event.motion.xrel, event.motion.yrel);
         }
-    }
-    
-    if (event.type == SDL_MOUSEMOTION) {
-        scheme->HandleMouseMovement(x, y, event.motion.xrel, event.motion.yrel);
     }
 }
