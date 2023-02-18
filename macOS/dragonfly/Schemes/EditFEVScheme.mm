@@ -34,10 +34,11 @@ void EditFEVScheme::CreateControlsModels() {
     z_arrow = new Arrow(0);
     
     ModelUniforms z_arrow_uniform;
-    z_arrow_uniform.b.pos = simd_make_float3(0, 0, 1);
-    z_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 1);
+    z_arrow_uniform.b.pos = simd_make_float3(0, 0, 0);
+    z_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 0);
     
     controls_model_uniforms_.push_back(z_arrow_uniform);
+    controls_model_default_bases_.push_back(z_arrow_uniform.b);
     arrow_projections[0] = simd_make_float2(0,0);
     arrow_projections[1] = simd_make_float2(0,1);
     
@@ -46,12 +47,13 @@ void EditFEVScheme::CreateControlsModels() {
     x_arrow = new Arrow(1, simd_make_float4(0, 1, 0, 1));
     
     ModelUniforms x_arrow_uniform;
-    x_arrow_uniform.b.pos = simd_make_float3(0, 0, 1);
-    x_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 1);
+    x_arrow_uniform.b.pos = simd_make_float3(0, 0, 0);
+    x_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 0);
     //x_arrow_uniform.angle = simd_make_float3(M_PI_2, 0, 0);
     RotateBasisOnY(&x_arrow_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(x_arrow_uniform);
+    controls_model_default_bases_.push_back(x_arrow_uniform.b);
     arrow_projections[2] = simd_make_float2(0,0);
     arrow_projections[3] = simd_make_float2(0,0);
     
@@ -60,12 +62,13 @@ void EditFEVScheme::CreateControlsModels() {
     y_arrow = new Arrow(2, simd_make_float4(0, 0, 1, 1));
     
     ModelUniforms y_arrow_uniform;
-    y_arrow_uniform.b.pos = simd_make_float3(0, 0, 1);
-    y_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 1);
+    y_arrow_uniform.b.pos = simd_make_float3(0, 0, 0);
+    y_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 0);
 //    y_arrow_uniform.angle = simd_make_float3(0, -M_PI_2, 0);
     RotateBasisOnX(&y_arrow_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(y_arrow_uniform);
+    controls_model_default_bases_.push_back(y_arrow_uniform.b);
     arrow_projections[4] = simd_make_float2(0,0);
     arrow_projections[5] = simd_make_float2(1,0);
     
@@ -471,7 +474,7 @@ void EditFEVScheme::SelectVerticesInDrag() {
     vertex_render_uniforms.num_selected_vertices = vertex_render_uniforms.selected_vertices.size();
 }
 
-void EditFEVScheme::SetControlsOrigin() {
+void EditFEVScheme::SetControlsBasis() {
     if (!vertex_render_uniforms.selected_vertices.empty()) {
         simd_float3 avg = simd_make_float3(0, 0, 0);
         for (int i = 0; i < vertex_render_uniforms.selected_vertices.size(); i++) {
@@ -479,13 +482,13 @@ void EditFEVScheme::SetControlsOrigin() {
             avg.y += scene_models_vertices_[vertex_render_uniforms.selected_vertices[i]].y;
             avg.z += scene_models_vertices_[vertex_render_uniforms.selected_vertices[i]].z;
         }
-        controls_origin_ = simd_make_float3(avg.x/vertex_render_uniforms.selected_vertices.size(), avg.y/vertex_render_uniforms.selected_vertices.size(), avg.z/vertex_render_uniforms.selected_vertices.size());
+        controls_basis_.pos = simd_make_float3(avg.x/vertex_render_uniforms.selected_vertices.size(), avg.y/vertex_render_uniforms.selected_vertices.size(), avg.z/vertex_render_uniforms.selected_vertices.size());
     } else {
         simd_float3 behind_camera;
         behind_camera.x = camera_->pos.x - camera_->vector.x*10;
         behind_camera.y = camera_->pos.y - camera_->vector.y*10;
         behind_camera.z = camera_->pos.z - camera_->vector.z*10;
-        controls_origin_ = behind_camera;
+        controls_basis_.pos = behind_camera;
     }
 }
 

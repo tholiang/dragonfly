@@ -47,7 +47,7 @@ private:
     
     void HandleSelection(simd_float2 loc);
     
-    void SetControlsOrigin();
+    void SetControlsBasis();
     
     void SetArrowProjections();
     

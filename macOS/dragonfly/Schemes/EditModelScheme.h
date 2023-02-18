@@ -51,7 +51,7 @@ private:
     
     void ModelEditMenu();
     
-    void SetControlsOrigin();
+    void SetControlsBasis();
     
     void SetArrowProjections();
     

@@ -88,6 +88,23 @@ simd_float3 DragonflyUtils::TranslatePoint(Basis *b, simd_float3 point) {
     return ret;
 }
 
+simd_float3 DragonflyUtils::RotatePointToBasis(Basis *b, simd_float3 point) {
+    simd_float3 ret;
+    // x component
+    ret.x = point.x * b->x.x;
+    ret.y = point.x * b->x.y;
+    ret.z = point.x * b->x.z;
+    // y component
+    ret.x += point.y * b->y.x;
+    ret.y += point.y * b->y.y;
+    ret.z += point.y * b->y.z;
+    // z component
+    ret.x += point.z * b->z.x;
+    ret.y += point.z * b->z.y;
+    ret.z += point.z * b->z.z;
+    
+    return ret;
+}
 
 simd_float3 DragonflyUtils::TranslatePointToStandard(Basis *b, simd_float3 point) {
     simd_float3 ret;
@@ -103,3 +120,13 @@ simd_float3 DragonflyUtils::TranslatePointToStandard(Basis *b, simd_float3 point
     
     return ret;
 };
+
+DragonflyUtils::Basis DragonflyUtils::TranslateBasis(Basis *b, Basis *onto) {
+    Basis newb;
+    newb.pos = TranslatePoint(onto, b->pos);
+    newb.x = RotatePointToBasis(onto, b->x);
+    newb.y = RotatePointToBasis(onto, b->y);
+    newb.z = RotatePointToBasis(onto, b->z);
+    
+    return newb;
+}

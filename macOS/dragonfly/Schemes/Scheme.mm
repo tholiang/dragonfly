@@ -33,7 +33,7 @@ void Scheme::SetCamera(Camera *camera) {
     behind_camera.x = camera_->pos.x - camera_->vector.x*10;
     behind_camera.y = camera_->pos.y - camera_->vector.y*10;
     behind_camera.z = camera_->pos.z - camera_->vector.z*10;
-    controls_origin_ = behind_camera;
+    controls_basis_.pos = behind_camera;
 }
 
 void Scheme::SetScene(Scene *scene) {
@@ -263,12 +263,13 @@ std::pair<int,float> Scheme::ControlModelClicked(simd_float2 loc) {
 
 void Scheme::MoveControlsModels() {
     for (int i = 0; i < controls_model_uniforms_.size(); i++) {
-        controls_model_uniforms_[i].b.pos = controls_origin_;
-        controls_model_uniforms_[i].rotate_origin = controls_origin_;
+        controls_model_uniforms_[i].rotate_origin = controls_basis_.pos;
+        //controls_model_uniforms_[i].b = controls_basis_;
+        controls_model_uniforms_[i].b = TranslateBasis(&controls_model_default_bases_[i], &controls_basis_);
     }
 }
 
-void Scheme::SetControlsOrigin() {
+void Scheme::SetControlsBasis() {
     
 }
 
@@ -498,7 +499,7 @@ bool Scheme::ShouldRenderSlices() {
 
 void Scheme::Update() {
     HandleCameraMovement();
-    SetControlsOrigin();
+    SetControlsBasis();
     MoveControlsModels();
     
     UpdateUIVars();

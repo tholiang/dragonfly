@@ -61,7 +61,7 @@ private:
     
     void SelectVerticesInDrag();
     
-    void SetControlsOrigin();
+    void SetControlsBasis();
     
     void SetArrowProjections();
     

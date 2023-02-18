@@ -109,9 +109,10 @@ protected:
     // actual model data for controls models (arrows, etc)
     std::vector<Model *> controls_models_;
     std::vector<ModelUniforms> controls_model_uniforms_;
+    std::vector<Basis> controls_model_default_bases_;
     
     // where to put the controls models - usually whatever is being edited
-    simd_float3 controls_origin_;
+    Basis controls_basis_;
     
     // what the renderer should show
     ShouldRender should_render;
@@ -168,7 +169,7 @@ protected:
     
     virtual std::pair<int,float> ControlModelClicked(simd_float2 loc);
     
-    virtual void SetControlsOrigin();
+    virtual void SetControlsBasis();
     virtual void MoveControlsModels();
     
     void UpdateUIVars();

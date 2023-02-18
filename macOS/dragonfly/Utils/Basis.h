@@ -36,7 +36,9 @@ void RotateBasisOnX(Basis *b, float angle);
 void RotateBasisOnY(Basis *b, float angle);
 void RotateBasisOnZ(Basis *b, float angle);
 simd_float3 TranslatePoint(Basis *b, simd_float3 point);
+simd_float3 RotatePointToBasis(Basis *b, simd_float3 point);
 simd_float3 TranslatePointToStandard(Basis *b, simd_float3 point);
+Basis TranslateBasis(Basis *b, Basis *onto);
 }
 
 

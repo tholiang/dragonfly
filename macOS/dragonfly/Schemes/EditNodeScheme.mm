@@ -30,10 +30,11 @@ void EditNodeScheme::CreateControlsModels() {
     z_arrow = new Arrow(0);
     
     ModelUniforms z_arrow_uniform;
-    z_arrow_uniform.b.pos = simd_make_float3(0, 0, 1);
-    z_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 1);
+    z_arrow_uniform.b.pos = simd_make_float3(0, 0, 0);
+    z_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 0);
     
     controls_model_uniforms_.push_back(z_arrow_uniform);
+    controls_model_default_bases_.push_back(z_arrow_uniform.b);
     arrow_projections[0] = simd_make_float2(0,0);
     arrow_projections[1] = simd_make_float2(0,1);
     
@@ -42,12 +43,13 @@ void EditNodeScheme::CreateControlsModels() {
     x_arrow = new Arrow(1, simd_make_float4(0, 1, 0, 1));
     
     ModelUniforms x_arrow_uniform;
-    x_arrow_uniform.b.pos = simd_make_float3(0, 0, 1);
-    x_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 1);
+    x_arrow_uniform.b.pos = simd_make_float3(0, 0, 0);
+    x_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 0);
     //x_arrow_uniform.angle = simd_make_float3(M_PI_2, 0, 0);
     RotateBasisOnY(&x_arrow_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(x_arrow_uniform);
+    controls_model_default_bases_.push_back(x_arrow_uniform.b);
     arrow_projections[2] = simd_make_float2(0,0);
     arrow_projections[3] = simd_make_float2(0,0);
     
@@ -56,12 +58,13 @@ void EditNodeScheme::CreateControlsModels() {
     y_arrow = new Arrow(2, simd_make_float4(0, 0, 1, 1));
     
     ModelUniforms y_arrow_uniform;
-    y_arrow_uniform.b.pos = simd_make_float3(0, 0, 1);
-    y_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 1);
+    y_arrow_uniform.b.pos = simd_make_float3(0, 0, 0);
+    y_arrow_uniform.rotate_origin = simd_make_float3(0, 0, 0);
 //    y_arrow_uniform.angle = simd_make_float3(0, -M_PI_2, 0);
     RotateBasisOnX(&y_arrow_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(y_arrow_uniform);
+    controls_model_default_bases_.push_back(y_arrow_uniform.b);
     arrow_projections[4] = simd_make_float2(0,0);
     arrow_projections[5] = simd_make_float2(1,0);
     
@@ -239,19 +242,19 @@ void EditNodeScheme::HandleSelection(simd_float2 loc) {
     }
 }
 
-void EditNodeScheme::SetControlsOrigin() {
+void EditNodeScheme::SetControlsBasis() {
     if (selected_node_ != -1) {
         Model *model = scene_->GetModel(selected_model_);
         unsigned long modelNodeId = selected_node_ - model->FaceStart();
         if (modelNodeId > 0) {
-            controls_origin_ = scene_models_nodes_[selected_node_].b.pos;
+            controls_basis_ = scene_models_nodes_[selected_node_].b;
         }
     } else {
         simd_float3 behind_camera;
         behind_camera.x = camera_->pos.x - camera_->vector.x*10;
         behind_camera.y = camera_->pos.y - camera_->vector.y*10;
         behind_camera.z = camera_->pos.z - camera_->vector.z*10;
-        controls_origin_ = behind_camera;
+        controls_basis_.pos = behind_camera;
     }
 }
 
