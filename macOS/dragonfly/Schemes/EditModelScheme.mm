@@ -461,8 +461,8 @@ void EditModelScheme::BuildUI() {
     RightMenu();
 }
 
-void EditModelScheme::SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf) {
-    Scheme::SetBufferContents(smv, smpv, smf, smn, smpn, cmv, cmpv, cmf);
+void EditModelScheme::SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp) {
+    Scheme::SetBufferContents(smv, smpv, smf, smn, smpn, cmv, cmpv, cmf, ssp);
     SetArrowProjections();
 }
 

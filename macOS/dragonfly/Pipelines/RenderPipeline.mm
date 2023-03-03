@@ -90,12 +90,13 @@ void RenderPipeline::SetSchemeController(SchemeController *sctr) {
     scheme_controller = sctr;
 }
 
-void RenderPipeline::SetBuffers(id<MTLBuffer> spv, id<MTLBuffer> sf, id<MTLBuffer> spn, id<MTLBuffer> spd, id<MTLBuffer> ssl, id<MTLBuffer> svru, id<MTLBuffer> ssv, id<MTLBuffer> snru, id<MTLBuffer> cpv, id<MTLBuffer> cf) {
+void RenderPipeline::SetBuffers(id<MTLBuffer> spv, id<MTLBuffer> sf, id<MTLBuffer> spn, id<MTLBuffer> spd, id<MTLBuffer> ssl, id<MTLBuffer> ssp, id<MTLBuffer> svru, id<MTLBuffer> ssv, id<MTLBuffer> snru, id<MTLBuffer> cpv, id<MTLBuffer> cf) {
     scene_projected_vertex_buffer = spv;
     scene_face_buffer = sf;
     scene_projected_node_buffer = spn;
     scene_projected_dot_buffer = spd;
     scene_line_buffer = ssl;
+    scene_slice_plates_buffer = ssp;
     scene_vertex_render_uniforms_buffer = svru;
     scene_selected_vertices_buffer = ssv;
     scene_node_render_uniforms_buffer = snru;
@@ -111,6 +112,13 @@ void RenderPipeline::SetPipeline () {
     descriptor.usage = MTLTextureUsageRenderTarget;
     depth_texture = [device newTextureWithDescriptor:descriptor];
     depth_texture.label = @"DepthStencil";
+    
+    MTLRenderPipelineDescriptor *triangle_render_pipeline_descriptor = [[MTLRenderPipelineDescriptor alloc] init];
+    
+    triangle_render_pipeline_descriptor.vertexFunction = [library newFunctionWithName:@"SuperDefaultVertexShader"];
+    triangle_render_pipeline_descriptor.fragmentFunction = [library newFunctionWithName:@"FragmentShader"];
+    triangle_render_pipeline_descriptor.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
+    triangle_render_pipeline_descriptor.colorAttachments[0].pixelFormat = layer.pixelFormat;
     
     MTLRenderPipelineDescriptor *render_pipeline_descriptor = [[MTLRenderPipelineDescriptor alloc] init];
     
@@ -140,6 +148,13 @@ void RenderPipeline::SetPipeline () {
     scene_point_render_pipeline_descriptor.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
     scene_point_render_pipeline_descriptor.colorAttachments[0].pixelFormat = layer.pixelFormat;
     
+    MTLRenderPipelineDescriptor *scene_dot_render_pipeline_descriptor = [[MTLRenderPipelineDescriptor alloc] init];
+    
+    scene_dot_render_pipeline_descriptor.vertexFunction = [library newFunctionWithName:@"DotShader"];
+    scene_dot_render_pipeline_descriptor.fragmentFunction = [library newFunctionWithName:@"FragmentShader"];
+    scene_dot_render_pipeline_descriptor.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
+    scene_dot_render_pipeline_descriptor.colorAttachments[0].pixelFormat = layer.pixelFormat;
+    
     MTLRenderPipelineDescriptor *scene_node_render_pipeline_descriptor = [[MTLRenderPipelineDescriptor alloc] init];
     
     scene_node_render_pipeline_descriptor.vertexFunction = [library newFunctionWithName:@"NodeShader"];
@@ -147,10 +162,12 @@ void RenderPipeline::SetPipeline () {
     scene_node_render_pipeline_descriptor.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
     scene_node_render_pipeline_descriptor.colorAttachments[0].pixelFormat = layer.pixelFormat;
     
+    triangle_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:triangle_render_pipeline_descriptor error:nil];
     face_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:render_pipeline_descriptor error:nil];
     scene_edge_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:edge_render_pipeline_descriptor error:nil];
     scene_line_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:line_render_pipeline_descriptor error:nil];
     scene_point_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:scene_point_render_pipeline_descriptor error:nil];
+    scene_dot_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:scene_dot_render_pipeline_descriptor error:nil];
     scene_node_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:scene_node_render_pipeline_descriptor error:nil];
     MTLDepthStencilDescriptor *depth_descriptor = [[MTLDepthStencilDescriptor alloc] init];
     [depth_descriptor setDepthCompareFunction: MTLCompareFunctionLessEqual];
@@ -232,12 +249,17 @@ void RenderPipeline::Render() {
     
     if (num_dots > 0) {
         if (scheme->ShouldRenderSlices()) {
-            [render_encoder setRenderPipelineState:scene_point_render_pipeline_state];
+            [render_encoder setRenderPipelineState:scene_dot_render_pipeline_state];
             [render_encoder setVertexBuffer:scene_projected_dot_buffer offset:0 atIndex:0];
             [render_encoder setVertexBuffer:scene_vertex_render_uniforms_buffer offset:0 atIndex:1];
-            [render_encoder setVertexBuffer:scene_selected_vertices_buffer offset:0 atIndex:2];
             for (int i = 0; i < num_dots*4; i+=4) {
                 [render_encoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:i vertexCount:4];
+            }
+            
+            if (scheme->GetType() != SchemeType::EditSlice) {
+                [render_encoder setRenderPipelineState:triangle_render_pipeline_state];
+                [render_encoder setVertexBuffer:scene_slice_plates_buffer offset:0 atIndex:0];
+                [render_encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:num_faces*3];
             }
         }
     }

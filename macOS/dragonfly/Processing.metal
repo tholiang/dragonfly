@@ -365,6 +365,57 @@ kernel void CalculateScaledDots(device Vertex *output [[buffer(0)]], const const
     output[did].z = 0.5;
 }
 
+kernel void CalculateProjectedDots(device Vertex *output [[buffer(0)]], const constant Dot *dots[[buffer(1)]], const constant ModelUniforms *model_uniforms[[buffer(2)]], const constant int *dot_slice_links[[buffer(3)]], const constant SliceAttributes *attr[[buffer(4)]], const constant VertexRenderUniforms *uniforms [[buffer(5)]], constant Camera &camera [[buffer(6)]], unsigned int did [[thread_position_in_grid]]) {
+    Dot d = dots[did];
+    Vertex dot3d;
+    dot3d.x = d.x;
+    dot3d.y = d.y;
+    dot3d.z = 0;
+    
+    int sid = dot_slice_links[did];
+    dot3d = TranslatePointToBasis(model_uniforms[sid].b, dot3d);
+    
+    output[did] = PointToPixel(dot3d, camera);
+}
+
+kernel void CalculateSlicePlates (device Vertex *output [[buffer(0)]], const constant ModelUniforms *model_uniforms[[buffer(1)]], const constant SliceAttributes *attr[[buffer(2)]], constant Camera &camera [[buffer(3)]], unsigned int vid [[thread_position_in_grid]]) {
+    unsigned int sid = vid/6;
+    unsigned int svid = vid%6;
+    
+    Vertex v;
+    SliceAttributes sa = attr[sid];
+    
+    if (svid == 0 || svid == 3) {
+        v.x = sa.width/2;
+        v.y = sa.height/2;
+    } else if (svid == 1) {
+        v.x = sa.width/2;
+        v.y = -sa.height/2;
+    } else if (svid == 4) {
+        v.x = -sa.width/2;
+        v.y = sa.height/2;
+    } else {
+        v.x = -sa.width/2;
+        v.y = -sa.height/2;
+    }
+    
+    v.z = 0;
+    
+    v = TranslatePointToBasis(model_uniforms[sid].b, v);
+    v = PointToPixel(v, camera);
+    v.z += 0.01;
+    
+    output[vid] = v;
+}
+
+vertex VertexOut SuperDefaultVertexShader (const constant vector_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]]) {
+    vector_float3 currentVertex = vertex_array[vid];
+    VertexOut output;
+    output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z, 1);
+    output.color = vector_float4(1, 1, 1, 1);
+    return output;
+}
+
 vertex VertexOut DefaultVertexShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant Face *face_array[[buffer(1)]], unsigned int vid [[vertex_id]]) {
     Face currentFace = face_array[vid/3];
     vector_float3 currentVertex = vertex_array[currentFace.vertices[vid%3]];
@@ -425,6 +476,23 @@ vertex VertexOut VertexPointShader (const constant vector_float3 *vertex_array [
     if (!is_selected) {
         output.color = vector_float4(0, 1, 0, 1);
     }
+    return output;
+}
+
+vertex VertexOut DotShader (const constant vector_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant VertexRenderUniforms *uniforms [[buffer(1)]]) {
+    vector_float3 currentVertex = vertex_array[vid/4];
+    VertexOut output;
+    if (vid % 4 == 0) {
+        output.pos = vector_float4(currentVertex.x-0.007, currentVertex.y-0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
+    } else if (vid % 4 == 1) {
+        output.pos = vector_float4(currentVertex.x-0.007, currentVertex.y+0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
+    } else if (vid % 4 == 2) {
+        output.pos = vector_float4(currentVertex.x+0.007, currentVertex.y-0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
+    } else {
+        output.pos = vector_float4(currentVertex.x+0.007, currentVertex.y+0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
+    }
+    
+    output.color = vector_float4(0, 1, 0, 1);
     return output;
 }
 

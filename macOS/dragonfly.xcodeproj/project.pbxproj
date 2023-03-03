@@ -138,6 +138,7 @@
 		D28B7D842793B4AC00C0E47F /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
 		D2A99F7C2792BCF100E85036 /* Model.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; path = Model.h; sourceTree = "<group>"; };
 		D2A99F7D2792BF7D00E85036 /* Model.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = Model.mm; sourceTree = "<group>"; };
+		D2AD72A329B2AF0E008DD21F /* SchemeController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SchemeController.h; sourceTree = "<group>"; };
 		D2B08AD5296D240800CA5FFC /* JoinModels.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = JoinModels.mm; sourceTree = "<group>"; };
 		D2B08AD6296D240800CA5FFC /* JoinModels.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JoinModels.h; sourceTree = "<group>"; };
 		D2D9BC5F2846FE7900D22480 /* ModelMoveAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ModelMoveAction.h; sourceTree = "<group>"; };
@@ -179,7 +180,6 @@
 		D2EFA03729A01F410080D216 /* Basis.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Basis.h; sourceTree = "<group>"; };
 		D2F0B0CD28985CE200057FD6 /* Engine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Engine.h; sourceTree = "<group>"; };
 		D2F0B0CE28985CF200057FD6 /* Engine.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Engine.mm; sourceTree = "<group>"; };
-		D2F0B0D0289878E300057FD6 /* SchemeController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SchemeController.h; sourceTree = "<group>"; };
 		D2F0B0D1289878F300057FD6 /* SchemeController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = SchemeController.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -304,7 +304,7 @@
 		D2E399AB2874BEBE003381DD /* Schemes */ = {
 			isa = PBXGroup;
 			children = (
-				D2F0B0D0289878E300057FD6 /* SchemeController.h */,
+				D2AD72A329B2AF0E008DD21F /* SchemeController.h */,
 				D2F0B0D1289878F300057FD6 /* SchemeController.mm */,
 				D2E399A92874BD59003381DD /* Scheme.h */,
 				D2E399A82874BD59003381DD /* Scheme.mm */,

@@ -64,7 +64,7 @@ public:
     //void RotateModelTo(unsigned int mid, float x, float y, float z);
     
     void MoveSliceBy(unsigned int sid, float dx, float dy, float dz);
-//    void RotateSliceBy(unsigned int sid, float dx, float dy, float dz);
+    void RotateSliceBy(unsigned int sid, float dx, float dy, float dz);
     
     void MoveSliceTo(unsigned int sid, float x, float y, float z);
 //    void RotateSliceTo(unsigned int sid, float x, float y, float z);

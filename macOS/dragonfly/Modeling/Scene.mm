@@ -227,19 +227,19 @@ void Scene::MoveSliceBy(unsigned int sid, float dx, float dy, float dz) {
     }
 }
 
-//void Scene::RotateSliceBy(unsigned int sid, float dx, float dy, float dz) {
-//    if (sid < slice_uniforms.size()) {
-//        ModelUniforms * mu = GetSliceUniforms(sid);
-//        
-//        if (mu == NULL) {
-//            return;
-//        }
-//        
-//        mu->angle.x += dx;
-//        mu->angle.y += dy;
-//        mu->angle.z += dz;
-//    }
-//}
+void Scene::RotateSliceBy(unsigned int sid, float dx, float dy, float dz) {
+    if (sid < slice_uniforms.size()) {
+        ModelUniforms * mu = GetSliceUniforms(sid);
+        
+        if (mu == NULL) {
+            return;
+        }
+        
+        RotateBasisOnX(&mu->b, dx);
+        RotateBasisOnY(&mu->b, dy);
+        RotateBasisOnZ(&mu->b, dz);
+    }
+}
 
 void Scene::MoveSliceTo(unsigned int sid, float x, float y, float z) {
     if (sid < slice_uniforms.size()) {

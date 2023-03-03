@@ -66,6 +66,9 @@ private:
     void MainWindow();
     
 public:
+    void SetDrawing();
+    void SetEditing();
+    
     void HandleMouseMovement(float x, float y, float dx, float dy);
     
     void BuildUI();

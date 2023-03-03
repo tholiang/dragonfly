@@ -28,6 +28,8 @@
 
 #include "../UserActions/UserAction.h"
 
+class SchemeController;
+
 using namespace DragonflyUtils;
 
 enum SchemeType {
@@ -83,6 +85,8 @@ protected:
     
     Scene *scene_;
     
+    SchemeController *controller_;
+    
     // for creating empty buffers in compute pipeline - calculate with CalculateNum____() and get with Num______()
     unsigned long scene_vertex_length_;
     unsigned long scene_face_length_;
@@ -105,6 +109,8 @@ protected:
     Vertex * control_models_vertices_;
     Vertex * control_models_projected_vertices_;
     Face * control_models_faces_;
+    
+    Vertex * scene_slice_plate_vertices_;
     
     // actual model data for controls models (arrows, etc)
     std::vector<Model *> controls_models_;
@@ -194,10 +200,12 @@ public:
     
     SchemeType GetType();
     
+    void SetController(SchemeController *sc);
+    
     void SetCamera(Camera *camera);
     void SetScene(Scene *scene);
     
-    virtual void SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf);
+    virtual void SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp);
     
     Camera *GetCamera();
     Scene *GetScene();
@@ -205,6 +213,7 @@ public:
     virtual std::vector<ModelUniforms> *GetModelUniforms();
     virtual std::vector<Slice *> *GetSlices();
     virtual std::vector<SliceAttributes> GetSliceAttributes();
+    virtual std::vector<ModelUniforms> *GetSliceUniforms();
     std::vector<Model *> *GetControlsModels();
     std::vector<ModelUniforms> *GetControlsModelUniforms();
     

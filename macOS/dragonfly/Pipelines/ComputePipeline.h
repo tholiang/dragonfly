@@ -33,6 +33,8 @@ private:
     id <MTLComputePipelineState> compute_projected_nodes_pipeline_state;
     id <MTLComputePipelineState> compute_lighting_pipeline_state;
     id <MTLComputePipelineState> compute_scaled_dots_pipeline_state;
+    id <MTLComputePipelineState> compute_projected_dots_pipeline_state;
+    id <MTLComputePipelineState> compute_slice_plates_state;
     
     // buffers for scene compute
     id <MTLBuffer> camera_buffer;
@@ -61,7 +63,11 @@ private:
     id <MTLBuffer> scene_selected_vertices_buffer;
     id <MTLBuffer> scene_node_render_uniforms_buffer;
     
+    id <MTLBuffer> scene_dot_slice_link_buffer;
     id <MTLBuffer> scene_slice_attributes_buffer;
+    id <MTLBuffer> scene_slice_uniforms_buffer;
+    
+    id <MTLBuffer> scene_projected_slice_plates_buffer;
     
     // buffers for controls models compute
     id <MTLBuffer> controls_vertex_buffer;

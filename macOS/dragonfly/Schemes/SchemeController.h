@@ -41,6 +41,8 @@ public:
     
     void SetScheme(Scheme *scheme);
     Scheme *GetScheme();
+    
+    void ChangeToEditSliceScheme(int sid);
 };
 
 #endif /* SchemeController_h */

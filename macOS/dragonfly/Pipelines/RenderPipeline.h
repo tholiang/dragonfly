@@ -40,10 +40,12 @@ private:
     id <MTLCommandQueue> command_queue;
     id<MTLLibrary> library;
     
+    id <MTLRenderPipelineState> triangle_render_pipeline_state;
     id <MTLRenderPipelineState> face_render_pipeline_state;
     id <MTLRenderPipelineState> scene_edge_render_pipeline_state;
     id <MTLRenderPipelineState> scene_line_render_pipeline_state;
     id <MTLRenderPipelineState> scene_point_render_pipeline_state;
+    id <MTLRenderPipelineState> scene_dot_render_pipeline_state;
 
     id <MTLRenderPipelineState> scene_node_render_pipeline_state;
 
@@ -58,6 +60,7 @@ private:
     
     id <MTLBuffer> scene_projected_dot_buffer;
     id <MTLBuffer> scene_line_buffer;
+    id <MTLBuffer> scene_slice_plates_buffer;
     
     id <MTLBuffer> scene_vertex_render_uniforms_buffer;
     id <MTLBuffer> scene_selected_vertices_buffer;
@@ -75,7 +78,7 @@ public:
     int init();
     void SetScheme(Scheme *sch);
     void SetSchemeController(SchemeController *sctr);
-    void SetBuffers(id<MTLBuffer> spv, id<MTLBuffer> sf, id<MTLBuffer> spn, id<MTLBuffer> spd, id<MTLBuffer> ssl, id<MTLBuffer> svru, id<MTLBuffer> ssv, id<MTLBuffer> snru, id<MTLBuffer> cpv, id<MTLBuffer> cf);
+    void SetBuffers(id<MTLBuffer> spv, id<MTLBuffer> sf, id<MTLBuffer> spn, id<MTLBuffer> spd, id<MTLBuffer> ssl, id<MTLBuffer> ssp, id<MTLBuffer> svru, id<MTLBuffer> ssv, id<MTLBuffer> snru, id<MTLBuffer> cpv, id<MTLBuffer> cf);
     
     void SetPipeline();
     

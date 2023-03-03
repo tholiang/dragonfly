@@ -7,6 +7,7 @@
 
 #import <Foundation/Foundation.h>
 #include "EditFEVScheme.h"
+#include "SchemeController.h"
 
 using namespace DragonflyUtils;
 
@@ -21,7 +22,7 @@ EditFEVScheme::EditFEVScheme() {
     should_render.edges = true;
     should_render.vertices = true;
     should_render.nodes = false;
-    should_render.slices = false;
+    should_render.slices = true;
     
     CreateControlsModels();
 }
@@ -202,9 +203,6 @@ std::pair<std::pair<int, int>, float> EditFEVScheme::VertexClicked(simd_float2 l
 }
 
 std::pair<std::pair<std::pair<int, int>, int>, float> EditFEVScheme::EdgeClicked(simd_float2 loc) {
-    float d1, d2, d3;
-    bool has_neg, has_pos;
-    
     float minZ = -1;
     int clickedv1 = -1;
     int clickedv2 = -1;
@@ -261,6 +259,42 @@ std::pair<std::pair<std::pair<int, int>, int>, float> EditFEVScheme::EdgeClicked
     return std::make_pair(std::make_pair(std::make_pair(clickedv1, clickedv2), clickedMid), minZ);
 }
 
+std::pair<int, float> EditFEVScheme::SliceClicked(simd_float2 loc) {
+    float minZ = -1;
+    int clicked = -1;
+    
+    int num_slices = GetSlices()->size();
+    for (int i = 0; i < num_slices; i++) {
+        int vid0 = i*6;
+        
+        Vertex v1 = scene_slice_plate_vertices_[vid0];
+        Vertex v2 = scene_slice_plate_vertices_[vid0+1];
+        Vertex v3 = scene_slice_plate_vertices_[vid0+2];
+        
+        if (InTriangle(loc, v1, v2, v3)) {
+            float z = WeightedZ(loc, v1, v2, v3);
+            if (minZ == -1 || z < minZ) {
+                minZ = z;
+                clicked = i;
+            }
+        }
+        
+        Vertex v4 = scene_slice_plate_vertices_[vid0+3];
+        Vertex v5 = scene_slice_plate_vertices_[vid0+4];
+        Vertex v6 = scene_slice_plate_vertices_[vid0+5];
+        
+        if (InTriangle(loc, v4, v5, v6)) {
+            float z = WeightedZ(loc, v4, v5, v6);
+            if (minZ == -1 || z < minZ) {
+                minZ = z;
+                clicked = i;
+            }
+        }
+    }
+    
+    return std::make_pair(clicked, minZ);
+}
+
 bool EditFEVScheme::ClickOnScene(simd_float2 loc) {
     if (render_rightclick_popup_ && InRectangle(rightclick_popup_loc_, rightclick_popup_size_, loc)) {
         return false;
@@ -285,6 +319,7 @@ void EditFEVScheme::HandleSelection(simd_float2 loc) {
     std::pair<std::pair<int, int>, float> face_selection = FaceClicked(loc);
     std::pair<std::pair<std::pair<int, int>, int>, float> edge_selection = EdgeClicked(loc);
     std::pair<std::pair<int, int>, float> vertex_selection = VertexClicked(loc);
+    std::pair<int, float> slice_selection = SliceClicked(loc);
     
     float minZ = -1;
     
@@ -315,6 +350,9 @@ void EditFEVScheme::HandleSelection(simd_float2 loc) {
         if (face_selection.second < minZ || minZ == -1) {
             selected_arrow = -1;
             selected_face = face_selection.first.first;
+            selected_edge.x = -1;
+            selected_edge.y = -1;
+            selected_slice = -1;
             
             if (selected_model != face_selection.first.second) {
                 vertex_render_uniforms.selected_vertices.clear();
@@ -335,6 +373,7 @@ void EditFEVScheme::HandleSelection(simd_float2 loc) {
             selected_face = -1;
             selected_edge.x = edge_selection.first.first.first;
             selected_edge.y = edge_selection.first.first.second;
+            selected_slice = -1;
             
             if (selected_model != edge_selection.first.second) {
                 vertex_render_uniforms.selected_vertices.clear();
@@ -351,6 +390,7 @@ void EditFEVScheme::HandleSelection(simd_float2 loc) {
             selected_face = -1;
             selected_edge.x = -1;
             selected_edge.y = -1;
+            selected_slice = -1;
             
             if (selected_model != vertex_selection.first.second) {
                 vertex_render_uniforms.selected_vertices.clear();
@@ -377,11 +417,25 @@ void EditFEVScheme::HandleSelection(simd_float2 loc) {
         }
     }
     
+    if (slice_selection.first != -1) {
+        if (slice_selection.second < minZ || minZ == -1) {
+            selected_arrow = -1;
+            selected_face = -1;
+            selected_edge.x = -1;
+            selected_edge.y = -1;
+            selected_slice = slice_selection.first;
+            vertex_render_uniforms.selected_vertices.clear();
+
+            nothing_clicked = false;
+        }
+    }
+    
     if (nothing_clicked && !keypresses_.shift) {
         selected_arrow = -1;
         selected_model = -1;
         selected_face = -1;
         selected_edge = -1;
+        selected_slice = -1;
         vertex_render_uniforms.selected_vertices.clear();
     } else {
         if (selected_face != -1) {
@@ -908,6 +962,89 @@ void EditFEVScheme::FaceEditMenu() {
     ImGui::Text("Selected Face ID: %lu", selected_face - scene_->GetModel(selected_model)->FaceStart());
 }
 
+void EditFEVScheme::SliceEditMenu() {
+    ImGui::Text("Selected Slice ID: %i", selected_slice);
+    
+    ImGui::SetCursorPos(ImVec2(30, 30));
+    ImGui::Text("Location: ");
+    
+    ImGui::SetCursorPos(ImVec2(50, 50));
+    ImGui::Text("x: ");
+    ImGui::SetCursorPos(ImVec2(70, 50));
+    std::string x_input = TextField(std::to_string(scene_->GetSliceUniforms(selected_slice)->b.pos.x), "##slicex");
+    if (isFloat(x_input)) {
+        float new_x = std::stof(x_input);
+        scene_->GetSliceUniforms(selected_slice)->b.pos.x = new_x;
+        scene_->GetSliceUniforms(selected_slice)->rotate_origin.x = new_x;
+    }
+    
+    ImGui::SetCursorPos(ImVec2(50, 80));
+    ImGui::Text("y: ");
+    ImGui::SetCursorPos(ImVec2(70, 80));
+    std::string y_input = TextField(std::to_string(scene_->GetSliceUniforms(selected_slice)->b.pos.y), "##slicey");
+    if (isFloat(y_input)) {
+        float new_y = std::stof(y_input);
+        scene_->GetSliceUniforms(selected_slice)->b.pos.y = new_y;
+        scene_->GetSliceUniforms(selected_slice)->rotate_origin.y = new_y;
+    }
+    
+    ImGui::SetCursorPos(ImVec2(50, 110));
+    ImGui::Text("z: ");
+    ImGui::SetCursorPos(ImVec2(70, 110));
+    std::string z_input = TextField(std::to_string(scene_->GetSliceUniforms(selected_slice)->b.pos.z), "##slicez");
+    if (isFloat(z_input)) {
+        float new_z = std::stof(z_input);
+        scene_->GetSliceUniforms(selected_slice)->b.pos.z = new_z;
+        scene_->GetSliceUniforms(selected_slice)->rotate_origin.z = new_z;
+    }
+    
+    
+    ImGui::SetCursorPos(ImVec2(30, 140));
+    ImGui::Text("Rotate By");
+
+    ImGui::SetCursorPos(ImVec2(50, 170));
+    ImGui::Text("x: ");
+    ImGui::SetCursorPos(ImVec2(70, 170));
+    angle_input_x = TextField(angle_input_x, "##sliceax");
+
+    ImGui::SetCursorPos(ImVec2(50, 200));
+    ImGui::Text("y: ");
+    ImGui::SetCursorPos(ImVec2(70, 200));
+    angle_input_y = TextField(angle_input_y, "##sliceay");
+
+    ImGui::SetCursorPos(ImVec2(50, 230));
+    ImGui::Text("z: ");
+    ImGui::SetCursorPos(ImVec2(70, 230));
+    angle_input_z = TextField(angle_input_z, "##sliceaz");
+    
+    ImGui::SetCursorPos(ImVec2(50, 250));
+    if (ImGui::Button("Rotate", ImVec2(80,30))) {
+        float new_x = 0;
+        float new_y = 0;
+        float new_z = 0;
+        if (isFloat(angle_input_x)) {
+            new_x = std::stof(angle_input_x);
+        }
+        if (isFloat(angle_input_y)) {
+            new_y = std::stof(angle_input_y);
+        }
+        if (isFloat(angle_input_z)) {
+            new_z = std::stof(angle_input_z);
+        }
+        
+        scene_->RotateSliceBy(selected_slice, new_x * M_PI / 180, new_y * M_PI / 180, new_z * M_PI / 180);
+        
+        angle_input_x = "0";
+        angle_input_y = "0";
+        angle_input_z = "0";
+    }
+    
+    ImGui::SetCursorPos(ImVec2(50, 290));
+    if (ImGui::Button("Edit Slice", ImVec2(80,30))) {
+        controller_->ChangeToEditSliceScheme(selected_slice);
+    }
+}
+
 void EditFEVScheme::RightMenu() {
     ImGui::SetNextWindowPos(ImVec2(window_width_ - right_menu_width_, UI_start_.y));
     ImGui::SetNextWindowSize(ImVec2(right_menu_width_, window_height_ - UI_start_.y));
@@ -921,6 +1058,8 @@ void EditFEVScheme::RightMenu() {
         FaceEditMenu();
     } else if (!vertex_render_uniforms.selected_vertices.empty()) {
         VertexEditMenu();
+    } else if (selected_slice != -1) {
+        SliceEditMenu();
     } else {
         ImGui::Text("Nothing Selected");
     }
@@ -979,7 +1118,7 @@ void EditFEVScheme::BuildUI() {
     RightMenu();
 }
 
-void EditFEVScheme::SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf) {
-    Scheme::SetBufferContents(smv, smpv, smf, smn, smpn, cmv, cmpv, cmf);
+void EditFEVScheme::SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp) {
+    Scheme::SetBufferContents(smv, smpv, smf, smn, smpn, cmv, cmpv, cmf, ssp);
     SetArrowProjections();
 }

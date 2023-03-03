@@ -51,6 +51,7 @@ void SchemeController::MenuBar() {
                 slicescheme->SetCamera(camera);
                 slicescheme->SetSliceID(scene->NumSlices()-1);
                 scheme_ = slicescheme;
+                scheme_->SetController(this);
             }
             if (ImGui::MenuItem("Save Selected Model", "")) {
                 if (scheme_->GetType() == SchemeType::EditModel) {
@@ -105,6 +106,7 @@ void SchemeController::MenuBar() {
                 scheme_ = new EditModelScheme();
                 scheme_->SetScene(scene);
                 scheme_->SetCamera(camera);
+                scheme_->SetController(this);
             }
             if (ImGui::MenuItem("Edit by Face, Edge, and Vertex", ""))   {
                 Scene *scene = scheme_->GetScene();
@@ -114,6 +116,7 @@ void SchemeController::MenuBar() {
                 scheme_ = new EditFEVScheme();
                 scheme_->SetScene(scene);
                 scheme_->SetCamera(camera);
+                scheme_->SetController(this);
             }
             if (ImGui::MenuItem("Edit by Node", ""))   {
                 Scene *scene = scheme_->GetScene();
@@ -123,6 +126,7 @@ void SchemeController::MenuBar() {
                 scheme_ = new EditNodeScheme();
                 scheme_->SetScene(scene);
                 scheme_->SetCamera(camera);
+                scheme_->SetController(this);
             }
             if (ImGui::MenuItem("Toggle Lighting", ""))   {
                 scheme_->EnableLighting(!scheme_->LightingEnabled());
@@ -186,4 +190,19 @@ void SchemeController::FileDialog() {
         saving_model = false;
         saving_scene = false;
     }
+}
+
+
+void SchemeController::ChangeToEditSliceScheme(int sid) {
+    Scene *scene = scheme_->GetScene();
+    Camera *camera = scheme_->GetCamera();
+
+    delete scheme_;
+    EditSliceScheme *slicescheme = new EditSliceScheme();
+    slicescheme->SetScene(scene);
+    slicescheme->SetCamera(camera);
+    slicescheme->SetSliceID(sid);
+    slicescheme->SetEditing();
+    scheme_ = slicescheme;
+    scheme_->SetController(this);
 }

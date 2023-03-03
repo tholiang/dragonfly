@@ -34,8 +34,10 @@ void ComputePipeline::SetPipeline() {
     compute_vertex_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateVertices"] error:nil];
     compute_projected_vertices_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateProjectedVertices"] error:nil];
     compute_scaled_dots_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateScaledDots"] error:nil];
+    compute_projected_dots_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateProjectedDots"] error:nil];
     compute_projected_nodes_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateProjectedNodes"] error:nil];
     compute_lighting_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateFaceLighting"] error:nil];
+    compute_slice_plates_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateSlicePlates"] error:nil];
 }
 
 void ComputePipeline::SetEmptyBuffers() {
@@ -43,6 +45,7 @@ void ComputePipeline::SetEmptyBuffers() {
     num_scene_faces = scheme->NumSceneFaces();
     num_scene_dots = scheme->NumSceneDots();
     num_scene_lines = scheme->NumSceneLines();
+    int num_scene_slices = scheme->GetSlices()->size();
     num_controls_vertices = scheme->NumControlsVertices();
     num_controls_faces = scheme->NumControlsFaces();
     
@@ -66,10 +69,17 @@ void ComputePipeline::SetEmptyBuffers() {
         empty_scene_dots.push_back(simd_make_float2(0, 0));
     }
     
+    std::vector<Vertex> empty_scene_slice_plates;
+    for (int i = 0; i < num_scene_slices*6; i++) {
+        empty_scene_slice_plates.push_back(simd_make_float3(0, 0, 0));
+    }
+    
     scene_vertex_buffer = [device newBufferWithBytes:empty_scene_vertices.data() length:(num_scene_vertices * sizeof(Vertex)) options:MTLResourceStorageModeShared];
     scene_projected_vertex_buffer = [device newBufferWithBytes:empty_scene_vertices.data() length:(num_scene_vertices * sizeof(Vertex)) options:MTLResourceStorageModeShared];
     
     scene_projected_dot_buffer = [device newBufferWithBytes:empty_scene_dots.data() length:(num_scene_dots * sizeof(Vertex)) options:MTLResourceStorageModeShared];
+    
+    scene_projected_slice_plates_buffer = [device newBufferWithBytes:empty_scene_slice_plates.data() length:(num_scene_slices * 6 * sizeof(Vertex)) options:MTLResourceStorageModeShared];
     
     controls_vertex_buffer = [device newBufferWithBytes:empty_controls_vertices.data() length:(num_controls_vertices * sizeof(Vertex)) options:MTLResourceStorageModeShared];
     controls_projected_vertex_buffer = [device newBufferWithBytes:empty_controls_vertices.data() length:(num_controls_vertices * sizeof(Vertex)) options:MTLResourceStorageModeShared];
@@ -81,6 +91,7 @@ void ComputePipeline::ResetStaticBuffers() {
     std::vector<Model *> *controls_models = scheme->GetControlsModels();
     std::vector<Model *> *models = scheme->GetModels();
     std::vector<Slice *> *slices = scheme->GetSlices();
+    std::vector<int> dot_slice_links;
     
     std::vector<Face> controls_faces;
     std::vector<NodeVertexLink> controls_nvlinks;
@@ -113,7 +124,7 @@ void ComputePipeline::ResetStaticBuffers() {
     }
     
     for (int i = 0; i < slices->size(); i++) {
-        slices->at(i)->AddToBuffers(scene_dots, scene_slice_edges);
+        slices->at(i)->AddToBuffers(scene_dots, scene_slice_edges, dot_slice_links, i);
     }
     
     std::vector<SliceAttributes> scene_slice_attributes = scheme->GetSliceAttributes();
@@ -129,6 +140,7 @@ void ComputePipeline::ResetStaticBuffers() {
     scene_dot_buffer = [device newBufferWithBytes:scene_dots.data() length:(scene_dots.size() * sizeof(Dot)) options:MTLResourceStorageModeShared];
     scene_line_buffer = [device newBufferWithBytes:scene_slice_edges.data() length:(scene_slice_edges.size() * sizeof(Line)) options:MTLResourceStorageModeShared];
     scene_slice_attributes_buffer = [device newBufferWithBytes:scene_slice_attributes.data() length:(scene_slice_attributes.size() * sizeof(SliceAttributes)) options:MTLResourceStorageModeShared];
+    scene_dot_slice_link_buffer = [device newBufferWithBytes:dot_slice_links.data() length:(dot_slice_links.size() * sizeof(int)) options:MTLResourceStorageModeShared];
     
     controls_faces_buffer = [device newBufferWithBytes:controls_faces.data() length:(controls_faces.size() * sizeof(Face)) options:MTLResourceStorageModeShared];
     controls_nvlink_buffer = [device newBufferWithBytes:controls_nvlinks.data() length:(controls_nvlinks.size() * sizeof(NodeVertexLink)) options:MTLResourceStorageModeShared];
@@ -145,6 +157,7 @@ void ComputePipeline::ResetStaticBuffers() {
 void ComputePipeline::ResetDynamicBuffers() {
     std::vector<ModelUniforms> *controls_transforms = scheme->GetControlsModelUniforms();
     std::vector<ModelUniforms> *scene_transforms = scheme->GetModelUniforms();
+    std::vector<ModelUniforms> *slice_uniforms = scheme->GetSliceUniforms();
     
     std::vector<Model *> *models = scheme->GetModels();
     for (std::size_t i = 0; i < models->size(); i++) {
@@ -165,6 +178,8 @@ void ComputePipeline::ResetDynamicBuffers() {
     
     controls_transform_uniforms_buffer = [device newBufferWithBytes: controls_transforms->data() length:(controls_transforms->size() * sizeof(ModelUniforms)) options:{}];
     controls_node_buffer = [device newBufferWithBytes:controls_node_array.data() length:(controls_node_array.size() * sizeof(Node)) options:MTLResourceStorageModeShared];
+    
+    scene_slice_uniforms_buffer = [device newBufferWithBytes: slice_uniforms->data() length:(slice_uniforms->size() * sizeof(ModelUniforms)) options:{}];
 }
 
 void ComputePipeline::Compute() {
@@ -251,12 +266,36 @@ void ComputePipeline::Compute() {
             [compute_encoder setBuffer: scene_slice_attributes_buffer offset:0 atIndex:2];
             [compute_encoder setBuffer: scene_vertex_render_uniforms_buffer offset:0 atIndex:3];
             MTLSize gridSize = MTLSizeMake(num_scene_dots, 1, 1);
-            NSUInteger threadGroupSize = compute_projected_vertices_pipeline_state.maxTotalThreadsPerThreadgroup;
-            if (threadGroupSize > num_scene_vertices) threadGroupSize = num_scene_vertices;
+            NSUInteger threadGroupSize = compute_scaled_dots_pipeline_state.maxTotalThreadsPerThreadgroup;
+            if (threadGroupSize > num_scene_dots) threadGroupSize = num_scene_dots;
             MTLSize threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
             [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
         } else {
+            [compute_encoder setComputePipelineState: compute_projected_dots_pipeline_state];
+            [compute_encoder setBuffer: scene_projected_dot_buffer offset:0 atIndex:0];
+            [compute_encoder setBuffer: scene_dot_buffer offset:0 atIndex:1];
+            [compute_encoder setBuffer: scene_slice_uniforms_buffer offset:0 atIndex:2];
+            [compute_encoder setBuffer: scene_dot_slice_link_buffer offset:0 atIndex:3];
+            //[compute_encoder setBuffer: scene_slice_attributes_buffer offset:0 atIndex:4];
+            [compute_encoder setBuffer: scene_vertex_render_uniforms_buffer offset:0 atIndex:5];
+            [compute_encoder setBuffer: camera_buffer offset:0 atIndex:6];
+            MTLSize gridSize = MTLSizeMake(num_scene_dots, 1, 1);
+            NSUInteger threadGroupSize = compute_projected_dots_pipeline_state.maxTotalThreadsPerThreadgroup;
+            if (threadGroupSize > num_scene_dots) threadGroupSize = num_scene_dots;
+            MTLSize threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
+            [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
             
+            int num_scene_slices = scheme->GetSlices()->size();
+            [compute_encoder setComputePipelineState: compute_slice_plates_state];
+            [compute_encoder setBuffer: scene_projected_slice_plates_buffer offset:0 atIndex:0];
+            [compute_encoder setBuffer: scene_slice_uniforms_buffer offset:0 atIndex:1];
+            [compute_encoder setBuffer: scene_slice_attributes_buffer offset:0 atIndex:2];
+            [compute_encoder setBuffer: camera_buffer offset:0 atIndex:3];
+            gridSize = MTLSizeMake(num_scene_slices*6, 1, 1);
+            threadGroupSize = compute_projected_dots_pipeline_state.maxTotalThreadsPerThreadgroup;
+            if (threadGroupSize > num_scene_slices*6) threadGroupSize = num_scene_slices*6;
+            threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
+            [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
         }
     }
     
@@ -315,9 +354,9 @@ void ComputePipeline::Compute() {
 
 void ComputePipeline::SendDataToRenderer(RenderPipeline *renderer) {
     if (scheme->LightingEnabled()) {
-        renderer->SetBuffers(scene_projected_vertex_buffer, scene_lit_face_buffer, scene_projected_node_buffer, scene_projected_dot_buffer, scene_line_buffer, scene_vertex_render_uniforms_buffer, scene_selected_vertices_buffer, scene_node_render_uniforms_buffer, controls_projected_vertex_buffer, controls_faces_buffer);
+        renderer->SetBuffers(scene_projected_vertex_buffer, scene_lit_face_buffer, scene_projected_node_buffer, scene_projected_dot_buffer, scene_line_buffer, scene_projected_slice_plates_buffer, scene_vertex_render_uniforms_buffer, scene_selected_vertices_buffer, scene_node_render_uniforms_buffer, controls_projected_vertex_buffer, controls_faces_buffer);
     } else {
-        renderer->SetBuffers(scene_projected_vertex_buffer, scene_face_buffer, scene_projected_node_buffer, scene_projected_dot_buffer, scene_line_buffer, scene_vertex_render_uniforms_buffer, scene_selected_vertices_buffer, scene_node_render_uniforms_buffer, controls_projected_vertex_buffer, controls_faces_buffer);
+        renderer->SetBuffers(scene_projected_vertex_buffer, scene_face_buffer, scene_projected_node_buffer, scene_projected_dot_buffer, scene_line_buffer, scene_projected_slice_plates_buffer, scene_vertex_render_uniforms_buffer, scene_selected_vertices_buffer, scene_node_render_uniforms_buffer, controls_projected_vertex_buffer, controls_faces_buffer);
     }
 }
 
@@ -330,6 +369,7 @@ void ComputePipeline::SendDataToScheme() {
     Vertex *cvb = (Vertex *) controls_vertex_buffer.contents;
     Vertex *cpvb = (Vertex *) controls_projected_vertex_buffer.contents;
     Face *cfb = (Face *) controls_faces_buffer.contents;
+    Vertex *ssp = (Vertex *) scene_projected_slice_plates_buffer.contents;
     
-    scheme->SetBufferContents(svb, spvb, sfb, snb, spnb, cvb, cpvb, cfb);
+    scheme->SetBufferContents(svb, spvb, sfb, snb, spnb, cvb, cpvb, cfb, ssp);
 }

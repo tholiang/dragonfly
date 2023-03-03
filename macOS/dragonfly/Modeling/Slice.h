@@ -71,7 +71,7 @@ public:
     std::vector<Dot*> &GetDots();
     std::vector<Line*> &GetLines();
     
-    void AddToBuffers(std::vector<Dot> &dotBuffer, std::vector<Line> &lineBuffer);
+    void AddToBuffers(std::vector<Dot> &dotBuffer, std::vector<Line> &lineBuffer, std::vector<int> &dotSliceLinkBuffer, int sid);
     uint32_t SliceID();
     
     unsigned long DotStart();

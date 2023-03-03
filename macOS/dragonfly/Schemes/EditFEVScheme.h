@@ -18,6 +18,10 @@ class EditFEVScheme : public Scheme {
 private:
     int right_menu_width_ = 300;
     
+    std::string angle_input_x = "0";
+    std::string angle_input_y = "0";
+    std::string angle_input_z = "0";
+    
     bool render_rightclick_popup_ = false;
     simd_float2 rightclick_popup_loc_;
     int num_right_click_buttons_ = 0;
@@ -41,6 +45,7 @@ private:
     vector_int2 selected_edge;
 //    int selected_vertex = -1;
     int selected_model = -1;
+    int selected_slice = -1;
     
     int joinModelA = -1;
     int joinModelB = -1;
@@ -54,6 +59,7 @@ private:
     std::pair<std::pair<int, int>, float> FaceClicked(simd_float2 loc);
     std::pair<std::pair<int, int>, float> VertexClicked(simd_float2 loc);
     std::pair<std::pair<std::pair<int, int>, int>, float> EdgeClicked(simd_float2 loc);
+    std::pair<int, float> SliceClicked(simd_float2 loc);
     
     bool ClickOnScene(simd_float2 loc);
     
@@ -77,6 +83,7 @@ private:
     void VertexEditMenu();
     void EdgeEditMenu();
     void FaceEditMenu();
+    void SliceEditMenu();
     
     void MainWindow();
     
@@ -84,7 +91,7 @@ public:
     void HandleMouseMovement(float x, float y, float dx, float dy);
     
     void BuildUI();
-    void SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf);
+    void SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp);
     
     void HandleMouseDown(simd_float2 loc, bool left);
     void HandleMouseUp(simd_float2 loc, bool left);

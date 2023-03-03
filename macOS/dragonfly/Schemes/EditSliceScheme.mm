@@ -25,6 +25,14 @@ EditSliceScheme::~EditSliceScheme() {
     
 }
 
+void EditSliceScheme::SetDrawing() {
+    mode = Drawing;
+}
+
+void EditSliceScheme::SetEditing() {
+    mode = Editing;
+}
+
 void EditSliceScheme::CreateDotAtClick(simd_float2 click_loc) {
     Slice *s = scene_->GetSlice(slice_id);
     

@@ -5,7 +5,7 @@
 //  Created by Thomas Liang on 7/5/22.
 //
 
-#include "Scheme.h"
+#include "SchemeController.h"
 
 using namespace DragonflyUtils;
 
@@ -26,6 +26,10 @@ SchemeType Scheme::GetType() {
     return type;
 }
 
+void Scheme::SetController(SchemeController *sc) {
+    controller_ = sc;
+}
+
 void Scheme::SetCamera(Camera *camera) {
     camera_ = camera;
     
@@ -44,7 +48,7 @@ void Scheme::SetScene(Scene *scene) {
     should_reset_static_buffers = true;
 }
 
-void Scheme::SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf) {
+void Scheme::SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp) {
     scene_models_vertices_ = smv;
     scene_models_projected_vertices_ = smpv;
     scene_models_faces_ = smf;
@@ -53,6 +57,7 @@ void Scheme::SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, 
     control_models_vertices_ = cmv;
     control_models_projected_vertices_ = cmpv;
     control_models_faces_ = cmf;
+    scene_slice_plate_vertices_ = ssp;
 }
 
 Camera * Scheme::GetCamera() {
@@ -77,6 +82,10 @@ std::vector<Slice *> *Scheme::GetSlices() {
 
 std::vector<SliceAttributes> Scheme::GetSliceAttributes() {
     return scene_->GetAllSliceAttributes();
+}
+
+std::vector<ModelUniforms> *Scheme::GetSliceUniforms() {
+    return scene_->GetAllSliceUniforms();
 }
 
 std::vector<Model *> * Scheme::GetControlsModels() {

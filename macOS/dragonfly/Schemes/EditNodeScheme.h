@@ -60,7 +60,7 @@ private:
     
 public:
     void BuildUI();
-    void SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf);
+    void SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp);
     
     void HandleMouseMovement(float x, float y, float dx, float dy);
     

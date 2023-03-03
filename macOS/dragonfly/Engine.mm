@@ -33,6 +33,7 @@ int Engine::init() {
     scheme->SetScene(scene);
     
     scheme_controller = new SchemeController(scheme);
+    scheme->SetController(scheme_controller);
     
     compute_pipeline = new ComputePipeline();
     compute_pipeline->init();
@@ -91,6 +92,10 @@ void Engine::run() {
             render_pipeline->Render();
             scheme = scheme_controller->GetScheme();
             compute_pipeline->SetScheme(scheme);
+            
+            if (scheme == NULL) {
+                std::cout<<"null"<<std::endl;
+            }
             
             scheme->Update();
         }

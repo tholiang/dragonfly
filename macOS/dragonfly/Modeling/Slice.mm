@@ -164,13 +164,14 @@ std::vector<Line*> & Slice::GetLines() {
     return lines;
 }
 
-void Slice::AddToBuffers(std::vector<Dot> &dotBuffer, std::vector<Line> &lineBuffer) {
+void Slice::AddToBuffers(std::vector<Dot> &dotBuffer, std::vector<Line> &lineBuffer, std::vector<int> &dotSliceLinkBuffer, int sid) {
     dot_start = dotBuffer.size();
     line_start = lineBuffer.size();
     
     for (int i = 0; i < dots.size(); i++) {
         Dot *d = dots[i];
         dotBuffer.push_back(simd_make_float2(d->x, d->y));
+        dotSliceLinkBuffer.push_back(sid);
     }
     
     for (int i = 0; i < lines.size(); i++) {
