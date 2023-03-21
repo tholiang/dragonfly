@@ -185,7 +185,7 @@ vector_float3 RotateAround (vector_float3 point, vector_float3 origin, vector_fl
     return point;
 }
 
-simd_float3 TranslatePointToBasis(Basis b, simd_float3 point) {
+simd_float3 TranslatePointToStandard(Basis b, simd_float3 point) {
     simd_float3 ret;
     // x component
     ret.x = point.x * b.x.x;
@@ -207,7 +207,7 @@ simd_float3 TranslatePointToBasis(Basis b, simd_float3 point) {
     return ret;
 }
 
-simd_float3 RotatePointToBasis(Basis b, simd_float3 point) {
+simd_float3 RotatePointToStandard(Basis b, simd_float3 point) {
     simd_float3 ret;
     // x component
     ret.x = point.x * b.x.x;
@@ -280,10 +280,10 @@ kernel void CalculateModelNodeTransforms(device Node *nodes [[buffer(0)]], unsig
 //    offset_node.y += uniform.b.pos.y;
 //    offset_node.z += uniform.b.pos.z;
 //    nodes[vid].pos = RotateAround(offset_node, uniform.rotate_origin, uniform.angle);
-    nodes[vid].b.pos = TranslatePointToBasis(uniform.b, nodes[vid].b.pos);
-    nodes[vid].b.x = RotatePointToBasis(uniform.b, nodes[vid].b.x);
-    nodes[vid].b.y = RotatePointToBasis(uniform.b, nodes[vid].b.y);
-    nodes[vid].b.z = RotatePointToBasis(uniform.b, nodes[vid].b.z);
+    nodes[vid].b.pos = TranslatePointToStandard(uniform.b, nodes[vid].b.pos);
+    nodes[vid].b.x = RotatePointToStandard(uniform.b, nodes[vid].b.x);
+    nodes[vid].b.y = RotatePointToStandard(uniform.b, nodes[vid].b.y);
+    nodes[vid].b.z = RotatePointToStandard(uniform.b, nodes[vid].b.z);
     
 //    nodes[vid].angle.x += uniform.angle.x;
 //    nodes[vid].angle.y += uniform.angle.y;
@@ -301,7 +301,7 @@ kernel void CalculateVertices(device Vertex *vertices [[buffer(0)]], const const
         
 //        Vertex desired1 = vector_float3(n.pos.x + link1.vector.x, n.pos.y + link1.vector.y, n.pos.z + link1.vector.z);
 //        desired1 = RotateAround(desired1, n.pos, n.angle);
-        Vertex desired1 = TranslatePointToBasis(n.b, link1.vector);
+        Vertex desired1 = TranslatePointToStandard(n.b, link1.vector);
         
         v.x += link1.weight*desired1.x;
         v.y += link1.weight*desired1.y;
@@ -313,7 +313,7 @@ kernel void CalculateVertices(device Vertex *vertices [[buffer(0)]], const const
         
 //        Vertex desired2 = vector_float3(n.pos.x + link2.vector.x, n.pos.y + link2.vector.y, n.pos.z + link2.vector.z);
 //        desired2 = RotateAround(desired2, n.pos, n.angle);
-        Vertex desired2 = TranslatePointToBasis(n.b, link2.vector);
+        Vertex desired2 = TranslatePointToStandard(n.b, link2.vector);
         
         v.x += link2.weight*desired2.x;
         v.y += link2.weight*desired2.y;
@@ -349,20 +349,25 @@ kernel void CalculateFaceLighting(device Face *output [[buffer(0)]], const const
     output[fid] = f;
 }
 
-kernel void CalculateScaledDots(device Vertex *output [[buffer(0)]], const constant Dot *dots[[buffer(1)]], const constant SliceAttributes *attr[[buffer(2)]], const constant VertexRenderUniforms *uniforms [[buffer(3)]], unsigned int did [[thread_position_in_grid]]) {
+kernel void CalculateScaledDots(device Vertex *output [[buffer(0)]], const constant Dot *dots[[buffer(1)]], const constant SliceAttributes *attr[[buffer(2)]], const constant VertexRenderUniforms *uniforms [[buffer(3)]], const constant simd_float4 *edit_window [[buffer(4)]], unsigned int did [[thread_position_in_grid]]) {
     float scale = attr->height / 2;
     if (attr->height > attr->width) {
         scale = attr->width / 2;
     }
-    
-    if (uniforms->screen_ratio < 1) {
+    float eratio = edit_window->z / edit_window->w * uniforms->screen_ratio;
+    if (eratio < 1) {
         output[did].x = dots[did].x / scale;
-        output[did].y = uniforms->screen_ratio * dots[did].y / scale;
+        output[did].y = eratio * dots[did].y / scale;
     } else {
-        output[did].x = (dots[did].x / scale) / uniforms->screen_ratio;
+        output[did].x = (dots[did].x / scale) / eratio;
         output[did].y =  dots[did].y / scale;
     }
     output[did].z = 0.5;
+    
+    output[did].x *= edit_window->z;
+    output[did].y *= edit_window->w;
+    output[did].x += edit_window->x;
+    output[did].y += edit_window->y;
 }
 
 kernel void CalculateProjectedDots(device Vertex *output [[buffer(0)]], const constant Dot *dots[[buffer(1)]], const constant ModelUniforms *model_uniforms[[buffer(2)]], const constant int *dot_slice_links[[buffer(3)]], const constant SliceAttributes *attr[[buffer(4)]], const constant VertexRenderUniforms *uniforms [[buffer(5)]], constant Camera &camera [[buffer(6)]], unsigned int did [[thread_position_in_grid]]) {
@@ -373,7 +378,7 @@ kernel void CalculateProjectedDots(device Vertex *output [[buffer(0)]], const co
     dot3d.z = 0;
     
     int sid = dot_slice_links[did];
-    dot3d = TranslatePointToBasis(model_uniforms[sid].b, dot3d);
+    dot3d = TranslatePointToStandard(model_uniforms[sid].b, dot3d);
     
     output[did] = PointToPixel(dot3d, camera);
 }
@@ -401,7 +406,7 @@ kernel void CalculateSlicePlates (device Vertex *output [[buffer(0)]], const con
     
     v.z = 0;
     
-    v = TranslatePointToBasis(model_uniforms[sid].b, v);
+    v = TranslatePointToStandard(model_uniforms[sid].b, v);
     v = PointToPixel(v, camera);
     v.z += 0.01;
     

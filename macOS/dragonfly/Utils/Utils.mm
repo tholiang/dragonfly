@@ -18,6 +18,14 @@ bool DragonflyUtils::InIntVector(std::vector<int> &vec, int a) {
     return false;
 }
 
+bool DragonflyUtils::isInt( std::string str ) {
+    std::istringstream iss(str);
+    int i;
+    iss >> std::noskipws >> i; // noskipws considers leading whitespace invalid
+    // Check the entire string was consumed and if either failbit or badbit is set
+    return iss.eof() && !iss.fail();
+}
+
 bool DragonflyUtils::isFloat( std::string str ) {
     std::istringstream iss(str);
     float f;

@@ -263,6 +263,8 @@ public:
     
     virtual void Update();
     
+    virtual simd_float4 GetEditWindow();
+    
     virtual ~Scheme();
 };
 

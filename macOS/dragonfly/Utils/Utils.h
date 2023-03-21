@@ -20,6 +20,7 @@
 
 namespace DragonflyUtils {
 bool InIntVector(std::vector<int> &vec, int a);
+bool isInt( std::string str );
 bool isFloat( std::string str );
 bool isUnsignedLong( std::string str );
 std::vector<float> splitStringToFloats (std::string str);

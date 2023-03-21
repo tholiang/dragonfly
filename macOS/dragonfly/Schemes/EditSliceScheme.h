@@ -46,6 +46,8 @@ private:
     int selected_line = -1;
     int held_dot = -1;
     
+    simd_float2 screen_to_eloc(simd_float2 loc);
+    
     void CreateDotAtClick(simd_float2 click_loc);
     
     int DotClicked(simd_float2 loc);
@@ -81,6 +83,8 @@ public:
     
     std::vector<Slice *> *GetSlices();
     std::vector<SliceAttributes> GetSliceAttributes();
+    
+    simd_float4 GetEditWindow();
     
     EditSliceScheme();
     ~EditSliceScheme();

@@ -202,7 +202,7 @@ bool EditNodeScheme::ClickOnScene(simd_float2 loc) {
         return false;
     }
     
-    if (pixelY < UI_start_.y || pixelY > UI_start_.y + window_height_) {
+    if (pixelY < 0 || pixelY > window_height_ - UI_start_.y) {
         return false;
     }
     

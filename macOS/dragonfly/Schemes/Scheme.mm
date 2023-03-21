@@ -513,3 +513,13 @@ void Scheme::Update() {
     
     UpdateUIVars();
 }
+
+simd_float4 Scheme::GetEditWindow() {
+    simd_float4 window;
+    window.x = 0;
+    window.y = float(-2*UI_start_.y) / window_height_;
+    window.z = 1;
+    window.w = float(window_height_ - UI_start_.y)/window_height_;
+    
+    return window;
+}

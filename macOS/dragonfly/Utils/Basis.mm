@@ -66,7 +66,7 @@ void DragonflyUtils::RotateBasisOnZ(Basis *b, float angle) {
     b->y = newY;
 }
 
-simd_float3 DragonflyUtils::TranslatePoint(Basis *b, simd_float3 point) {
+simd_float3 DragonflyUtils::TranslatePointToStandard(Basis *b, simd_float3 point) {
     simd_float3 ret;
     // x component
     ret.x = point.x * b->x.x;
@@ -88,7 +88,7 @@ simd_float3 DragonflyUtils::TranslatePoint(Basis *b, simd_float3 point) {
     return ret;
 }
 
-simd_float3 DragonflyUtils::RotatePointToBasis(Basis *b, simd_float3 point) {
+simd_float3 DragonflyUtils::RotatePointToStandard(Basis *b, simd_float3 point) {
     simd_float3 ret;
     // x component
     ret.x = point.x * b->x.x;
@@ -106,7 +106,7 @@ simd_float3 DragonflyUtils::RotatePointToBasis(Basis *b, simd_float3 point) {
     return ret;
 }
 
-simd_float3 DragonflyUtils::TranslatePointToStandard(Basis *b, simd_float3 point) {
+simd_float3 DragonflyUtils::TranslatePointToBasis(Basis *b, simd_float3 point) {
     simd_float3 ret;
     
     simd_float3 tobasis;
@@ -123,10 +123,10 @@ simd_float3 DragonflyUtils::TranslatePointToStandard(Basis *b, simd_float3 point
 
 DragonflyUtils::Basis DragonflyUtils::TranslateBasis(Basis *b, Basis *onto) {
     Basis newb;
-    newb.pos = TranslatePoint(onto, b->pos);
-    newb.x = RotatePointToBasis(onto, b->x);
-    newb.y = RotatePointToBasis(onto, b->y);
-    newb.z = RotatePointToBasis(onto, b->z);
+    newb.pos = TranslatePointToStandard(onto, b->pos);
+    newb.x = RotatePointToStandard(onto, b->x);
+    newb.y = RotatePointToStandard(onto, b->y);
+    newb.z = RotatePointToStandard(onto, b->z);
     
     return newb;
 }

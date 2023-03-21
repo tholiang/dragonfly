@@ -266,7 +266,7 @@ void Model::LinkNodeAndVertex(unsigned long vid, unsigned long nid) {
     
 //    simd_float3 reverse_angle = simd_make_float3(-node->angle.x, -node->angle.y, -node->angle.z);
 //    nvlink->vector = RotateAround(nvlink->vector, simd_make_float3(0, 0, 0), reverse_angle);
-    nvlink->vector = TranslatePointToStandard(&node->b, vertex);
+    nvlink->vector = TranslatePointToBasis(&node->b, vertex);
     nvlink->weight = 1;
     nvlinks[setIndex] = nvlink;
     
@@ -595,7 +595,7 @@ Vertex Model::GetVertex(unsigned long vid) {
 //        Vertex desired1 = simd_make_float3(n->pos.x + link1->vector.x, n->pos.y + link1->vector.y, n->pos.z + link1->vector.z);
 //        desired1 = RotateAround(desired1, n->pos, n->b);
         
-        Vertex desired1 = TranslatePoint(&n->b, link1->vector);
+        Vertex desired1 = TranslatePointToStandard(&n->b, link1->vector);
         
         ret.x += link1->weight*desired1.x;
         ret.y += link1->weight*desired1.y;
@@ -608,7 +608,7 @@ Vertex Model::GetVertex(unsigned long vid) {
 //        Vertex desired2 = simd_make_float3(n->pos.x + link2->vector.x, n->pos.y + link2->vector.y, n->pos.z + link2->vector.z);
 //        desired2 = TranslatePoint(desired2, n->pos, n->b);
         
-        Vertex desired2 = TranslatePoint(&n->b, link2->vector);
+        Vertex desired2 = TranslatePointToStandard(&n->b, link2->vector);
         
         ret.x += link2->weight*desired2.x;
         ret.y += link2->weight*desired2.y;

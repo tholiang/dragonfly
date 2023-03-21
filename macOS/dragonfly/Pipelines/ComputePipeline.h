@@ -49,6 +49,8 @@ private:
     id <MTLBuffer> scene_dot_buffer;
     id <MTLBuffer> scene_projected_dot_buffer;
     id <MTLBuffer> scene_line_buffer;
+    
+    id <MTLBuffer> scene_edit_window_buffer;
 
     id <MTLBuffer> scene_node_model_id_buffer;
 

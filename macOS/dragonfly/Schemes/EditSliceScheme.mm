@@ -33,24 +33,46 @@ void EditSliceScheme::SetEditing() {
     mode = Editing;
 }
 
+simd_float2 EditSliceScheme::screen_to_eloc(simd_float2 loc) {
+    simd_float4 edit_window = GetEditWindow();
+    simd_float2 eloc = loc;
+    
+    eloc.x -= edit_window.x;
+    eloc.y -= edit_window.y;
+    eloc.x /= edit_window.z;
+    eloc.y /= edit_window.w;
+    
+    return eloc;
+}
+
 void EditSliceScheme::CreateDotAtClick(simd_float2 click_loc) {
     Slice *s = scene_->GetSlice(slice_id);
     
-    SliceAttributes *attr = &slice_attr_vector.at(slice_id);
+    SliceAttributes *attr = &slice_attr_vector.at(0);
     float scale = attr->height / 2;
     if (attr->height > attr->width) {
         scale = attr->width / 2;
     }
     
+    float ewidth = window_width_ - right_menu_width_;
+    float eheight = window_height_ - UI_start_.y;
+    float eratio = ewidth/eheight;
+    
+    simd_float2 eloc = screen_to_eloc(click_loc);
     float x,y;
     
-    if (vertex_render_uniforms.screen_ratio < 1) {
-        x = click_loc.x * scale;
-        y = scale * click_loc.y / vertex_render_uniforms.screen_ratio;
+    if (eratio < 1) {
+        x = eloc.x * scale;
+        y = scale * eloc.y / eratio;
     } else {
-        x = click_loc.x * scale * vertex_render_uniforms.screen_ratio;
-        y =  click_loc.y * scale;
+        x = eloc.x * scale * eratio;
+        y =  eloc.y * scale;
     }
+    if (x > scale || y > scale || x < -scale || y < -scale) {
+        std::cout<<"out of bounds"<<std::endl;
+        return;
+    }
+    
     
     s->MakeDot(x, y);
     
@@ -72,25 +94,34 @@ void EditSliceScheme::CreateDotAtClick(simd_float2 click_loc) {
 
 int EditSliceScheme::DotClicked(simd_float2 loc) {
     Slice *s = scene_->GetSlice(slice_id);
+    simd_float4 edit_window = GetEditWindow();
+    float ewidth = window_width_ - right_menu_width_;
+    float eheight = window_height_ - UI_start_.y;
+    float eratio = ewidth/eheight;
     
     for (int i = 0; i < s->NumDots(); i++) {
         Dot *d = s->GetDot(i);
         
         float x,y;
         
-        SliceAttributes *attr = &slice_attr_vector.at(slice_id);
+        SliceAttributes *attr = &slice_attr_vector.at(0);
         float scale = attr->height / 2;
         if (attr->height > attr->width) {
             scale = attr->width / 2;
         }
         
-        if (vertex_render_uniforms.screen_ratio < 1) {
+        if (eratio < 1) {
             x = d->x / scale;
-            y = vertex_render_uniforms.screen_ratio * d->y / scale;
+            y = eratio * d->y / scale;
         } else {
-            x = (d->x / scale) / vertex_render_uniforms.screen_ratio;
+            x = (d->x / scale) / eratio;
             y =  d->y / scale;
         }
+        
+        x *= edit_window.z;
+        y *= edit_window.w;
+        x += edit_window.x;
+        y += edit_window.y;
         
         float x_min = x-0.007;
         float x_max = x+0.007;
@@ -107,6 +138,10 @@ int EditSliceScheme::DotClicked(simd_float2 loc) {
 
 int EditSliceScheme::LineClicked(simd_float2 loc) {
     Slice *s = scene_->GetSlice(slice_id);
+    simd_float4 edit_window = GetEditWindow();
+    float ewidth = window_width_ - right_menu_width_;
+    float eheight = window_height_ - UI_start_.y;
+    float eratio = ewidth/eheight;
     
     for (int i = 0; i < s->NumLines(); i++) {
         Line *l = s->GetLine(i);
@@ -116,23 +151,33 @@ int EditSliceScheme::LineClicked(simd_float2 loc) {
         
         float x1,y1,x2,y2;
         
-        SliceAttributes *attr = &slice_attr_vector.at(slice_id);
+        SliceAttributes *attr = &slice_attr_vector.at(0);
         float scale = attr->height / 2;
         if (attr->height > attr->width) {
             scale = attr->width / 2;
         }
         
-        if (vertex_render_uniforms.screen_ratio < 1) {
+        if (eratio < 1) {
             x1 = d1->x / scale;
-            y1 = vertex_render_uniforms.screen_ratio * d1->y / scale;
+            y1 = eratio * d1->y / scale;
             x2 = d2->x / scale;
-            y2 = vertex_render_uniforms.screen_ratio * d2->y / scale;
+            y2 = eratio * d2->y / scale;
         } else {
-            x1 = (d1->x / scale) / vertex_render_uniforms.screen_ratio;
+            x1 = (d1->x / scale) / eratio;
             y1 = d1->y / scale;
-            x2 = (d2->x / scale) / vertex_render_uniforms.screen_ratio;
+            x2 = (d2->x / scale) / eratio;
             y2 = d2->y / scale;
         }
+        
+        x1 *= edit_window.z;
+        y1 *= edit_window.w;
+        x1 += edit_window.x;
+        y1 += edit_window.y;
+        
+        x2 *= edit_window.z;
+        y2 *= edit_window.w;
+        x2 += edit_window.x;
+        y2 += edit_window.y;
         
         simd_float2 edgeVec = simd_make_float2(x1-x2, y1-y2);
         float mag = sqrt(pow(edgeVec.x, 2) + pow(edgeVec.y, 2));
@@ -170,7 +215,7 @@ bool EditSliceScheme::ClickOnScene(simd_float2 loc) {
         return false;
     }
     
-    if (pixelY < UI_start_.y || pixelY > UI_start_.y + window_height_) {
+    if (pixelY < 0 || pixelY > window_height_ - UI_start_.y) {
         return false;
     }
     
@@ -321,18 +366,24 @@ void EditSliceScheme::HandleMouseMovement(float x, float y, float dx, float dy) 
         Slice *s = scene_->GetSlice(slice_id);
         Dot *d = s->GetDot(held_dot);
         
-        SliceAttributes *attr = &slice_attr_vector.at(slice_id);
+        float ewidth = window_width_ - right_menu_width_;
+        float eheight = window_height_ - UI_start_.y;
+        float eratio = ewidth/eheight;
+        
+        simd_float2 eloc = screen_to_eloc(simd_make_float2(x, y));
+        
+        SliceAttributes *attr = &slice_attr_vector.at(0);
         float scale = attr->height / 2;
         if (attr->height > attr->width) {
             scale = attr->width / 2;
         }
         
-        if (vertex_render_uniforms.screen_ratio < 1) {
-            d->x = x * scale;
-            d->y = scale * y / vertex_render_uniforms.screen_ratio;
+        if (eratio < 1) {
+            d->x = eloc.x * scale;
+            d->y = scale * eloc.y / eratio;
         } else {
-            d->x = x * scale * vertex_render_uniforms.screen_ratio;
-            d->y =  y * scale;
+            d->x = eloc.x * scale * eratio;
+            d->y =  eloc.y * scale;
         }
         
         should_reset_static_buffers = true;
@@ -415,4 +466,14 @@ std::vector<Slice *> *EditSliceScheme::GetSlices() {
 
 std::vector<SliceAttributes> EditSliceScheme::GetSliceAttributes() {
     return slice_attr_vector;
+}
+
+simd_float4 EditSliceScheme::GetEditWindow() {
+    simd_float4 window;
+    window.x = float(-right_menu_width_)/ window_width_;
+    window.y = float(UI_start_.y) / window_height_;
+    window.z = float(window_width_ - right_menu_width_)/(window_width_);
+    window.w = float(window_height_ - UI_start_.y)/(window_height_);
+    
+    return window;
 }

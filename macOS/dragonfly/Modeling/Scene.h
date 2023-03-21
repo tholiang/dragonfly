@@ -72,6 +72,7 @@ public:
     void CreateNewModel();
     void NewModelFromFile(std::string path);
     void NewModelFromPointData(std::string path);
+    void AddModel(Model *m, ModelUniforms mu);
     
     void AddSlice(Slice *s);
     

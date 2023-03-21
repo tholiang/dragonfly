@@ -180,6 +180,9 @@ void ComputePipeline::ResetDynamicBuffers() {
     controls_node_buffer = [device newBufferWithBytes:controls_node_array.data() length:(controls_node_array.size() * sizeof(Node)) options:MTLResourceStorageModeShared];
     
     scene_slice_uniforms_buffer = [device newBufferWithBytes: slice_uniforms->data() length:(slice_uniforms->size() * sizeof(ModelUniforms)) options:{}];
+    
+    simd_float4 window = scheme->GetEditWindow();
+    scene_edit_window_buffer = [device newBufferWithBytes: &window length:(slice_uniforms->size() * sizeof(simd_float4)) options:{}];
 }
 
 void ComputePipeline::Compute() {
@@ -265,6 +268,7 @@ void ComputePipeline::Compute() {
             [compute_encoder setBuffer: scene_dot_buffer offset:0 atIndex:1];
             [compute_encoder setBuffer: scene_slice_attributes_buffer offset:0 atIndex:2];
             [compute_encoder setBuffer: scene_vertex_render_uniforms_buffer offset:0 atIndex:3];
+            [compute_encoder setBuffer: scene_edit_window_buffer offset:0 atIndex:4];
             MTLSize gridSize = MTLSizeMake(num_scene_dots, 1, 1);
             NSUInteger threadGroupSize = compute_scaled_dots_pipeline_state.maxTotalThreadsPerThreadgroup;
             if (threadGroupSize > num_scene_dots) threadGroupSize = num_scene_dots;

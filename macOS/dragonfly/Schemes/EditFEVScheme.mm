@@ -307,7 +307,7 @@ bool EditFEVScheme::ClickOnScene(simd_float2 loc) {
         return false;
     }
     
-    if (pixelY < UI_start_.y || pixelY > UI_start_.y + window_height_) {
+    if (pixelY < 0 || pixelY > window_height_ - UI_start_.y) {
         return false;
     }
     
@@ -537,6 +537,8 @@ void EditFEVScheme::SetControlsBasis() {
             avg.z += scene_models_vertices_[vertex_render_uniforms.selected_vertices[i]].z;
         }
         controls_basis_.pos = simd_make_float3(avg.x/vertex_render_uniforms.selected_vertices.size(), avg.y/vertex_render_uniforms.selected_vertices.size(), avg.z/vertex_render_uniforms.selected_vertices.size());
+    } else if (selected_slice != -1) {
+        controls_basis_ = scene_->GetSliceUniforms(selected_slice)->b;
     } else {
         simd_float3 behind_camera;
         behind_camera.x = camera_->pos.x - camera_->vector.x*10;
@@ -587,31 +589,21 @@ void EditFEVScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
             float x_vec = arrow_uniform.b.z.x; // 0;
             float y_vec = arrow_uniform.b.z.y;// 0;
             float z_vec = arrow_uniform.b.z.z;// 1;
-//            // gimbal locked
-//
-//            // around z axis
-//            //x_vec = x_vec*cos(arrow_uniform.angle.z)-y_vec*sin(arrow_uniform.angle.z);
-//            //y_vec = x_vec*sin(arrow_uniform.angle.z)+y_vec*cos(arrow_uniform.angle.z);
-//
-//            // around y axis
-//            float newx = x_vec*cos(arrow_uniform.angle.y)+z_vec*sin(arrow_uniform.angle.y);
-//            z_vec = -x_vec*sin(arrow_uniform.angle.y)+z_vec*cos(arrow_uniform.angle.y);
-//            x_vec = newx;
-//
-//            // around x axis
-//            float newy = y_vec*cos(arrow_uniform.angle.x)-z_vec*sin(arrow_uniform.angle.x);
-//            z_vec = y_vec*sin(arrow_uniform.angle.x)+z_vec*cos(arrow_uniform.angle.x);
-//            y_vec = newy;
             
             x_vec *= 0.01*mvmt;
             y_vec *= 0.01*mvmt;
             z_vec *= 0.01*mvmt;
             
-            Model *model = scene_->GetModel(selected_model);
-            
-            for (int i = 0; i < vertex_render_uniforms.selected_vertices.size(); i++) {
-                unsigned long modelVertexID = vertex_render_uniforms.selected_vertices[i] - model->VertexStart();
-                model->MoveVertexBy(modelVertexID, x_vec, y_vec, z_vec);
+            if (selected_model != -1) {
+                Model *model = scene_->GetModel(selected_model);
+                
+                for (int i = 0; i < vertex_render_uniforms.selected_vertices.size(); i++) {
+                    unsigned long modelVertexID = vertex_render_uniforms.selected_vertices[i] - model->VertexStart();
+                    model->MoveVertexBy(modelVertexID, x_vec, y_vec, z_vec);
+                }
+            } else if (selected_slice != -1) {
+                ModelUniforms *su = scene_->GetSliceUniforms(selected_slice);
+                scene_->MoveSliceBy(selected_slice, x_vec, y_vec, z_vec);
             }
             
             should_reset_static_buffers = true;
@@ -1043,6 +1035,43 @@ void EditFEVScheme::SliceEditMenu() {
     if (ImGui::Button("Edit Slice", ImVec2(80,30))) {
         controller_->ChangeToEditSliceScheme(selected_slice);
     }
+    
+    ImGui::SetCursorPos(ImVec2(50, 330));
+    if (ImGui::Button("Build Model", ImVec2(80,30))) {
+        int otherslice = -1;
+        if (isInt(angle_input_x)) {
+            otherslice = std::stof(angle_input_x);
+        }
+        if (otherslice != -1 && otherslice < scene_->NumSlices() && otherslice != selected_slice) {
+            Slice *s = scene_->GetSlice(selected_slice);
+            Slice *s2 = scene_->GetSlice(otherslice);
+            
+            Model *m = new Model(0);
+            ModelUniforms mu;
+            JoinSlices(m, &mu, s, s2, scene_->GetSliceUniforms(selected_slice), scene_->GetSliceUniforms(otherslice), 1000);
+            scene_->AddModel(m, mu);
+            
+            // weird glitch happens when keeping the slices
+            if (otherslice > selected_slice) {
+                scene_->RemoveSlice(otherslice);
+                scene_->RemoveSlice(selected_slice);
+            } else {
+                scene_->RemoveSlice(selected_slice);
+                scene_->RemoveSlice(otherslice);
+            }
+            selected_slice = -1;
+            
+            CalculateCounts();
+            should_reset_empty_buffers = true;
+            should_reset_static_buffers = true;
+        }
+    }
+    
+    
+    ImGui::SetCursorPos(ImVec2(50, 370));
+    ImGui::Text("On: ");
+    ImGui::SetCursorPos(ImVec2(70, 370));
+    build_slice_on = TextField(build_slice_on, "##buildslice");
 }
 
 void EditFEVScheme::RightMenu() {

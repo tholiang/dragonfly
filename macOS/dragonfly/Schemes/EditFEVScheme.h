@@ -13,6 +13,7 @@
 #include "../UserActions/FaceAddVertexAction.h"
 #include "../UserActions/EdgeAddVertexAction.h"
 #include "../Utils/JoinModels.h"
+#include "../Utils/JoinSlices.h"
 
 class EditFEVScheme : public Scheme {
 private:
@@ -21,6 +22,8 @@ private:
     std::string angle_input_x = "0";
     std::string angle_input_y = "0";
     std::string angle_input_z = "0";
+    
+    std::string build_slice_on = "-1";
     
     bool render_rightclick_popup_ = false;
     simd_float2 rightclick_popup_loc_;

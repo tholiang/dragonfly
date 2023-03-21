@@ -308,6 +308,12 @@ void Scene::NewModelFromPointData(std::string path) {
     model_uniforms.push_back(new_uniform);
 }
 
+void Scene::AddModel(Model *m, ModelUniforms mu) {
+    m->SetId(models.size());
+    models.push_back(m);
+    model_uniforms.push_back(mu);
+}
+
 void Scene::AddSlice(Slice *s) {
     slices.push_back(s);
     
