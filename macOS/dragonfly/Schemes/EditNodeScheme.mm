@@ -95,31 +95,18 @@ void EditNodeScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
             float x_vec = arrow_uniform.b.z.x; // 0;
             float y_vec = arrow_uniform.b.z.y;// 0;
             float z_vec = arrow_uniform.b.z.z;// 1;
-//            // gimbal locked
-//
-//            // around z axis
-//            //x_vec = x_vec*cos(arrow_uniform.angle.z)-y_vec*sin(arrow_uniform.angle.z);
-//            //y_vec = x_vec*sin(arrow_uniform.angle.z)+y_vec*cos(arrow_uniform.angle.z);
-//
-//            // around y axis
-//            float newx = x_vec*cos(arrow_uniform.angle.y)+z_vec*sin(arrow_uniform.angle.y);
-//            z_vec = -x_vec*sin(arrow_uniform.angle.y)+z_vec*cos(arrow_uniform.angle.y);
-//            x_vec = newx;
-//
-//            // around x axis
-//            float newy = y_vec*cos(arrow_uniform.angle.x)-z_vec*sin(arrow_uniform.angle.x);
-//            z_vec = y_vec*sin(arrow_uniform.angle.x)+z_vec*cos(arrow_uniform.angle.x);
-//            y_vec = newy;
             
             x_vec *= 0.01*mvmt;
             y_vec *= 0.01*mvmt;
             z_vec *= 0.01*mvmt;
+            Vertex mvmt_vec = simd_make_float3(x_vec, y_vec, z_vec);
+            mvmt_vec = TranslatePointToBasis(&scene_->GetModelUniforms(selected_model_)->b, mvmt_vec);
             
             if (selected_node_ != -1) {
                 Model *model = scene_->GetModel(selected_model_);
                 unsigned long modelNodeId = selected_node_ - model->NodeStart();
                 if (modelNodeId > 0) {
-                    model->MoveNodeBy(modelNodeId, x_vec, y_vec, z_vec);
+                    model->MoveNodeBy(modelNodeId, mvmt_vec.x, mvmt_vec.y, mvmt_vec.z);
                 }
             }
         }

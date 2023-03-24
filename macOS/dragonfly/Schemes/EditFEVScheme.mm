@@ -536,6 +536,8 @@ void EditFEVScheme::SetControlsBasis() {
             avg.y += scene_models_vertices_[vertex_render_uniforms.selected_vertices[i]].y;
             avg.z += scene_models_vertices_[vertex_render_uniforms.selected_vertices[i]].z;
         }
+        
+        controls_basis_ = scene_->GetModelUniforms(selected_model)->b;
         controls_basis_.pos = simd_make_float3(avg.x/vertex_render_uniforms.selected_vertices.size(), avg.y/vertex_render_uniforms.selected_vertices.size(), avg.z/vertex_render_uniforms.selected_vertices.size());
     } else if (selected_slice != -1) {
         controls_basis_ = scene_->GetSliceUniforms(selected_slice)->b;
@@ -593,13 +595,15 @@ void EditFEVScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
             x_vec *= 0.01*mvmt;
             y_vec *= 0.01*mvmt;
             z_vec *= 0.01*mvmt;
+            Vertex mvmt_vec = simd_make_float3(x_vec, y_vec, z_vec);
+            mvmt_vec = TranslatePointToBasis(&scene_->GetModelUniforms(selected_model)->b, mvmt_vec);
             
             if (selected_model != -1) {
                 Model *model = scene_->GetModel(selected_model);
                 
                 for (int i = 0; i < vertex_render_uniforms.selected_vertices.size(); i++) {
                     unsigned long modelVertexID = vertex_render_uniforms.selected_vertices[i] - model->VertexStart();
-                    model->MoveVertexBy(modelVertexID, x_vec, y_vec, z_vec);
+                    model->MoveVertexBy(modelVertexID, mvmt_vec.x, mvmt_vec.y, mvmt_vec.z);
                 }
             } else if (selected_slice != -1) {
                 ModelUniforms *su = scene_->GetSliceUniforms(selected_slice);
@@ -1039,8 +1043,8 @@ void EditFEVScheme::SliceEditMenu() {
     ImGui::SetCursorPos(ImVec2(50, 330));
     if (ImGui::Button("Build Model", ImVec2(80,30))) {
         int otherslice = -1;
-        if (isInt(angle_input_x)) {
-            otherslice = std::stof(angle_input_x);
+        if (isInt(build_slice_on)) {
+            otherslice = std::stof(build_slice_on);
         }
         if (otherslice != -1 && otherslice < scene_->NumSlices() && otherslice != selected_slice) {
             Slice *s = scene_->GetSlice(selected_slice);
@@ -1064,6 +1068,43 @@ void EditFEVScheme::SliceEditMenu() {
             CalculateCounts();
             should_reset_empty_buffers = true;
             should_reset_static_buffers = true;
+        }
+    }
+    
+    ImGui::SetCursorPos(ImVec2(130, 330));
+    if (ImGui::Button("Bridge", ImVec2(80,30))) {
+        int otherslice = -1;
+        if (isInt(build_slice_on)) {
+            otherslice = std::stof(build_slice_on);
+        }
+        if (otherslice != -1 && otherslice < scene_->NumSlices() && otherslice != selected_slice) {
+            Slice *s = scene_->GetSlice(selected_slice);
+            Slice *s2 = scene_->GetSlice(otherslice);
+            
+            if (s->NumDots() == s2->NumDots()) {
+                Model *m = new Model(0);
+                ModelUniforms mu;
+                BridgeEqualSlices(m, &mu, s, s2, scene_->GetSliceUniforms(selected_slice), scene_->GetSliceUniforms(otherslice));
+                scene_->AddModel(m, mu);
+                
+                // weird glitch happens when keeping the slices
+                if (otherslice > selected_slice) {
+                    scene_->RemoveSlice(otherslice);
+                    scene_->RemoveSlice(selected_slice);
+                } else {
+                    scene_->RemoveSlice(selected_slice);
+                    scene_->RemoveSlice(otherslice);
+                }
+                selected_slice = -1;
+                
+                CalculateCounts();
+                should_reset_empty_buffers = true;
+                should_reset_static_buffers = true;
+            } else {
+                std::cout<<"unequal"<<std::endl;
+            }
+        } else {
+            std::cout<<"invalid other slice"<<std::endl;
         }
     }
     

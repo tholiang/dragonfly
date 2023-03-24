@@ -7,6 +7,18 @@
 
 #include "JoinSlices.h"
 
+
+Vertex DragonflyUtils::GetStandardVertexFromDot(Slice *s, ModelUniforms *mu, int i) {
+    Dot *d = s->GetDot(i);
+    Vertex v;
+    v.x = d->x * s->GetAttributes().width / 2;
+    v.y = d->y * s->GetAttributes().height / 2;
+    v.z = 0;
+    v = TranslatePointToStandard(&mu->b, v);
+    
+    return v;
+}
+
 void DragonflyUtils::BuildSliceOnModel(Model *m, ModelUniforms *mu, Slice *s, ModelUniforms *su, int lastslicestart) {
     int newslicestart = m->NumVertices();
     if (newslicestart == 0) {
@@ -14,13 +26,7 @@ void DragonflyUtils::BuildSliceOnModel(Model *m, ModelUniforms *mu, Slice *s, Mo
     }
     
     for (int i = 0; i < s->NumDots(); i++) {
-        Dot *d = s->GetDot(i);
-        Vertex v;
-        v.x = d->x * s->GetAttributes().width / 2;
-        v.y = d->y * s->GetAttributes().height / 2;
-        v.z = 0;
-        
-        v = TranslatePointToStandard(&su->b, v);
+        Vertex v = GetStandardVertexFromDot(s, su, i);
         v = TranslatePointToBasis(&mu->b, v);
         m->MakeVertex(v.x, v.y, v.z);
     }
@@ -48,19 +54,8 @@ std::vector<int> DragonflyUtils::LinesAcross(Slice *a, ModelUniforms *au, ModelU
     std::vector<int> ret;
     
     for (int i = 0; i < a->NumLines(); i++) {
-        Dot *d1 = a->GetDot(a->GetLine(i)->d1);
-        Vertex v1;
-        v1.x = d1->x * a->GetAttributes().width / 2;
-        v1.y = d1->y * a->GetAttributes().height / 2;
-        v1.z = 0;
-        v1 = TranslatePointToStandard(&au->b, v1);
-        
-        Dot *d2 = a->GetDot(a->GetLine(i)->d2);
-        Vertex v2;
-        v2.x = d2->x * a->GetAttributes().width / 2;
-        v2.y = d2->y * a->GetAttributes().height / 2;
-        v2.z = 0;
-        v2 = TranslatePointToStandard(&au->b, v2);
+        Vertex v1 = GetStandardVertexFromDot(a, au, a->GetLine(i)->d1);
+        Vertex v2 = GetStandardVertexFromDot(a, au, a->GetLine(i)->d2);
         
         simd_float3 vec1 = simd_make_float3(v1.x - bu->b.pos.x, v1.y - bu->b.pos.y, v1.z - bu->b.pos.z);
         simd_float3 vec2 = simd_make_float3(v2.x - bu->b.pos.x, v2.y - bu->b.pos.y, v2.z - bu->b.pos.z);
@@ -79,19 +74,8 @@ std::vector<int> DragonflyUtils::LowerDotsOnLinesAcross(Slice *a, ModelUniforms 
     std::vector<int> ret;
     
     for (int i = 0; i < a->NumLines(); i++) {
-        Dot *d1 = a->GetDot(a->GetLine(i)->d1);
-        Vertex v1;
-        v1.x = d1->x * a->GetAttributes().width / 2;
-        v1.y = d1->y * a->GetAttributes().height / 2;
-        v1.z = 0;
-        v1 = TranslatePointToStandard(&au->b, v1);
-        
-        Dot *d2 = a->GetDot(a->GetLine(i)->d2);
-        Vertex v2;
-        v2.x = d2->x * a->GetAttributes().width / 2;
-        v2.y = d2->y * a->GetAttributes().height / 2;
-        v2.z = 0;
-        v2 = TranslatePointToStandard(&au->b, v2);
+        Vertex v1 = GetStandardVertexFromDot(a, au, a->GetLine(i)->d1);
+        Vertex v2 = GetStandardVertexFromDot(a, au, a->GetLine(i)->d2);
         
         simd_float3 vec1 = simd_make_float3(v1.x - bu->b.pos.x, v1.y - bu->b.pos.y, v1.z - bu->b.pos.z);
         simd_float3 vec2 = simd_make_float3(v2.x - bu->b.pos.x, v2.y - bu->b.pos.y, v2.z - bu->b.pos.z);
@@ -112,19 +96,8 @@ std::vector<simd_float3> DragonflyUtils::CrossedPointsOnLinesAcross(Slice *a, Mo
     std::vector<simd_float3> ret;
     
     for (int i = 0; i < a->NumLines(); i++) {
-        Dot *d1 = a->GetDot(a->GetLine(i)->d1);
-        Vertex v1;
-        v1.x = d1->x * a->GetAttributes().width / 2;
-        v1.y = d1->y * a->GetAttributes().height / 2;
-        v1.z = 0;
-        v1 = TranslatePointToStandard(&au->b, v1);
-        
-        Dot *d2 = a->GetDot(a->GetLine(i)->d2);
-        Vertex v2;
-        v2.x = d2->x * a->GetAttributes().width / 2;
-        v2.y = d2->y * a->GetAttributes().height / 2;
-        v2.z = 0;
-        v2 = TranslatePointToStandard(&au->b, v2);
+        Vertex v1 = GetStandardVertexFromDot(a, au, a->GetLine(i)->d1);
+        Vertex v2 = GetStandardVertexFromDot(a, au, a->GetLine(i)->d2);
         
         simd_float3 vec1 = simd_make_float3(v1.x - bu->b.pos.x, v1.y - bu->b.pos.y, v1.z - bu->b.pos.z);
         simd_float3 vec2 = simd_make_float3(v2.x - bu->b.pos.x, v2.y - bu->b.pos.y, v2.z - bu->b.pos.z);
@@ -177,18 +150,8 @@ std::pair<int,int> DragonflyUtils::GetNextMergeDots(std::pair<int, int> curr, bo
             }
             
             if (other != -1) {
-                Dot *d1 = b->GetDot(curr.first);
-                Vertex v1;
-                v1.x = d1->x * b->GetAttributes().width / 2;
-                v1.y = d1->y * b->GetAttributes().height / 2;
-                v1.z = 0;
-                v1 = TranslatePointToStandard(&bu->b, v1);
-                Dot *d2 = b->GetDot(other);
-                Vertex v2;
-                v2.x = d2->x * b->GetAttributes().width / 2;
-                v2.y = d2->y * b->GetAttributes().height / 2;
-                v2.z = 0;
-                v2 = TranslatePointToStandard(&bu->b, v2);
+                Vertex v1 = GetStandardVertexFromDot(b, bu, curr.first);
+                Vertex v2 = GetStandardVertexFromDot(b, bu, other);
                 
                 simd_float3 vec = simd_make_float3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z);
                 float proj = Projection(vec, au->b.z);
@@ -212,18 +175,8 @@ std::pair<int,int> DragonflyUtils::GetNextMergeDots(std::pair<int, int> curr, bo
             }
             
             if (other != -1) {
-                Dot *d1 = b->GetDot(curr.second);
-                Vertex v1;
-                v1.x = d1->x * b->GetAttributes().width / 2;
-                v1.y = d1->y * b->GetAttributes().height / 2;
-                v1.z = 0;
-                v1 = TranslatePointToStandard(&bu->b, v1);
-                Dot *d2 = b->GetDot(other);
-                Vertex v2;
-                v2.x = d2->x * b->GetAttributes().width / 2;
-                v2.y = d2->y * b->GetAttributes().height / 2;
-                v2.z = 0;
-                v2 = TranslatePointToStandard(&bu->b, v2);
+                Vertex v1 = GetStandardVertexFromDot(b, bu, curr.second);
+                Vertex v2 = GetStandardVertexFromDot(b, bu, other);
                 
                 simd_float3 vec = simd_make_float3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z);
                 float proj = Projection(vec, au->b.z);
@@ -247,19 +200,8 @@ std::pair<int,int> DragonflyUtils::GetNextMergeDots(std::pair<int, int> curr, bo
 }
 
 void DragonflyUtils::MoveToMerge(Slice *a, ModelUniforms *au, Slice *b, ModelUniforms *bu, std::pair<int, int> bdots) {
-    Dot *d1 = b->GetDot(bdots.first);
-    Vertex v1;
-    v1.x = d1->x * b->GetAttributes().width / 2;
-    v1.y = d1->y * b->GetAttributes().height / 2;
-    v1.z = 0;
-    v1 = TranslatePointToStandard(&bu->b, v1);
-    
-    Dot *d2 = b->GetDot(bdots.second);
-    Vertex v2;
-    v2.x = d2->x * b->GetAttributes().width / 2;
-    v2.y = d2->y * b->GetAttributes().height / 2;
-    v2.z = 0;
-    v2 = TranslatePointToStandard(&bu->b, v2);
+    Vertex v1 = GetStandardVertexFromDot(b, bu, bdots.first);
+    Vertex v2 = GetStandardVertexFromDot(b, bu, bdots.second);
     
     simd_float3 atov1 = dist3to3(v1, au->b.pos);
     simd_float3 atov2 = dist3to3(v2, au->b.pos);
@@ -331,4 +273,135 @@ void DragonflyUtils::JoinSlices(Model *m, ModelUniforms *mu, Slice *a, Slice *b,
     *au = initau;
     a->SetWidth(initaa.width);
     a->SetHeight(initaa.height);
+}
+
+
+int DragonflyUtils::GetNextDot(Slice *s, int cur, int last) {
+    for (int i = 0; i < s->NumLines(); i++) {
+        Line *l = s->GetLine(i);
+        if (l->d1 == cur && l->d2 != last) {
+            return l->d2;
+        } else if (l->d2 == cur && l->d1 != last) {
+            return l->d1;
+        }
+    }
+    
+    return -1;
+}
+
+float DragonflyUtils::DotDist(Slice *a, ModelUniforms *au, Slice *b, ModelUniforms *bu, int adot, int bdot) {
+    Vertex av = GetStandardVertexFromDot(a, au, adot);
+    Vertex bv = GetStandardVertexFromDot(b, bu, bdot);
+    return dist3to3(av, bv);
+}
+
+std::pair<std::vector<int>, float> DragonflyUtils::MatchSlicesFrom(Slice *a, ModelUniforms *au, Slice *b, ModelUniforms *bu, int a1, int a2, int b1, int b2) {
+    std::vector<int> matching;
+    for (int i = 0; i < a->NumDots(); i++) {
+        matching.push_back(-1);
+    }
+    
+    matching[a1] = b1;
+    matching[a2] = b2;
+    int numdots = 2;
+    
+    int alast = a2;
+    int blast = b2;
+    int acur = GetNextDot(a, a1, a2);
+    int bcur = GetNextDot(b, b1, b2);
+    while (acur != a1 && acur != -1 && bcur != -1) {
+        matching[acur] = bcur;
+        numdots++;
+        
+        int anext = GetNextDot(a, acur, alast);
+        int bnext = GetNextDot(b, bcur, blast);
+        
+        alast = acur;
+        blast = bcur;
+        
+        acur = anext;
+        bcur = bnext;
+    }
+    
+    float score = 0;
+    
+    for (int i = 0; i < matching.size(); i++) {
+        if (matching[i] != -1) {
+            score += DotDist(a, au, b, bu, i, matching[i]);
+        }
+    }
+    
+    score /= numdots;
+    
+    return std::make_pair(matching, score);
+}
+
+std::vector<int> DragonflyUtils::MatchEqualSlices(Slice *a, ModelUniforms *au, Slice *b, ModelUniforms *bu) {
+    std::vector<int> bestmatching;
+    float bestmatchingscore = -1;
+    
+    for (int i = 0; i < a->NumLines(); i++) {
+        Line *aline = a->GetLine(i);
+        for (int j = 0; j < b->NumLines(); j++) {
+            Line *bline = b->GetLine(j);
+            
+            std::pair<std::vector<int>, float> a1b1 = MatchSlicesFrom(a, au, b, bu, aline->d2, aline->d1, bline->d2, bline->d1);
+            if (a1b1.second < bestmatchingscore || bestmatchingscore == -1) {
+                bestmatching = a1b1.first;
+                bestmatchingscore = a1b1.second;
+            }
+            
+            std::pair<std::vector<int>, float> a1b2 = MatchSlicesFrom(a, au, b, bu, aline->d2, aline->d1, bline->d1, bline->d2);
+            if (a1b2.second < bestmatchingscore) {
+                bestmatching = a1b2.first;
+                bestmatchingscore = a1b2.second;
+            }
+            
+            std::pair<std::vector<int>, float> a2b1 = MatchSlicesFrom(a, au, b, bu, aline->d1, aline->d2, bline->d2, bline->d1);
+            if (a2b1.second < bestmatchingscore) {
+                bestmatching = a2b1.first;
+                bestmatchingscore = a2b1.second;
+            }
+            
+            std::pair<std::vector<int>, float> a2b2 = MatchSlicesFrom(a, au, b, bu, aline->d1, aline->d2, bline->d1, bline->d2);
+            if (a2b2.second < bestmatchingscore) {
+                bestmatching = a2b2.first;
+                bestmatchingscore = a2b2.second;
+            }
+        }
+    }
+    
+    return bestmatching;
+}
+
+void DragonflyUtils::BridgeEqualSlices(Model *m, ModelUniforms *mu, Slice *a, Slice *b, ModelUniforms *au, ModelUniforms *bu) {
+    std::vector<int> matching = MatchEqualSlices(a, au, b, bu);
+    
+    *mu = *au;
+    
+    for (int i = 0; i < a->NumDots(); i++) {
+        Vertex sv = GetStandardVertexFromDot(a, au, i);
+        Vertex mv = TranslatePointToBasis(&mu->b, sv);
+        
+        m->MakeVertex(mv.x, mv.y, mv.z);
+    }
+    
+    for (int i = 0; i < b->NumDots(); i++) {
+        Vertex sv = GetStandardVertexFromDot(b, bu, i);
+        Vertex mv = TranslatePointToBasis(&mu->b, sv);
+        
+        m->MakeVertex(mv.x, mv.y, mv.z);
+    }
+    
+    for (int i = 0; i < a->NumLines(); i++) {
+        Line *l = a->GetLine(i);
+        
+        int a1 = l->d1;
+        int a2 = l->d2;
+        int b1 = matching[a1];
+        int b2 = matching[a2];
+        
+        m->MakeFace(a1, a2, b1+a->NumDots(), simd_make_float4(1, 1, 1, 1));
+        m->MakeFace(a2, b1+a->NumDots(), b2+a->NumDots(), simd_make_float4(1, 1, 1, 1));
+    }
 }
