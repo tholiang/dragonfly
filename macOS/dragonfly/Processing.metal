@@ -351,7 +351,7 @@ kernel void CalculateFaceLighting(device Face *output [[buffer(0)]], const const
 
 kernel void CalculateScaledDots(device Vertex *output [[buffer(0)]], const constant Dot *dots[[buffer(1)]], const constant SliceAttributes *attr[[buffer(2)]], const constant VertexRenderUniforms *uniforms [[buffer(3)]], const constant simd_float4 *edit_window [[buffer(4)]], unsigned int did [[thread_position_in_grid]]) {
     float scale = attr->height / 2;
-    if (attr->height > attr->width) {
+    if (attr->height < attr->width) {
         scale = attr->width / 2;
     }
     float eratio = edit_window->z / edit_window->w * uniforms->screen_ratio;

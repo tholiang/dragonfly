@@ -55,7 +55,7 @@ int RenderPipeline::init () {
         return -2;
     }
 
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED/* | SDL_RENDERER_PRESENTVSYNC*/);
     if (renderer == NULL)
     {
         printf("Error creating renderer: %s\n", SDL_GetError());
@@ -259,7 +259,8 @@ void RenderPipeline::Render() {
             if (scheme->GetType() != SchemeType::EditSlice) {
                 [render_encoder setRenderPipelineState:triangle_render_pipeline_state];
                 [render_encoder setVertexBuffer:scene_slice_plates_buffer offset:0 atIndex:0];
-                [render_encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:num_faces*3];
+                int num_scene_slices = scheme->GetSlices()->size();
+                [render_encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:num_scene_slices*6];
             }
         }
     }

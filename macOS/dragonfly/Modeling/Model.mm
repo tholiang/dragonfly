@@ -350,88 +350,6 @@ void Model::MakeCube() {
     MakeFace(5, 7, 6, {1, 1, 1, 1});
 }
 
-void Model::FromFile(std::string path) {
-    std::string line;
-    std::ifstream myfile (path);
-    if (myfile.is_open()) {
-        getline(myfile, line);
-        delete nodes[0];
-        nodes.erase(nodes.begin());
-        
-        int num_nodes;
-        sscanf(line.c_str(), "%d nodes", &num_nodes);
-        for (int i = 0; i < num_nodes; i++) {
-            getline(myfile, line);
-            Node *n = new Node();
-            float posx, posy, posz, angx, angy, angz;
-            sscanf(line.c_str(), "%f %f %f %f %f %f", &posx, &posy, &posz, &angx, &angy, &angz);
-            n->b.pos = simd_make_float3(posx, posy, posz);
-            //n->angle = simd_make_float3(angx, angy, angz);
-            n->locked_to = -1;
-            
-            nodes.push_back(n);
-        }
-        
-        getline(myfile, line);
-        int num_links;
-        sscanf(line.c_str(), "%d vertices", &num_links);
-        for (int i = 0; i < num_links; i++) {
-            getline(myfile, line);
-            NodeVertexLink *nvlink = new NodeVertexLink();
-            int nid;
-            float nvweight, posx, posy, posz;
-            sscanf(line.c_str(), "%d %f %f %f %f", &nid, &nvweight, &posx, &posy, &posz);
-            nvlink->nid = nid;
-            nvlink->weight = nvweight;
-            nvlink->vector = simd_make_float3(posx, posy, posz);
-            
-            nvlinks.push_back(nvlink);
-        }
-        num_vertices = num_links / 2;
-        
-        getline(myfile, line);
-        int num_faces;
-        sscanf(line.c_str(), "%d faces", &num_faces);
-        for (int i = 0; i < num_faces; i++) {
-            getline(myfile, line);
-            Face *f = new Face();
-            int v1, v2, v3;
-            float cx, cy, cz, cw;
-            int nr;
-            float sm;
-            float lx, ly, lz;
-            sscanf(line.c_str(), "%d %d %d %f %f %f %f %d %f %f %f %f", &v1, &v2, &v3, &cx, &cy, &cz, &cw, &nr, &sm, &lx, &ly, &lz);
-            f->vertices[0] = v1;
-            f->vertices[1] = v2;
-            f->vertices[2] = v3;
-            f->color = simd_make_float4(cx, cy, cz, cw);
-            f->normal_reversed = nr == 1;
-            f->shading_multiplier = sm;
-            f->lighting_offset = simd_make_float3(lx, ly, lz);
-            
-            faces.push_back(f);
-        }
-        
-        getline(myfile, line);
-        int num_anims;
-        sscanf(line.c_str(), "%d animations", &num_anims);
-        for (int i = 0; i < num_anims; i++) {
-            //getline(myfile, line);
-            Animation *anim = new Animation(this);
-            
-            anim->FromFile(myfile);
-            animations.push_back(anim);
-        }
-        
-        myfile.close();
-        
-        std::cout<<NumVertices()<<std::endl;
-        std::cout<<NumFaces()<<std::endl;
-    } else {
-        std::cout<<"invalid path"<<std::endl;
-    }
-}
-
 void Model::InsertVertex(float x, float y, float z, int vid) {
     if (vid >= num_vertices) {
         MakeVertex(x, y, z);
@@ -545,6 +463,22 @@ void Model::RemoveFace(int fid) {
     }
 }
 
+void Model::ScaleBy(float x, float y, float z) {
+    for (int i = 0; i < nodes.size(); i++) {
+        Node *n = GetNode(i);
+        n->b.x *= x;
+        n->b.y *= y;
+        n->b.z *= z;
+    }
+    
+    for (int i = 0; i < nvlinks.size(); i++) {
+        NodeVertexLink *nvlink = nvlinks[i];
+        nvlink->vector.x *= x;
+        nvlink->vector.y *= y;
+        nvlink->vector.z *= z;
+    }
+}
+
 unsigned Model::MakeAnimation() {
     Animation *animation = new Animation(this);
     animations.push_back(animation);
@@ -637,6 +571,23 @@ std::vector<unsigned long> Model::GetEdgeFaces(unsigned long vid1, unsigned long
     return ret;
 }
 
+bool Model::HasFaceWith(std::vector<int> &vids) {
+    for (std::size_t fid = 0; fid < faces.size(); fid++) {
+        Face *f = faces[fid];
+        int numwith = 0;
+        for (int i = 0; i < vids.size(); i++) {
+            if (f->vertices[0] == vids[i] || f->vertices[1] == vids[i] || f->vertices[2] == vids[i]) {
+                numwith++;
+            }
+        }
+        
+        if (numwith >= 3) {
+            return true;
+        }
+    }
+    
+    return false;
+}
 
 std::vector<unsigned long> Model::GetLinkedNodes(unsigned long vid) {
     std::vector<unsigned long> ret;
@@ -770,13 +721,12 @@ std::string Model::GetName() {
 
 void Model::SaveToFile(std::string path) {
     std::ofstream myfile;
-    myfile.open (path + name_ + ".drgn");
+    myfile.open (path + ".drgn");
     
     myfile << nodes.size() << " nodes" << std::endl;
     for (int i = 0; i < nodes.size(); i++) {
         Node *n = nodes[i];
-//        myfile << n->pos.x << " " << n->pos.y << " " << n->pos.z << " ";
-//        myfile << n->angle.x << " " << n->angle.y << " " << n->angle.z << std::endl;
+        DragonflyUtils::BasisToFile(myfile, &n->b);
     }
     
     myfile << nvlinks.size() << " vertices" << std::endl;
@@ -803,6 +753,84 @@ void Model::SaveToFile(std::string path) {
     }
     
     myfile.close();
+}
+
+void Model::FromFile(std::string path) {
+    std::string line;
+    std::ifstream myfile (path);
+    if (myfile.is_open()) {
+        getline(myfile, line);
+        delete nodes[0];
+        nodes.erase(nodes.begin());
+        
+        int num_nodes;
+        sscanf(line.c_str(), "%d nodes", &num_nodes);
+        for (int i = 0; i < num_nodes; i++) {
+            Node *n = new Node();
+            n->b = DragonflyUtils::BasisFromFile(myfile);
+            n->locked_to = -1;
+            
+            nodes.push_back(n);
+        }
+        
+        getline(myfile, line);
+        int num_links;
+        sscanf(line.c_str(), "%d vertices", &num_links);
+        for (int i = 0; i < num_links; i++) {
+            getline(myfile, line);
+            NodeVertexLink *nvlink = new NodeVertexLink();
+            int nid;
+            float nvweight, posx, posy, posz;
+            sscanf(line.c_str(), "%d %f %f %f %f", &nid, &nvweight, &posx, &posy, &posz);
+            nvlink->nid = nid;
+            nvlink->weight = nvweight;
+            nvlink->vector = simd_make_float3(posx, posy, posz);
+            
+            nvlinks.push_back(nvlink);
+        }
+        num_vertices = num_links / 2;
+        
+        getline(myfile, line);
+        int num_faces;
+        sscanf(line.c_str(), "%d faces", &num_faces);
+        for (int i = 0; i < num_faces; i++) {
+            getline(myfile, line);
+            Face *f = new Face();
+            int v1, v2, v3;
+            float cx, cy, cz, cw;
+            int nr;
+            float sm;
+            float lx, ly, lz;
+            sscanf(line.c_str(), "%d %d %d %f %f %f %f %d %f %f %f %f", &v1, &v2, &v3, &cx, &cy, &cz, &cw, &nr, &sm, &lx, &ly, &lz);
+            f->vertices[0] = v1;
+            f->vertices[1] = v2;
+            f->vertices[2] = v3;
+            f->color = simd_make_float4(cx, cy, cz, cw);
+            f->normal_reversed = nr == 1;
+            f->shading_multiplier = sm;
+            f->lighting_offset = simd_make_float3(lx, ly, lz);
+            
+            faces.push_back(f);
+        }
+        
+        getline(myfile, line);
+        int num_anims;
+        sscanf(line.c_str(), "%d animations", &num_anims);
+        for (int i = 0; i < num_anims; i++) {
+            //getline(myfile, line);
+            Animation *anim = new Animation(this);
+            
+            anim->FromFile(myfile);
+            animations.push_back(anim);
+        }
+        
+        myfile.close();
+        
+        std::cout<<NumVertices()<<std::endl;
+        std::cout<<NumFaces()<<std::endl;
+    } else {
+        std::cout<<"invalid path"<<std::endl;
+    }
 }
 
 Model::~Model() {

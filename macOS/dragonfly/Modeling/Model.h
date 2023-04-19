@@ -133,6 +133,8 @@ public:
     void RemoveVertex(int vid);
     void RemoveFace(int fid);
     
+    void ScaleBy(float x, float y, float z);
+    
     unsigned MakeAnimation();
     void StartAnimation(int aid);
     void SetKeyFrame(int aid, int nid, float time);
@@ -142,6 +144,7 @@ public:
     Vertex GetVertex(unsigned long vid);
     Face *GetFace(unsigned long fid);
     std::vector<unsigned long> GetEdgeFaces(unsigned long vid1, unsigned long vid2);
+    bool HasFaceWith(std::vector<int> &vids);
     
     std::vector<unsigned long> GetLinkedNodes(unsigned long vid);
     std::vector<unsigned long> GetLinkedVertices(unsigned long nid);

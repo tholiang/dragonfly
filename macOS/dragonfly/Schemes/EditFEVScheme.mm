@@ -596,9 +596,9 @@ void EditFEVScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
             y_vec *= 0.01*mvmt;
             z_vec *= 0.01*mvmt;
             Vertex mvmt_vec = simd_make_float3(x_vec, y_vec, z_vec);
-            mvmt_vec = TranslatePointToBasis(&scene_->GetModelUniforms(selected_model)->b, mvmt_vec);
             
             if (selected_model != -1) {
+                //mvmt_vec = TranslatePointToBasis(&scene_->GetModelUniforms(selected_model)->b, mvmt_vec);
                 Model *model = scene_->GetModel(selected_model);
                 
                 for (int i = 0; i < vertex_render_uniforms.selected_vertices.size(); i++) {
@@ -606,8 +606,8 @@ void EditFEVScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
                     model->MoveVertexBy(modelVertexID, mvmt_vec.x, mvmt_vec.y, mvmt_vec.z);
                 }
             } else if (selected_slice != -1) {
-                ModelUniforms *su = scene_->GetSliceUniforms(selected_slice);
-                scene_->MoveSliceBy(selected_slice, x_vec, y_vec, z_vec);
+                //mvmt_vec = TranslatePointToBasis(&scene_->GetSliceUniforms(selected_slice)->b, mvmt_vec);
+                scene_->MoveSliceBy(selected_slice, mvmt_vec.x, mvmt_vec.y, mvmt_vec.z);
             }
             
             should_reset_static_buffers = true;
@@ -670,14 +670,16 @@ void EditFEVScheme::AddVertexToEdge (int vid1, int vid2, int mid) {
     
     ModelUniforms *mu = scene_->GetModelUniforms(selected_model);
     
-    Vertex v1 = scene_models_vertices_[vid1];
-    Vertex v2 = scene_models_vertices_[vid2];
-    v1.x -= mu->b.pos.x;
-    v1.y -= mu->b.pos.y;
-    v1.z -= mu->b.pos.z;
-    v2.x -= mu->b.pos.x;
-    v2.y -= mu->b.pos.y;
-    v2.z -= mu->b.pos.z;
+//    Vertex v1 = scene_models_vertices_[vid1];
+//    Vertex v2 = scene_models_vertices_[vid2];
+//    v1.x -= mu->b.pos.x;
+//    v1.y -= mu->b.pos.y;
+//    v1.z -= mu->b.pos.z;
+//    v2.x -= mu->b.pos.x;
+//    v2.y -= mu->b.pos.y;
+//    v2.z -= mu->b.pos.z;
+    Vertex v1 = model->GetVertex(vid1 - model->VertexStart());
+    Vertex v2 = model->GetVertex(vid2 - model->VertexStart());
     Vertex new_v = BiAvg(v1, v2);
     unsigned new_vid = model->MakeVertex(new_v.x, new_v.y, new_v.z);
     
@@ -749,11 +751,17 @@ void EditFEVScheme::JoinModels() {
     }
     
     if (joinModelA != joinModelB && joinAvids.size() == joinBvids.size()) {
-        DragonflyUtils::JoinModels(scene_->GetModel(joinModelA), scene_->GetModel(joinModelB), scene_->GetModelUniforms(joinModelA), scene_->GetModelUniforms(joinModelB), joinAvids, joinBvids);
+//        DragonflyUtils::JoinModels(scene_->GetModel(joinModelA), scene_->GetModel(joinModelB), scene_->GetModelUniforms(joinModelA), scene_->GetModelUniforms(joinModelB), joinAvids, joinBvids);
+        Model *a = scene_->GetModel(joinModelA);
+        Model *b = scene_->GetModel(joinModelB);
+        ModelUniforms *au = scene_->GetModelUniforms(joinModelA);
+        ModelUniforms *bu = scene_->GetModelUniforms(joinModelB);
+        DragonflyUtils::BridgeEqualModels(a, au, joinAvids, b, bu, joinBvids);
         
-        scene_vertex_length_ -= joinBvids.size();
-        scene_node_length_ -= scene_->GetModel(joinModelB)->NumNodes();
-        scene_->RemoveModel(joinModelB);
+//        scene_vertex_length_ -= joinBvids.size();
+//        scene_node_length_ -= scene_->GetModel(joinModelB)->NumNodes();
+//        scene_->RemoveModel(joinModelB);
+        CalculateCounts();
         should_reset_empty_buffers = true;
         should_reset_static_buffers = true;
     }
@@ -944,6 +952,17 @@ void EditFEVScheme::VertexEditMenu() {
         ImGui::SetCursorPos(ImVec2(30, current_y));
         ImGui::Text("Mixed node links");
     }
+    
+    if (ImGui::Button("Cap")) {
+        std::vector<int> modelvids;
+        for (int j = 0; j < vertex_render_uniforms.selected_vertices.size(); j++) {
+            modelvids.push_back(vertex_render_uniforms.selected_vertices[j] - model->VertexStart());
+        }
+        CapModel(model, modelvids);
+        CalculateCounts();
+        should_reset_empty_buffers = true;
+        should_reset_static_buffers = true;
+    }
 }
 
 void EditFEVScheme::EdgeEditMenu() {
@@ -955,7 +974,97 @@ void EditFEVScheme::EdgeEditMenu() {
 void EditFEVScheme::FaceEditMenu() {
     ImGui::Text("Selected Model ID: %i", selected_model - 3);
     ImGui::SetCursorPos(ImVec2(20, 30));
-    ImGui::Text("Selected Face ID: %lu", selected_face - scene_->GetModel(selected_model)->FaceStart());
+    Model *m = scene_->GetModel(selected_model);
+    ImGui::Text("Selected Face ID: %lu", selected_face - m->FaceStart());
+    Face *f = m->GetFace(selected_face - m->FaceStart());
+    
+    ImGui::SetCursorPos(ImVec2(30, 30));
+    ImGui::Text("Color: ");
+    
+    ImGui::SetCursorPos(ImVec2(50, 50));
+    ImGui::Text("r: ");
+    ImGui::SetCursorPos(ImVec2(70, 50));
+    std::string r_input = TextField(std::to_string(f->color.x), "##facer");
+    if (isFloat(r_input)) {
+        bool diff = false;
+        float new_r = std::stof(r_input);
+        if (new_r != f->color.x) {
+            diff = true;
+        }
+        f->color.x = new_r;
+        
+        if (diff) {
+            should_reset_static_buffers = true;
+        }
+    }
+    
+    ImGui::SetCursorPos(ImVec2(50, 80));
+    ImGui::Text("g: ");
+    ImGui::SetCursorPos(ImVec2(70, 80));
+    std::string g_input = TextField(std::to_string(f->color.y), "##faceg");
+    if (isFloat(g_input)) {
+        bool diff = false;
+        float new_g = std::stof(g_input);
+        if (new_g != f->color.y) {
+            diff = true;
+        }
+        f->color.y = new_g;
+        
+        if (diff) {
+            should_reset_static_buffers = true;
+        }
+    }
+    
+    ImGui::SetCursorPos(ImVec2(50, 110));
+    ImGui::Text("b: ");
+    ImGui::SetCursorPos(ImVec2(70, 110));
+    std::string b_input = TextField(std::to_string(f->color.z), "##faceb");
+    if (isFloat(b_input)) {
+        bool diff = false;
+        float new_b = std::stof(b_input);
+        if (new_b != f->color.z) {
+            diff = true;
+        }
+        f->color.z = new_b;
+        
+        if (diff) {
+            should_reset_static_buffers = true;
+        }
+    }
+    
+    ImGui::SetCursorPos(ImVec2(50, 140));
+    ImGui::Text("a: ");
+    ImGui::SetCursorPos(ImVec2(70, 140));
+    std::string a_input = TextField(std::to_string(f->color.z), "##facea");
+    if (isFloat(a_input)) {
+        bool diff = false;
+        float new_a = std::stof(a_input);
+        if (new_a != f->color.z) {
+            diff = true;
+        }
+        f->color.w = new_a;
+        
+        if (diff) {
+            should_reset_static_buffers = true;
+        }
+    }
+    
+    ImGui::SetCursorPos(ImVec2(50, 180));
+    ImGui::Text("shading multiplier: ");
+    ImGui::SetCursorPos(ImVec2(70, 200));
+    std::string sm_input = TextField(std::to_string(f->shading_multiplier), "##facesm");
+    if (isFloat(sm_input)) {
+        bool diff = false;
+        float new_sm = std::stof(sm_input);
+        if (new_sm != f->shading_multiplier) {
+            diff = true;
+        }
+        f->shading_multiplier = new_sm;
+        
+        if (diff) {
+            should_reset_static_buffers = true;
+        }
+    }
 }
 
 void EditFEVScheme::SliceEditMenu() {
@@ -1036,11 +1145,45 @@ void EditFEVScheme::SliceEditMenu() {
     }
     
     ImGui::SetCursorPos(ImVec2(50, 290));
+    ImGui::Text("w: ");
+    ImGui::SetCursorPos(ImVec2(70, 290));
+    std::string w_input = TextField(std::to_string(scene_->GetSlice(selected_slice)->GetWidth()), "##slicew");
+    if (isFloat(w_input)) {
+        bool diff = false;
+        float new_w = std::stof(w_input);
+        if (new_w != scene_->GetSlice(selected_slice)->GetWidth()) {
+            diff = true;
+        }
+        scene_->GetSlice(selected_slice)->SetWidth(new_w);
+        
+        if (diff) {
+            should_reset_static_buffers = true;
+        }
+    }
+    
+    ImGui::SetCursorPos(ImVec2(50, 320));
+    ImGui::Text("h: ");
+    ImGui::SetCursorPos(ImVec2(70, 320));
+    std::string h_input = TextField(std::to_string(scene_->GetSlice(selected_slice)->GetHeight()), "##sliceh");
+    if (isFloat(h_input)) {
+        bool diff = false;
+        float new_h = std::stof(h_input);
+        if (new_h != scene_->GetSlice(selected_slice)->GetHeight()) {
+            diff = true;
+        }
+        scene_->GetSlice(selected_slice)->SetHeight(new_h);
+        
+        if (diff) {
+            should_reset_static_buffers = true;
+        }
+    }
+    
+    ImGui::SetCursorPos(ImVec2(50, 350));
     if (ImGui::Button("Edit Slice", ImVec2(80,30))) {
         controller_->ChangeToEditSliceScheme(selected_slice);
     }
     
-    ImGui::SetCursorPos(ImVec2(50, 330));
+    ImGui::SetCursorPos(ImVec2(50, 380));
     if (ImGui::Button("Build Model", ImVec2(80,30))) {
         int otherslice = -1;
         if (isInt(build_slice_on)) {
@@ -1071,7 +1214,7 @@ void EditFEVScheme::SliceEditMenu() {
         }
     }
     
-    ImGui::SetCursorPos(ImVec2(130, 330));
+    ImGui::SetCursorPos(ImVec2(130, 380));
     if (ImGui::Button("Bridge", ImVec2(80,30))) {
         int otherslice = -1;
         if (isInt(build_slice_on)) {
@@ -1109,9 +1252,9 @@ void EditFEVScheme::SliceEditMenu() {
     }
     
     
-    ImGui::SetCursorPos(ImVec2(50, 370));
+    ImGui::SetCursorPos(ImVec2(50, 410));
     ImGui::Text("On: ");
-    ImGui::SetCursorPos(ImVec2(70, 370));
+    ImGui::SetCursorPos(ImVec2(70, 410));
     build_slice_on = TextField(build_slice_on, "##buildslice");
 }
 

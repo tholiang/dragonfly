@@ -237,3 +237,292 @@ void DragonflyUtils::JoinModels(Model *A, Model *B, ModelUniforms *muA, ModelUni
         A->MakeFaceWithLighting(newvids[0], newvids[1], newvids[2], f->color, f->normal_reversed, f->lighting_offset, f->shading_multiplier);
     }
 }
+
+
+std::vector<int> DragonflyUtils::GetNeighborsIn(Model *m, std::vector<int> vertices, int curr) {
+    std::vector<int> ret;
+    
+    for (int i = 0; i < m->NumFaces(); i++) {
+        Face *f = m->GetFace(i);
+        int curridx = -1;
+        for (int j = 0; j < 3; j++) {
+            if (f->vertices[j] == curr) {
+                curridx = j;
+                break;
+            }
+        }
+        
+        if (curridx >= 0) {
+            for (int k = 0; k < vertices.size(); k++) {
+                if (vertices[k] != curr) {
+                    for (int j = 0; j < 3; j++) {
+                        if (f->vertices[j] == vertices[k]) {
+                            ret.push_back(vertices[k]);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    return ret;
+}
+
+void DragonflyUtils::CapModel(Model *m, std::vector<int> vertices) {
+    Vertex avg = simd_make_float3(0, 0, 0);
+    for (int i = 0; i < vertices.size(); i++) {
+        Vertex v = m->GetVertex(vertices[i]);
+        avg.x += v.x;
+        avg.y += v.y;
+        avg.z += v.z;
+    }
+    
+    avg.x /= vertices.size();
+    avg.y /= vertices.size();
+    avg.z /= vertices.size();
+    int newid = m->MakeVertex(avg.x, avg.y, avg.z);
+    
+    std::vector<std::pair<int,int>> alreadylinked;
+    for (int i = 0; i < vertices.size(); i++) {
+        int vid = vertices[i];
+        
+        std::vector<int> neighbors = GetNeighborsIn(m, vertices, vid);
+        for (int j = 0; j < neighbors.size(); j++) {
+            int neighbor = neighbors[j];
+            
+            bool prevlinked = false;
+            for (int k = 0; k < alreadylinked.size(); k++) {
+                if (alreadylinked[k].first == vid && alreadylinked[k].second == neighbor) {
+                    prevlinked = true;
+                    break;
+                }
+                if (alreadylinked[k].first == neighbor && alreadylinked[k].second == vid) {
+                    prevlinked = true;
+                    break;
+                }
+            }
+            
+            if (!prevlinked) {
+                m->MakeFace(vid, neighbor, newid, simd_make_float4(1, 1, 1, 1));
+                alreadylinked.push_back(std::make_pair(vid, neighbor));
+            }
+        }
+    }
+}
+
+
+std::vector<int> DragonflyUtils::GetNeighbors(Model *m, std::vector<int> &vertices, int cur) {
+    std::vector<int> neighbors;
+    for (int i = 0; i < vertices.size(); i++) {
+        if (vertices[i] == cur) {
+            continue;
+        }
+        
+        std::vector<unsigned long> shared_faces = m->GetEdgeFaces(cur, vertices[i]);
+        if (shared_faces.size() > 0) {
+            neighbors.push_back(vertices[i]);
+        }
+    }
+    
+    return neighbors;
+}
+
+std::vector<int> DragonflyUtils::GetNeighborsIdx(Model *m, std::vector<int> &vertices, int cur) {
+    std::vector<int> neighbors;
+    for (int i = 0; i < vertices.size(); i++) {
+        if (vertices[i] == vertices[cur]) {
+            continue;
+        }
+        
+        std::vector<unsigned long> shared_faces = m->GetEdgeFaces(vertices[cur], vertices[i]);
+        if (shared_faces.size() > 0) {
+            neighbors.push_back(i);
+        }
+    }
+    
+    return neighbors;
+}
+
+int DragonflyUtils::GetNextVertex(Model *m, std::vector<int> &vertices, int cur, int last) {
+    std::vector<int> neighbors = GetNeighbors(m, vertices, cur);
+    for (int i = 0; i < neighbors.size(); i++) {
+        if (neighbors[i] == last) {
+            continue;
+        }
+        
+        return neighbors[i];
+    }
+    
+    return -1;
+}
+
+int DragonflyUtils::GetNextVertexIdx(Model *m, std::vector<int> &vertices, int cur, int last) {
+    std::vector<int> neighborsidx = GetNeighborsIdx(m, vertices, cur);
+    for (int i = 0; i < neighborsidx.size(); i++) {
+        if (vertices[neighborsidx[i]] == vertices[last]) {
+            continue;
+        }
+        
+        return neighborsidx[i];
+    }
+    
+    return -1;
+}
+
+float DragonflyUtils::VertexDist(Model *a, ModelUniforms *au, Model *b, ModelUniforms *bu, int avid, int bvid) {
+    Vertex av = TranslatePointToStandard(&au->b, a->GetVertex(avid));
+    Vertex bv = TranslatePointToStandard(&bu->b, b->GetVertex(bvid));
+    return dist3to3(av, bv);
+}
+
+std::pair<std::vector<int>, float> DragonflyUtils::MatchModelsFrom(Model *a, ModelUniforms *au, std::vector<int> &avertices, Model *b, ModelUniforms *bu, std::vector<int> &bvertices, int a1, int a2, int b1, int b2) {
+    std::vector<int> matching;
+    for (int i = 0; i < avertices.size(); i++) {
+        matching.push_back(-1);
+    }
+    
+    matching[a1] = b1;
+    matching[a2] = b2;
+    int numdots = 2;
+    
+    int alast = a1;
+    int blast = b1;
+    int acur = GetNextVertexIdx(a, avertices, a1, a2);
+    int bcur = GetNextVertexIdx(b, bvertices, b1, b2);
+    while (acur != a1 && acur != -1 && bcur != -1) {
+        matching[acur] = bcur;
+        numdots++;
+        
+        int anext = GetNextVertexIdx(a, avertices, acur, alast);
+        int bnext = GetNextVertexIdx(b, bvertices, bcur, blast);
+        
+        alast = acur;
+        blast = bcur;
+        
+        acur = anext;
+        bcur = bnext;
+    }
+    
+    float score = 0;
+    
+    for (int i = 0; i < matching.size(); i++) {
+        if (matching[i] != -1) {
+            score += VertexDist(a, au, b, bu, i, matching[i]);
+        }
+    }
+    
+    score /= numdots;
+    
+    return std::make_pair(matching, score);
+}
+
+std::vector<int> DragonflyUtils::MatchEqualModels(Model *a, ModelUniforms *au, std::vector<int> &avertices, Model *b, ModelUniforms *bu, std::vector<int> &bvertices) {
+    std::vector<int> bestmatching;
+    float bestmatchingscore = -1;
+    
+    for (int i = 0; i < avertices.size(); i++) {
+        for (int j = 0; j < bvertices.size(); j++) {
+            std::vector<int> aneighbors = GetNeighborsIdx(a, avertices, i);
+            std::vector<int> bneighbors = GetNeighborsIdx(b, bvertices, j);
+            
+            for (int k = 0; k < aneighbors.size(); k++) {
+                for (int l = 0; l < aneighbors.size(); l++) {
+                    std::pair<std::vector<int>, float> ab = MatchModelsFrom(a, au, avertices, b, bu, bvertices, i, aneighbors[k], j, bneighbors[l]);
+                    if (ab.second < bestmatchingscore || bestmatchingscore == -1) {
+                        bestmatching = ab.first;
+                        bestmatchingscore = ab.second;
+                    }
+                }
+            }
+        }
+    }
+    
+    return bestmatching;
+}
+
+void DragonflyUtils::AddModels(Model *a, ModelUniforms *au, Model *b, ModelUniforms *bu) {
+    int bnodestart = a->NumNodes();
+    for (int i = 0; i < b->NumNodes(); i++) {
+        Node *n = b->GetNode(i);
+        Vertex v = n->b.pos;
+        v = TranslatePointToStandard(&bu->b, v);
+        v = TranslatePointToBasis(&au->b, v);
+        
+        int nid = a->MakeNode(v.x, v.y, v.z);
+        Node *newn = a->GetNode(nid);
+        newn->b = n->b;
+        newn->b.pos = v;
+        newn->locked_to = n->locked_to;
+    }
+    
+    int bvertexstart = a->NumVertices();
+    for (int i = 0; i < b->NumVertices(); i++) {
+        Vertex v = b->GetVertex(i);
+        v = TranslatePointToStandard(&bu->b, v);
+        v = TranslatePointToBasis(&au->b, v);
+        a->MakeVertex(v.x, v.y, v.z);
+        
+        std::vector<unsigned long> nids = b->GetLinkedNodes(i);
+        a->LinkNodeAndVertex(i+bvertexstart, nids[0]+bnodestart);
+        a->UnlinkNodeAndVertex(i+bvertexstart, 0);
+        if (nids.size() > 1) {
+            a->LinkNodeAndVertex(i+bvertexstart, nids[1]+bnodestart);
+        }
+    }
+    
+    for (int i = 0; i < b->NumFaces(); i++) {
+        Face *f = b->GetFace(i);
+        
+        a->MakeFace(f->vertices[0]+bvertexstart, f->vertices[1]+bvertexstart, f->vertices[2]+bvertexstart, f->color);
+    }
+}
+
+void DragonflyUtils::BridgeEqualModels(Model *a, ModelUniforms *au, std::vector<int> &avertices, Model *b, ModelUniforms *bu, std::vector<int> &bvertices) {
+    // if any face contains 3 vertices in arrays: error
+    if (a->HasFaceWith(avertices) || b->HasFaceWith(bvertices)) {
+        std::cout<<"cant have face between vertices"<<std::endl;
+        return;
+    }
+    
+    std::vector<int> matching = MatchEqualModels(a, au, avertices, b, bu, bvertices);
+    
+    for (int i = 0; i < matching.size(); i++) {
+        if (matching[i] == -1) {
+            std::cout<<"no possible matching"<<std::endl;
+            return;
+        }
+    }
+    
+    int bvertexstart = a->NumVertices();
+    AddModels(a, au, b, bu);
+    
+    int a1 = 0;
+    std::vector<int> neighbors = GetNeighborsIdx(a, avertices, a1);
+    if (neighbors.size() == 0) {
+        std::cout<<"error occurred"<<std::endl;
+        return;
+    }
+    int a2 = neighbors[0];
+    
+    while (true) {
+        int b1 = matching[a1];
+        int b2 = matching[a2];
+        
+        int avid1 = avertices[a1];
+        int avid2 = avertices[a2];
+        int bvid1 = bvertices[b1];
+        int bvid2 = bvertices[b2];
+        
+        a->MakeFace(avid1, avid2, bvid1+bvertexstart, simd_make_float4(1, 1, 1, 1));
+        a->MakeFace(avid2, bvid1+bvertexstart, bvid2+bvertexstart, simd_make_float4(1, 1, 1, 1));
+        
+        int temp = a2;
+        a2 = GetNextVertexIdx(a, avertices, a2, a1);
+        a1 = temp;
+        
+        if (a1 == 0) {
+            break;
+        }
+    }
+}

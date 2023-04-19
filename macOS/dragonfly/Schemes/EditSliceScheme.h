@@ -46,6 +46,9 @@ private:
     int selected_line = -1;
     int held_dot = -1;
     
+    unsigned long num_edit_slice_dots = 0;
+    unsigned long num_edit_slice_lines = 0;
+    
     simd_float2 screen_to_eloc(simd_float2 loc);
     
     void CreateDotAtClick(simd_float2 click_loc);
@@ -67,6 +70,9 @@ private:
     
     void MainWindow();
     
+    void CalculateNumSceneDots();
+    void CalculateNumSceneLines();
+    
 public:
     void SetDrawing();
     void SetEditing();
@@ -85,6 +91,9 @@ public:
     std::vector<SliceAttributes> GetSliceAttributes();
     
     simd_float4 GetEditWindow();
+    
+    unsigned long NumSceneDots();
+    unsigned long NumSceneLines();
     
     EditSliceScheme();
     ~EditSliceScheme();

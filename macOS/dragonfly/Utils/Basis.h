@@ -15,6 +15,7 @@
 #include <sstream>
 #include <simd/SIMD.h>
 #include <iostream>
+#include <fstream>
 
 #include "Utils.h"
 
@@ -39,6 +40,8 @@ simd_float3 TranslatePointToStandard(Basis *b, simd_float3 point);
 simd_float3 RotatePointToStandard(Basis *b, simd_float3 point);
 simd_float3 TranslatePointToBasis(Basis *b, simd_float3 point);
 Basis TranslateBasis(Basis *b, Basis *onto);
+void BasisToFile(std::ofstream &file, Basis *b);
+Basis BasisFromFile(std::ifstream &file);
 }
 
 

@@ -48,6 +48,7 @@ float LineAndPlane(simd_float3 start, simd_float3 vector, simd_float4 plane);
 float TriangleArea(simd_float3 p1, simd_float3 p2, simd_float3 p3);
 simd_float3 DistancePolynomial(simd_float3 start, simd_float3 vector, simd_float3 origin); // at ^ 2 + bt + c
 float AngleBetween(simd_float3 v1, simd_float3 v2);
+float GetAcute(float angle);
 float QuadraticEquation(simd_float3 coeff);
 std::string TextField(std::string input, std::string name);
 }

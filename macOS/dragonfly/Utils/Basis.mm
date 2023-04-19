@@ -130,3 +130,43 @@ DragonflyUtils::Basis DragonflyUtils::TranslateBasis(Basis *b, Basis *onto) {
     
     return newb;
 }
+
+
+void DragonflyUtils::BasisToFile(std::ofstream &file, Basis *b) {
+    file << b->pos.x << " " << b->pos.y << " " << b->pos.z << std::endl;
+    file << b->x.x << " " << b->x.y << " " << b->x.z << std::endl;
+    file << b->y.x << " " << b->y.y << " " << b->y.z << std::endl;
+    file << b->z.x << " " << b->z.y << " " << b->z.z << std::endl;
+}
+
+DragonflyUtils::Basis DragonflyUtils::BasisFromFile(std::ifstream &file) {
+    Basis b;
+    
+    std::string line;
+    getline(file, line);
+    float x,y,z;
+    sscanf(line.c_str(), "%f %f %f", &x, &y, &z);
+    b.pos.x = x;
+    b.pos.y = y;
+    b.pos.z = z;
+    
+    getline(file, line);
+    sscanf(line.c_str(), "%f %f %f", &x, &y, &z);
+    b.x.x = x;
+    b.x.y = y;
+    b.x.z = z;
+    
+    getline(file, line);
+    sscanf(line.c_str(), "%f %f %f", &x, &y, &z);
+    b.y.x = x;
+    b.y.y = y;
+    b.y.z = z;
+    
+    getline(file, line);
+    sscanf(line.c_str(), "%f %f %f", &x, &y, &z);
+    b.z.x = x;
+    b.z.y = y;
+    b.z.z = z;
+    
+    return b;
+}

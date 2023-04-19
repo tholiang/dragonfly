@@ -11,8 +11,8 @@
 Vertex DragonflyUtils::GetStandardVertexFromDot(Slice *s, ModelUniforms *mu, int i) {
     Dot *d = s->GetDot(i);
     Vertex v;
-    v.x = d->x * s->GetAttributes().width / 2;
-    v.y = d->y * s->GetAttributes().height / 2;
+    v.x = d->x;// * s->GetAttributes().width / 2;
+    v.y = d->y;// * s->GetAttributes().height / 2;
     v.z = 0;
     v = TranslatePointToStandard(&mu->b, v);
     
@@ -45,8 +45,8 @@ void DragonflyUtils::BuildSliceOnModel(Model *m, ModelUniforms *mu, Slice *s, Mo
         int d1 = l->d1;
         int d2 = l->d2;
         
-        m->MakeFace(newslicestart+d1, newslicestart+d2, lastslicestart+d1, simd_make_float4(0, 1, 1, 1));
-        m->MakeFace(lastslicestart+d1, lastslicestart+d2, newslicestart+d2, simd_make_float4(0, 1, 1, 1));
+        m->MakeFace(newslicestart+d1, newslicestart+d2, lastslicestart+d1, simd_make_float4(1, 1, 1, 1));
+        m->MakeFace(lastslicestart+d1, lastslicestart+d2, newslicestart+d2, simd_make_float4(1, 1, 1, 1));
     }
 }
 
@@ -206,6 +206,7 @@ void DragonflyUtils::MoveToMerge(Slice *a, ModelUniforms *au, Slice *b, ModelUni
     simd_float3 atov1 = dist3to3(v1, au->b.pos);
     simd_float3 atov2 = dist3to3(v2, au->b.pos);
     
+    // for the edges on a that cross through b, find points on those edges that are closest to b
     std::vector<simd_float3> acrosses = CrossedPointsOnLinesAcross(a, au, bu);
     if (acrosses.size() < 2) {
         return;
@@ -233,31 +234,103 @@ void DragonflyUtils::MoveToMerge(Slice *a, ModelUniforms *au, Slice *b, ModelUni
     float crossradius = Magnitude(cvec);
     float ascale = vradius / crossradius;
     
-    au->b.pos = AddVectors(au->b.pos, ashift);
+    // set scale (no rotate)
     SliceAttributes aa = a->GetAttributes();
     a->SetWidth(aa.width * ascale);
     a->SetHeight(aa.height * ascale);
+    
+    au->b.pos = AddVectors(au->b.pos, ashift);
+    
+    // get angle
+    simd_float3 avec = simd_make_float3(cross2.x-cross1.x, cross2.y-cross1.y, cross2.z-cross1.z);
+    simd_float3 bvec = simd_make_float3(v2.x-v1.x, v2.y-v1.y, v2.z-v1.z);
+    float angle = AngleBetween(avec, bvec);
+    angle = abs(GetAcute(angle));
+    ascale /= cos(angle);
+    
+    float anglex = AngleBetween(au->b.x, avec);
+    float angley = AngleBetween(au->b.y, avec);
+    anglex = GetAcute(anglex);
+    angley = GetAcute(angley);
+    if (abs(anglex) < abs(angley)) {
+        // check if rotating positive or negative is better
+        RotateBasisOnY(&au->b, angle); // positive
+        simd_float3 posx = au->b.x;
+        RotateBasisOnY(&au->b, -2*angle); //negative
+        simd_float3 negx = au->b.x;
+        RotateBasisOnY(&au->b, angle); // back to previous
+        
+        if (abs(AngleBetween(posx, bvec)) < abs(AngleBetween(negx, bvec))) {
+            if (angley >= 0) {
+                RotateBasisOnY(&au->b, angle);
+            } else {
+                RotateBasisOnY(&au->b, -angle);
+            }
+        } else {
+            if (angley >= 0) {
+                RotateBasisOnY(&au->b, -angle);
+            } else {
+                RotateBasisOnY(&au->b, angle);
+            }
+        }
+        
+        // expand width after rotate
+        a->SetWidth(aa.width * ascale);
+    } else {
+        if (anglex < 0) {
+            angle *= -1;
+        }
+        // check if rotating positive or negative is better
+        RotateBasisOnX(&au->b, angle); // positive
+        simd_float3 posy = au->b.y;
+        RotateBasisOnX(&au->b, -2*angle); //negative
+        simd_float3 negy = au->b.y;
+        RotateBasisOnX(&au->b, angle); // back to previous
+        
+        if (abs(AngleBetween(posy, bvec)) < abs(AngleBetween(negy, bvec))) {
+            RotateBasisOnX(&au->b, angle);
+        } else {
+            RotateBasisOnX(&au->b, -angle);
+        }
+        
+        a->SetHeight(aa.height * ascale);
+    }
 }
 
 void DragonflyUtils::JoinSlices(Model *m, ModelUniforms *mu, Slice *a, Slice *b, ModelUniforms *au, ModelUniforms *bu, float merge_threshold) {
     ModelUniforms initau = *au;
     SliceAttributes initaa = a->GetAttributes();
     
+    // get first dots closest to slice a (going down)
     std::pair<int, int> initdots = GetNextMergeDots(std::make_pair(-1, -1), true, a, b, au, bu);
     MoveToMerge(a, au, b, bu, initdots);
-    BuildSliceOnModel(m, mu, a, au, 0);
+    BuildSliceOnModel(m, mu, a, au, 0); // build first vertices on new model
     
+    // build up
+    std::pair<int, int> lastdots = initdots;
     std::pair<int, int> nextdots = GetNextMergeDots(initdots, true, a, b, au, bu);
-    while (nextdots.first != -2 && nextdots.second != -2) {
+    std::pair<int, int> firstup = nextdots;
+    while (nextdots.first != -2 && nextdots.second != -2 && nextdots.first != nextdots.second && nextdots.first != lastdots.second && nextdots.second != lastdots.first) {
+        // reset slice uniforms
+        *au = initau;
+        a->SetWidth(initaa.width);
+        a->SetHeight(initaa.height);
+        
         MoveToMerge(a, au, b, bu, nextdots);
         BuildSliceOnModel(m, mu, a, au, m->NumVertices() - a->NumDots());
-        nextdots = GetNextMergeDots(nextdots, true, a, b, au, bu);
+        //nextdots = GetNextMergeDots(nextdots, true, a, b, au, bu);
+        std::pair<int, int> temp = nextdots;
+        nextdots.first = GetNextDot(b, nextdots.first, lastdots.first);
+        nextdots.second = GetNextDot(b, nextdots.second, lastdots.second);
+        lastdots = temp;
     }
     
     *au = initau;
     a->SetWidth(initaa.width);
     a->SetHeight(initaa.height);
     
+    // build down
+    /*lastdots = initdots;
     nextdots = GetNextMergeDots(initdots, false, a, b, au, bu);
     if (nextdots.first != -2 && nextdots.second != -2) {
         MoveToMerge(a, au, b, bu, nextdots);
@@ -267,6 +340,33 @@ void DragonflyUtils::JoinSlices(Model *m, ModelUniforms *mu, Slice *a, Slice *b,
             MoveToMerge(a, au, b, bu, nextdots);
             BuildSliceOnModel(m, mu, a, au, m->NumVertices() - a->NumDots());
             nextdots = GetNextMergeDots(nextdots, false, a, b, au, bu);
+        }
+    }*/
+    		
+    nextdots.first = GetNextDot(b, initdots.first, firstup.first);
+    nextdots.second = GetNextDot(b, initdots.second, firstup.second);
+    lastdots = initdots;
+    if (nextdots.first != -2 && nextdots.second != -2 && nextdots.first != nextdots.second && nextdots.first != lastdots.second && nextdots.second != lastdots.first) {
+        MoveToMerge(a, au, b, bu, nextdots);
+        BuildSliceOnModel(m, mu, a, au, 0);
+        std::pair<int, int> temp = nextdots;
+        nextdots.first = GetNextDot(b, nextdots.first, lastdots.first);
+        nextdots.second = GetNextDot(b, nextdots.second, lastdots.second);
+        lastdots = temp;
+        
+        while (nextdots.first != -2 && nextdots.second != -2 && nextdots.first != nextdots.second && nextdots.first != lastdots.second && nextdots.second != lastdots.first) {
+            // reset slice uniforms
+            *au = initau;
+            a->SetWidth(initaa.width);
+            a->SetHeight(initaa.height);
+            
+            MoveToMerge(a, au, b, bu, nextdots);
+            BuildSliceOnModel(m, mu, a, au, m->NumVertices() - a->NumDots());
+            //nextdots = GetNextMergeDots(nextdots, true, a, b, au, bu);
+            temp = nextdots;
+            nextdots.first = GetNextDot(b, nextdots.first, lastdots.first);
+            nextdots.second = GetNextDot(b, nextdots.second, lastdots.second);
+            lastdots = temp;
         }
     }
 
@@ -375,6 +475,8 @@ std::vector<int> DragonflyUtils::MatchEqualSlices(Slice *a, ModelUniforms *au, S
 }
 
 void DragonflyUtils::BridgeEqualSlices(Model *m, ModelUniforms *mu, Slice *a, Slice *b, ModelUniforms *au, ModelUniforms *bu) {
+    
+    
     std::vector<int> matching = MatchEqualSlices(a, au, b, bu);
     
     *mu = *au;
@@ -405,3 +507,102 @@ void DragonflyUtils::BridgeEqualSlices(Model *m, ModelUniforms *mu, Slice *a, Sl
         m->MakeFace(a2, b1+a->NumDots(), b2+a->NumDots(), simd_make_float4(1, 1, 1, 1));
     }
 }
+
+/*
+ 
+ std::vector<int> DragonflyUtils::MatchSlicesWithSkip(Slice *a, ModelUniforms *au, Slice *b, ModelUniforms *bu, int numskips) {
+ float bestmatchingscore = -1;
+ 
+ for (int i = 0; i < a->NumLines(); i++) {
+ Line *aline = a->GetLine(i);
+ for (int j = 0; j < b->NumLines(); j++) {
+ Line *bline = b->GetLine(j);
+ 
+ std::pair<std::vector<int>, float> a1b1 = GetBestSkipMatch(a, au, b, bu, aline->d2, aline->d1, bline->d2, bline->d1, aline->d1, numskips);
+ if (a1b1.second < bestmatchingscore || bestmatchingscore == -1) {
+ bestmatching = a1b1.first;
+ bestmatchingscore = a1b1.second;
+ }
+ 
+ std::pair<std::vector<int>, float> a1b2 = MatchSlicesFrom(a, au, b, bu, aline->d2, aline->d1, bline->d1, bline->d2);
+ if (a1b2.second < bestmatchingscore) {
+ bestmatching = a1b2.first;
+ bestmatchingscore = a1b2.second;
+ }
+ 
+ std::pair<std::vector<int>, float> a2b1 = MatchSlicesFrom(a, au, b, bu, aline->d1, aline->d2, bline->d2, bline->d1);
+ if (a2b1.second < bestmatchingscore) {
+ bestmatching = a2b1.first;
+ bestmatchingscore = a2b1.second;
+ }
+ 
+ std::pair<std::vector<int>, float> a2b2 = MatchSlicesFrom(a, au, b, bu, aline->d1, aline->d2, bline->d1, bline->d2);
+ if (a2b2.second < bestmatchingscore) {
+ bestmatching = a2b2.first;
+ bestmatchingscore = a2b2.second;
+ }
+ }
+ }
+ 
+ return bestmatching;
+ }
+ 
+ std::pair<std::vector<int>, float> DragonflyUtils::GetBestSkipMatch(Slice *a, ModelUniforms *au, Slice *b, ModelUniforms *bu, int alast, int acur, int blast, int bcur, int astart, int numskips) {
+ Vertex av = GetStandardVertexFromDot(a, au, acur);
+ Vertex bv = GetStandardVertexFromDot(b, bu, bcur);
+ float curscore = dist3to3(av, bv);
+ std::vector<int> skips;
+ 
+ int bnext = GetNextDot(b, bcur, blast);
+ 
+ int anext = GetNextDot(a, acur, alast);
+ if (anext == astart) { // base case
+ if (numskips > 0) {
+ curscore = 100000000000;
+ } else {
+ Vertex afirstv = GetStandardVertexFromDot(a, au, anext);
+ Vertex bfirstv = GetStandardVertexFromDot(b, bu, bnext);
+ curscore += dist3to3(av, bv);
+ }
+ return std::make_pair(std::vector<int>(), curscore);
+ }
+ std::pair<std::vector<int>, float> bestnext = GetBestSkipMatch(a, au, b, bu, anext, acur, bnext, bcur, astart, numskips);
+ 
+ if (numskips > 0) {
+ int askip = GetNextDot(a, anext, acur);
+ skips.push_back(anext);
+ 
+ if (askip == astart) { // base case
+ if (numskips > 1) {
+ curscore = 100000000000;
+ } else {
+ Vertex afirstv = GetStandardVertexFromDot(a, au, askip);
+ Vertex bfirstv = GetStandardVertexFromDot(b, bu, askip);
+ curscore += dist3to3(av, bv);
+ }
+ return std::make_pair(skips, curscore);
+ }
+ 
+ std::pair<std::vector<int>, float> bestskip = GetBestSkipMatch(a, au, b, bu, askip, anext, bnext, bcur, astart, numskips-1);
+ 
+ if (bestskip.second < bestnext.second) {
+ curscore += bestskip.second;
+ for (int i = 0; i < bestskip.first.size(); i++) {
+ skips.push_back(bestskip.first.at(i));
+ }
+ 
+ return std::make_pair(skips, curscore);
+ }
+ }
+ 
+ curscore += bestnext.second;
+ for (int i = 0; i < bestnext.first.size(); i++) {
+ skips.push_back(bestnext.first.at(i));
+ }
+ return std::make_pair(skips, curscore);
+ }
+ 
+ std::vector<int> DragonflyUtils::MatchSlicesWithAdd(Slice *a, ModelUniforms *au, Slice *b, ModelUniforms *bu, int numadds) {
+ 
+ }
+ */

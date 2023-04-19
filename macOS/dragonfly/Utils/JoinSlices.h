@@ -37,8 +37,19 @@ std::pair<std::vector<int>, float> MatchSlicesFrom(Slice *a, ModelUniforms *au, 
 // return minimized matching from a to b and its distance for when |a| = |b|
 // adots[ret[i]] = matched bdot idx
 std::vector<int> MatchEqualSlices(Slice *a, ModelUniforms *au, Slice *b, ModelUniforms *bu);
-
 void BridgeEqualSlices(Model *m, ModelUniforms *mu, Slice *a, Slice *b, ModelUniforms *au, ModelUniforms *bu);
+
+/* TODO later
+// return minimized matching from a to b and its distance for when |a| > |b| and can skip dots in a
+std::vector<int> MatchSlicesWithSkip(Slice *a, ModelUniforms *au, Slice *b, ModelUniforms *bu, int numskips);
+// return (dots skipped, score)
+std::pair<std::vector<int>, float> GetBestSkipMatch(Slice *a, ModelUniforms *au, Slice *b, ModelUniforms *bu, int alast, int acur, int blast, int bcur, int astart, int numskips);
+
+// return minimized matching from a to b and its distance for when |a| < |b| and can add dots to a
+std::vector<int> MatchSlicesWithAdd(Slice *a, ModelUniforms *au, Slice *b, ModelUniforms *bu, int numadds);
+
+std::vector<int> GetBestAddMatch(std::vector<Dot> adots, std::vector<Line> alines, ModelUniforms *au, Slice *b, ModelUniforms *bu, int a1, int a2, int b1, int b2);
+ */
 }
 
 #endif /* JoinSlices_h */

@@ -397,23 +397,65 @@ void EditModelScheme::ModelEditMenu() {
         angle_input_z = "0";
     }
     
-    ImGui::SetCursorPos(ImVec2(50, 280));
+    ImGui::SetCursorPos(ImVec2(30, 280));
+    ImGui::Text("Scale By");
+
+    ImGui::SetCursorPos(ImVec2(50, 310));
+    ImGui::Text("x: ");
+    ImGui::SetCursorPos(ImVec2(70, 310));
+    scale_input_x = TextField(scale_input_x, "##modelsx");
+
+    ImGui::SetCursorPos(ImVec2(50, 340));
+    ImGui::Text("y: ");
+    ImGui::SetCursorPos(ImVec2(70, 340));
+    scale_input_y = TextField(scale_input_y, "##modelsy");
+
+    ImGui::SetCursorPos(ImVec2(50, 370));
+    ImGui::Text("z: ");
+    ImGui::SetCursorPos(ImVec2(70, 370));
+    scale_input_z = TextField(scale_input_z, "##modelsz");
+    
+    ImGui::SetCursorPos(ImVec2(50, 390));
+    if (ImGui::Button("Scale", ImVec2(80,30))) {
+        float new_x = 1;
+        float new_y = 1;
+        float new_z = 1;
+        if (isFloat(scale_input_x)) {
+            new_x = std::stof(scale_input_x);
+        }
+        if (isFloat(scale_input_y)) {
+            new_y = std::stof(scale_input_y);
+        }
+        if (isFloat(scale_input_z)) {
+            new_z = std::stof(scale_input_z);
+        }
+        
+        scene_->GetModel(selected_model)->ScaleBy(new_x, new_y, new_z);
+        
+        scale_input_x = "1";
+        scale_input_y = "1";
+        scale_input_z = "1";
+        
+        should_reset_static_buffers = true;
+    }
+    
+    ImGui::SetCursorPos(ImVec2(50, 420));
     ImGui::Text("Number of Animations: %u", scene_->GetModel(selected_model)->NumAnimations());
     
-    ImGui::SetCursorPos(ImVec2(70, 310));
+    ImGui::SetCursorPos(ImVec2(70, 450));
     ImGui::Text("play: ");
-    ImGui::SetCursorPos(ImVec2(110, 310));
+    ImGui::SetCursorPos(ImVec2(110, 450));
     std::string aid = TextField(std::to_string(wanted_aid), "##aid");
     if (isUnsignedLong(aid)) {
         wanted_aid = std::stoul(aid);
         
     }
-    ImGui::SetCursorPos(ImVec2(70, 340));
+    ImGui::SetCursorPos(ImVec2(70, 480));
     if (ImGui::Button("Play", ImVec2(100,30))) {
         scene_->GetModel(selected_model)->StartAnimation(wanted_aid);
     }
     
-    ImGui::SetCursorPos(ImVec2(70, 370));
+    ImGui::SetCursorPos(ImVec2(70, 510));
     if (ImGui::Button("New Animation", ImVec2(100,30))) {
         scene_->GetModel(selected_model)->MakeAnimation();
     }

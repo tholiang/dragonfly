@@ -50,7 +50,7 @@ void EditSliceScheme::CreateDotAtClick(simd_float2 click_loc) {
     
     SliceAttributes *attr = &slice_attr_vector.at(0);
     float scale = attr->height / 2;
-    if (attr->height > attr->width) {
+    if (attr->height < attr->width) {
         scale = attr->width / 2;
     }
     
@@ -106,7 +106,7 @@ int EditSliceScheme::DotClicked(simd_float2 loc) {
         
         SliceAttributes *attr = &slice_attr_vector.at(0);
         float scale = attr->height / 2;
-        if (attr->height > attr->width) {
+        if (attr->height < attr->width) {
             scale = attr->width / 2;
         }
         
@@ -153,7 +153,7 @@ int EditSliceScheme::LineClicked(simd_float2 loc) {
         
         SliceAttributes *attr = &slice_attr_vector.at(0);
         float scale = attr->height / 2;
-        if (attr->height > attr->width) {
+        if (attr->height < attr->width) {
             scale = attr->width / 2;
         }
         
@@ -374,7 +374,7 @@ void EditSliceScheme::HandleMouseMovement(float x, float y, float dx, float dy) 
         
         SliceAttributes *attr = &slice_attr_vector.at(0);
         float scale = attr->height / 2;
-        if (attr->height > attr->width) {
+        if (attr->height < attr->width) {
             scale = attr->width / 2;
         }
         
@@ -445,8 +445,8 @@ void EditSliceScheme::SetSliceID(int sid) {
     slice_id = sid;
     
     Slice *s = scene_->GetSlice(sid);
-    scene_dot_length_ = s->NumDots();
-    scene_line_length_ = s->NumLines();
+    num_edit_slice_dots = s->NumDots();
+    num_edit_slice_lines = s->NumLines();
     slice_vector.clear();
     slice_vector.push_back(s);
     
@@ -476,4 +476,20 @@ simd_float4 EditSliceScheme::GetEditWindow() {
     window.w = float(window_height_ - UI_start_.y)/(window_height_);
     
     return window;
+}
+
+void EditSliceScheme::CalculateNumSceneDots() {
+    num_edit_slice_dots = scene_->GetSlice(slice_id)->NumDots();
+}
+
+void EditSliceScheme::CalculateNumSceneLines() {
+    num_edit_slice_lines = scene_->GetSlice(slice_id)->NumLines();
+}
+
+unsigned long EditSliceScheme::NumSceneDots() {
+    return num_edit_slice_dots;
+}
+
+unsigned long EditSliceScheme::NumSceneLines() {
+    return num_edit_slice_lines;
 }

@@ -188,8 +188,8 @@ protected:
     void CalculateNumSceneVertices();
     void CalculateNumSceneFaces();
     void CalculateNumSceneNodes();
-    void CalculateNumSceneDots();
-    void CalculateNumSceneLines();
+    virtual void CalculateNumSceneDots();
+    virtual void CalculateNumSceneLines();
     void CalculateNumControlsVertices();
     void CalculateNumControlsFaces();
     void CalculateNumControlsNodes();
@@ -249,8 +249,8 @@ public:
     unsigned long NumSceneVertices();
     unsigned long NumSceneFaces();
     unsigned long NumSceneNodes();
-    unsigned long NumSceneDots();
-    unsigned long NumSceneLines();
+    virtual unsigned long NumSceneDots();
+    virtual unsigned long NumSceneLines();
     unsigned long NumControlsVertices();
     unsigned long NumControlsFaces();
     unsigned long NumControlsNodes();

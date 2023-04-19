@@ -92,6 +92,7 @@ void Engine::run() {
             render_pipeline->Render();
             scheme = scheme_controller->GetScheme();
             compute_pipeline->SetScheme(scheme);
+            render_pipeline->SetScheme(scheme);
             
             if (scheme == NULL) {
                 std::cout<<"null"<<std::endl;

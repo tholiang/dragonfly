@@ -320,6 +320,16 @@ float DragonflyUtils::AngleBetween (simd_float3 v1, simd_float3 v2) {
     return acos((v1.x*v2.x + v1.y*v2.y + v1.z*v2.z) / (mag1 * mag2));
 }
 
+float DragonflyUtils::GetAcute(float angle) {
+    if (angle > M_PI_2 && angle <= 3*M_PI_2) {
+        angle = angle - M_PI;
+    } else if (angle > 3*M_PI_4) {
+        angle = M_2_PI - angle;
+    }
+    
+    return angle;
+}
+
 std::string DragonflyUtils::TextField(std::string input, std::string name) {
     char buf [128] = "";
     std::strcpy (buf, input.c_str());
