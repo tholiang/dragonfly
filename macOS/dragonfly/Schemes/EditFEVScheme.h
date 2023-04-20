@@ -41,8 +41,8 @@ private:
     simd_float2 arrow_projections [6];
     // z, x, y
     int selected_arrow = -1;
-    int ARROW_VERTEX_SIZE = 18;
-    int ARROW_FACE_SIZE = 22;
+    int ARROW_VERTEX_SIZE = 10;
+    int ARROW_FACE_SIZE = 12;
     
     int selected_face = -1;
     vector_int2 selected_edge;

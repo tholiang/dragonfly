@@ -25,6 +25,7 @@
 #include "../Modeling/Model.h"
 #include "../Modeling/Scene.h"
 #include "../Modeling/Arrow.h"
+#include "../Modeling/Rotator.h"
 
 #include "../UserActions/UserAction.h"
 
@@ -109,6 +110,7 @@ protected:
     Vertex * control_models_vertices_;
     Vertex * control_models_projected_vertices_;
     Face * control_models_faces_;
+    float curr_control_scale = 1;
     
     Vertex * scene_slice_plate_vertices_;
     

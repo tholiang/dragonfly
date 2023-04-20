@@ -408,11 +408,14 @@ std::pair<std::vector<int>, float> DragonflyUtils::MatchModelsFrom(Model *a, Mod
     
     for (int i = 0; i < matching.size(); i++) {
         if (matching[i] != -1) {
-            score += VertexDist(a, au, b, bu, i, matching[i]);
+            score += VertexDist(a, au, b, bu, avertices[i], bvertices[matching[i]]);
         }
     }
     
     score /= numdots;
+    if (numdots < avertices.size()) {
+        score = 1000000000;
+    }
     
     return std::make_pair(matching, score);
 }

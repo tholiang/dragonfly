@@ -276,6 +276,15 @@ void Scheme::MoveControlsModels() {
         //controls_model_uniforms_[i].b = controls_basis_;
         controls_model_uniforms_[i].b = TranslateBasis(&controls_model_default_bases_[i], &controls_basis_);
     }
+    
+    float camtocontrols = dist3to3(camera_->pos, controls_basis_.pos);
+    float scale = camtocontrols/3;
+    
+    for (int i = 0; i < controls_models_.size(); i++) {
+        controls_model_uniforms_[i].scale.x = scale;
+        controls_model_uniforms_[i].scale.y = scale;
+        controls_model_uniforms_[i].scale.z = scale;
+    }
 }
 
 void Scheme::SetControlsBasis() {

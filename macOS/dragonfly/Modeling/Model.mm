@@ -234,6 +234,7 @@ unsigned Model::MakeNode(float x, float y, float z) {
     Node *node = new Node();
     node->b = Basis();
     node->b.pos = simd_make_float3(x, y, z);
+    node->scale = simd_make_float3(1, 1, 1);
     nodes.push_back(node);
     
     for (int i = 0; i < animations.size(); i++) {
@@ -466,9 +467,9 @@ void Model::RemoveFace(int fid) {
 void Model::ScaleBy(float x, float y, float z) {
     for (int i = 0; i < nodes.size(); i++) {
         Node *n = GetNode(i);
-        n->b.x *= x;
-        n->b.y *= y;
-        n->b.z *= z;
+        n->b.pos.x *= x;
+        n->b.pos.y *= y;
+        n->b.pos.z *= z;
     }
     
     for (int i = 0; i < nvlinks.size(); i++) {
@@ -476,6 +477,18 @@ void Model::ScaleBy(float x, float y, float z) {
         nvlink->vector.x *= x;
         nvlink->vector.y *= y;
         nvlink->vector.z *= z;
+    }
+}
+
+
+void Model::ScaleOnNodeBy(float x, float y, float z, int nid) {
+    for (int i = 0; i < nvlinks.size(); i++) {
+        NodeVertexLink *nvlink = nvlinks[i];
+        if (nvlink->nid == nid) {
+            nvlink->vector.x *= x;
+            nvlink->vector.y *= y;
+            nvlink->vector.z *= z;
+        }
     }
 }
 
@@ -727,6 +740,7 @@ void Model::SaveToFile(std::string path) {
     for (int i = 0; i < nodes.size(); i++) {
         Node *n = nodes[i];
         DragonflyUtils::BasisToFile(myfile, &n->b);
+        myfile << n->scale.x << " " << n->scale.y << " " << n->scale.z << std::endl;
     }
     
     myfile << nvlinks.size() << " vertices" << std::endl;
@@ -769,6 +783,10 @@ void Model::FromFile(std::string path) {
             Node *n = new Node();
             n->b = DragonflyUtils::BasisFromFile(myfile);
             n->locked_to = -1;
+            float scalex, scaley, scalez;
+            getline(myfile, line);
+            sscanf(line.c_str(), "%f %f %f", &scalex, &scaley, &scalez);
+            n->scale = simd_make_float3(scalex, scaley, scalez);
             
             nodes.push_back(n);
         }

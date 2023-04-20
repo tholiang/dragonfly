@@ -22,12 +22,20 @@ private:
     Arrow *z_arrow;
     Arrow *x_arrow;
     Arrow *y_arrow;
+    
+    Rotator *z_rotator;
+    Rotator *x_rotator;
+    Rotator *y_rotator;
     // z base, z tip, x base, x tip, y base, y tip
     simd_float2 arrow_projections [6];
+    simd_float2 rotator_projections [6];
     // z, x, y
     int selected_arrow = -1;
-    int ARROW_VERTEX_SIZE = 18;
-    int ARROW_FACE_SIZE = 22;
+    int selected_rotator = -1;
+    int ARROW_VERTEX_SIZE = 10;
+    int ARROW_FACE_SIZE = 12;
+    int ROTATOR_VERTEX_SIZE = 20;
+    int ROTATOR_FACE_SIZE = 8;
     
     int selected_node_ = -1;
     int selected_model_ = -1;
@@ -38,6 +46,10 @@ private:
     std::string angle_input_x = "0";
     std::string angle_input_y = "0";
     std::string angle_input_z = "0";
+    
+    std::string scale_input_x = "1";
+    std::string scale_input_y = "1";
+    std::string scale_input_z = "1";
     
     void CreateControlsModels();
     

@@ -39,6 +39,7 @@ struct Face {
 
 struct Node {
     int locked_to = -1;
+    simd_float3 scale = {1,1,1};
     Basis b;
 };
 
@@ -134,6 +135,7 @@ public:
     void RemoveFace(int fid);
     
     void ScaleBy(float x, float y, float z);
+    void ScaleOnNodeBy(float x, float y, float z, int nid);
     
     unsigned MakeAnimation();
     void StartAnimation(int aid);

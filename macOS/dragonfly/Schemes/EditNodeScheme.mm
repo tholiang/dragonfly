@@ -69,6 +69,54 @@ void EditNodeScheme::CreateControlsModels() {
     arrow_projections[5] = simd_make_float2(1,0);
     
     controls_models_.push_back(y_arrow);
+    
+    
+    z_rotator = new Rotator(3);
+    z_rotator->ScaleBy(1, 1, 0.8);
+    
+    ModelUniforms z_rotator_uniform;
+    z_rotator_uniform.b.pos = simd_make_float3(0, 0, 0);
+    z_rotator_uniform.rotate_origin = simd_make_float3(0, 0, 0);
+    RotateBasisOnZ(&z_rotator_uniform.b, M_PI_2);
+    
+    controls_model_uniforms_.push_back(z_rotator_uniform);
+    controls_model_default_bases_.push_back(z_rotator_uniform.b);
+    rotator_projections[0] = simd_make_float2(0,0);
+    rotator_projections[1] = simd_make_float2(0,1);
+    
+    controls_models_.push_back(z_rotator);
+    
+    x_rotator = new Rotator(4, simd_make_float4(0, 1, 0, 1));
+    x_rotator->ScaleBy(1, 1, 0.8);
+    
+    ModelUniforms x_rotator_uniform;
+    x_rotator_uniform.b.pos = simd_make_float3(0, 0, 0);
+    x_rotator_uniform.rotate_origin = simd_make_float3(0, 0, 0);
+    //x_arrow_uniform.angle = simd_make_float3(M_PI_2, 0, 0);
+    RotateBasisOnY(&x_rotator_uniform.b, M_PI_2);
+    
+    controls_model_uniforms_.push_back(x_rotator_uniform);
+    controls_model_default_bases_.push_back(x_rotator_uniform.b);
+    rotator_projections[2] = simd_make_float2(0,0);
+    rotator_projections[3] = simd_make_float2(0,0);
+    
+    controls_models_.push_back(x_rotator);
+    
+    y_rotator = new Rotator(5, simd_make_float4(0, 0, 1, 1));
+    y_rotator->ScaleBy(1, 1, 0.8);
+    
+    ModelUniforms y_rotator_uniform;
+    y_rotator_uniform.b.pos = simd_make_float3(0, 0, 0);
+    y_rotator_uniform.rotate_origin = simd_make_float3(0, 0, 0);
+//    y_arrow_uniform.angle = simd_make_float3(0, -M_PI_2, 0);
+    RotateBasisOnX(&y_rotator_uniform.b, M_PI_2);
+    
+    controls_model_uniforms_.push_back(y_rotator_uniform);
+    controls_model_default_bases_.push_back(y_rotator_uniform.b);
+    rotator_projections[4] = simd_make_float2(0,0);
+    rotator_projections[5] = simd_make_float2(1,0);
+    
+    controls_models_.push_back(y_rotator);
 }
 
 void EditNodeScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
@@ -77,12 +125,12 @@ void EditNodeScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
     if (input_enabled) {
         if (selected_arrow != -1) {
             // find the projected location of the tip and the base
-            simd_float2 base = arrow_projections[selected_arrow*2];
-            simd_float2 tip = arrow_projections[selected_arrow*2+1];
+            simd_float2 top = arrow_projections[selected_arrow*2];
+            simd_float2 bot = arrow_projections[selected_arrow*2+1];
             
             // find direction to move
-            float xDiff = tip.x-base.x;
-            float yDiff = tip.y-base.y;
+            float xDiff = top.x-bot.x;
+            float yDiff = top.y-bot.y;
             
             float mag = sqrt(pow(xDiff, 2) + pow(yDiff, 2));
             xDiff /= mag;
@@ -108,6 +156,30 @@ void EditNodeScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
                 if (modelNodeId > 0) {
                     model->MoveNodeBy(modelNodeId, mvmt_vec.x, mvmt_vec.y, mvmt_vec.z);
                 }
+            }
+        } else if (selected_rotator != -1) {
+            // find the projected location of the tip and the base
+            simd_float2 top = rotator_projections[selected_rotator*2];
+            simd_float2 bot = rotator_projections[selected_rotator*2+1];
+            
+            // find direction to move
+            float xDiff = top.x-bot.x;
+            float yDiff = top.y-bot.y;
+            
+            float mag = sqrt(pow(xDiff, 2) + pow(yDiff, 2));
+            xDiff /= mag;
+            yDiff /= mag;
+            
+            float mvmt = xDiff * dx + yDiff * (-dy);
+            
+            Model *model = scene_->GetModel(selected_model_);
+            Node *n = model->GetNode(selected_node_ - model->NodeStart());
+            if (selected_rotator == 0) {
+                RotateBasisOnY(&n->b, -mvmt / 100);
+            } else if (selected_rotator == 1) {
+                RotateBasisOnZ(&n->b, -mvmt / 100);
+            } else {
+                RotateBasisOnX(&n->b, -mvmt / 100);
             }
         }
     }
@@ -138,6 +210,7 @@ void EditNodeScheme::HandleMouseUp(simd_float2 loc, bool left) {
     
     if (left) {
         selected_arrow = -1;
+        selected_rotator = -1;
         
         if (!(render_rightclick_popup_ && InRectangle(rightclick_popup_loc_, rightclick_popup_size_, loc))) {
             render_rightclick_popup_ = false;
@@ -219,11 +292,14 @@ void EditNodeScheme::HandleSelection(simd_float2 loc) {
     } else if (controls_selection.first != -1) {
         if (controls_selection.first < 3) {
             selected_arrow = controls_selection.first;
+        } else if (controls_selection.first < 6) {
+            selected_rotator = controls_selection.first - 3;
         }
     } else {
         selected_node_ = -1;
         selected_model_ = -1;
         selected_arrow = -1;
+        selected_rotator = -1;
         
         node_render_uniforms_.selected_node = -1;
     }
@@ -246,20 +322,36 @@ void EditNodeScheme::SetControlsBasis() {
 }
 
 void EditNodeScheme::SetArrowProjections() {
-    arrow_projections[0].x = control_models_projected_vertices_[0].x;
-    arrow_projections[0].y = control_models_projected_vertices_[0].y;
-    arrow_projections[1].x = control_models_projected_vertices_[12].x;
-    arrow_projections[1].y = control_models_projected_vertices_[12].y;
+    arrow_projections[0].x = control_models_projected_vertices_[4].x;
+    arrow_projections[0].y = control_models_projected_vertices_[4].y;
+    arrow_projections[1].x = control_models_projected_vertices_[9].x;
+    arrow_projections[1].y = control_models_projected_vertices_[9].y;
     
-    arrow_projections[2].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE].x;
-    arrow_projections[2].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE].y;
-    arrow_projections[3].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE+12].x;
-    arrow_projections[3].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE+12].y;
+    arrow_projections[2].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE+4].x;
+    arrow_projections[2].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE+4].y;
+    arrow_projections[3].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE+9].x;
+    arrow_projections[3].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE+9].y;
     
-    arrow_projections[4].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE*2].x;
-    arrow_projections[4].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE*2].y;
-    arrow_projections[5].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE*2+12].x;
-    arrow_projections[5].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE*2+12].y;
+    arrow_projections[4].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE*2+4].x;
+    arrow_projections[4].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE*2+4].y;
+    arrow_projections[5].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE*2+9].x;
+    arrow_projections[5].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE*2+9].y;
+    
+    
+    rotator_projections[0].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE*3+6].x;
+    rotator_projections[0].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE*3+6].y;
+    rotator_projections[1].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE*3+9].x;
+    rotator_projections[1].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE*3+9].y;
+    
+    rotator_projections[2].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE*3+ROTATOR_VERTEX_SIZE+6].x;
+    rotator_projections[2].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE*3+ROTATOR_VERTEX_SIZE+6].y;
+    rotator_projections[3].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE*3+ROTATOR_VERTEX_SIZE+9].x;
+    rotator_projections[3].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE*3+ROTATOR_VERTEX_SIZE+9].y;
+    
+    rotator_projections[4].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE*3+ROTATOR_VERTEX_SIZE*2+6].x;
+    rotator_projections[4].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE*3+ROTATOR_VERTEX_SIZE*2+6].y;
+    rotator_projections[5].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE*3+ROTATOR_VERTEX_SIZE*2+9].x;
+    rotator_projections[5].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE*3+ROTATOR_VERTEX_SIZE*2+9].y;
 }
 
 void EditNodeScheme::RightClickPopup() {
@@ -360,26 +452,78 @@ void EditNodeScheme::NodeEditMenu() {
         angle_input_z = "0";
     }
     
-    ImGui::SetCursorPos(ImVec2(50, 320));
+    ImGui::SetCursorPos(ImVec2(30, 320));
+    ImGui::Text("Scale By");
+
+    ImGui::SetCursorPos(ImVec2(50, 350));
+    ImGui::Text("x: ");
+    ImGui::SetCursorPos(ImVec2(70, 350));
+    scale_input_x = TextField(scale_input_x, "##modelsx");
+
+    ImGui::SetCursorPos(ImVec2(50, 370));
+    ImGui::Text("y: ");
+    ImGui::SetCursorPos(ImVec2(70, 370));
+    scale_input_y = TextField(scale_input_y, "##modelsy");
+
+    ImGui::SetCursorPos(ImVec2(50, 400));
+    ImGui::Text("z: ");
+    ImGui::SetCursorPos(ImVec2(70, 400));
+    scale_input_z = TextField(scale_input_z, "##modelsz");
+    
+    ImGui::SetCursorPos(ImVec2(50, 390));
+    if (ImGui::Button("Scale", ImVec2(80,30))) {
+        float new_x = 1;
+        float new_y = 1;
+        float new_z = 1;
+        if (isFloat(scale_input_x)) {
+            new_x = std::stof(scale_input_x);
+        }
+        if (isFloat(scale_input_y)) {
+            new_y = std::stof(scale_input_y);
+        }
+        if (isFloat(scale_input_z)) {
+            new_z = std::stof(scale_input_z);
+        }
+        
+        node->scale.x = new_x;
+        node->scale.y = new_y;
+        node->scale.z = new_z;
+    }
+    
+    ImGui::SetCursorPos(ImVec2(150, 390));
+    if (ImGui::Button("Set Default", ImVec2(120,30))) {
+        model->ScaleOnNodeBy(node->scale.x, node->scale.y, node->scale.z, selected_node_-model->NodeStart());
+        node->scale.x = 1;
+        node->scale.y = 1;
+        node->scale.z = 1;
+        
+        scale_input_x = "1";
+        scale_input_y = "1";
+        scale_input_z = "1";
+        
+        should_reset_static_buffers = true;
+    }
+    
+    ImGui::SetCursorPos(ImVec2(50, 460));
     ImGui::Text("lock to: ");
-    ImGui::SetCursorPos(ImVec2(90, 320));
+    ImGui::SetCursorPos(ImVec2(90, 460));
     std::string locked_to = TextField(std::to_string(node->locked_to), "##nodelock");
     if (isUnsignedLong(locked_to) && selected_node_ != model->NodeStart()) {
         unsigned long new_lock = std::stoul(locked_to);
         model->LockNodeToNode(selected_node_ - model->NodeStart(), new_lock);
     }
     
-    ImGui::SetCursorPos(ImVec2(50, 350));
+    ImGui::SetCursorPos(ImVec2(50, 480));
     ImGui::Text("keyframe: ");
-    ImGui::SetCursorPos(ImVec2(70, 370));
+    ImGui::SetCursorPos(ImVec2(70, 510));
     ImGui::Text("animation id: ");
-    ImGui::SetCursorPos(ImVec2(120, 370));
+    ImGui::SetCursorPos(ImVec2(120, 510));
     std::string aidin = TextField(std::to_string(wanted_aid), "##naid");
-    ImGui::SetCursorPos(ImVec2(70, 400));
+    ImGui::SetCursorPos(ImVec2(70, 540));
     ImGui::Text("time: ");
-    ImGui::SetCursorPos(ImVec2(100, 400));
+    ImGui::SetCursorPos(ImVec2(100, 540));
     std::string timein = TextField(std::to_string(wanted_time), "##natime");
-    ImGui::SetCursorPos(ImVec2(70, 430));
+    ImGui::SetCursorPos(ImVec2(70, 570));
     if (isUnsignedLong(aidin) && isFloat(timein)) {
         wanted_aid = std::stoul(aidin);
         wanted_time = std::stof(timein);

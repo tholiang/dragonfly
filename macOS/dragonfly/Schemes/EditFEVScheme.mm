@@ -551,20 +551,20 @@ void EditFEVScheme::SetControlsBasis() {
 }
 
 void EditFEVScheme::SetArrowProjections() {
-    arrow_projections[0].x = control_models_projected_vertices_[0].x;
-    arrow_projections[0].y = control_models_projected_vertices_[0].y;
-    arrow_projections[1].x = control_models_projected_vertices_[12].x;
-    arrow_projections[1].y = control_models_projected_vertices_[12].y;
+    arrow_projections[0].x = control_models_projected_vertices_[4].x;
+    arrow_projections[0].y = control_models_projected_vertices_[4].y;
+    arrow_projections[1].x = control_models_projected_vertices_[9].x;
+    arrow_projections[1].y = control_models_projected_vertices_[9].y;
     
-    arrow_projections[2].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE].x;
-    arrow_projections[2].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE].y;
-    arrow_projections[3].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE+12].x;
-    arrow_projections[3].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE+12].y;
+    arrow_projections[2].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE+4].x;
+    arrow_projections[2].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE+4].y;
+    arrow_projections[3].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE+9].x;
+    arrow_projections[3].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE+9].y;
     
-    arrow_projections[4].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE*2].x;
-    arrow_projections[4].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE*2].y;
-    arrow_projections[5].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE*2+12].x;
-    arrow_projections[5].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE*2+12].y;
+    arrow_projections[4].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE*2+4].x;
+    arrow_projections[4].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE*2+4].y;
+    arrow_projections[5].x = control_models_projected_vertices_[ARROW_VERTEX_SIZE*2+9].x;
+    arrow_projections[5].y = control_models_projected_vertices_[ARROW_VERTEX_SIZE*2+9].y;
 }
 
 void EditFEVScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
@@ -573,12 +573,12 @@ void EditFEVScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
     if (input_enabled) {
         if (selected_arrow != -1) {
             // find the projected location of the tip and the base
-            simd_float2 base = arrow_projections[selected_arrow*2];
-            simd_float2 tip = arrow_projections[selected_arrow*2+1];
+            simd_float2 top = arrow_projections[selected_arrow*2];
+            simd_float2 bot = arrow_projections[selected_arrow*2+1];
             
             // find direction to move
-            float xDiff = tip.x-base.x;
-            float yDiff = tip.y-base.y;
+            float xDiff = top.x-bot.x;
+            float yDiff = top.y-bot.y;
             
             float mag = sqrt(pow(xDiff, 2) + pow(yDiff, 2));
             xDiff /= mag;

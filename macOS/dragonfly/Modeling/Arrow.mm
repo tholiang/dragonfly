@@ -19,47 +19,22 @@ Arrow::Arrow(uint32 mid, simd_float4 c) : Model(mid), color(c) {
 }
 
 void Arrow::MakeArrow() {
-    // base
-    MakeVertex(-0.005, -0.005, -1);
-    MakeVertex(0.005, -0.005, -1);
-    MakeVertex(-0.005, 0.005, -1);
-    MakeVertex(0.005, 0.005, -1);
-    MakeVertex(-0.005, -0.005, 1);
-    MakeVertex(0.005, -0.005, 1);
-    MakeVertex(-0.005, 0.005, 1);
-    MakeVertex(0.005, 0.005, 1);
-    
-    MakeFace(1, 0, 4, color);
-    MakeFace(4, 5, 1, color);
-    
-    MakeFace(2, 0, 4, color);
-    MakeFace(2, 6, 4, color);
-    
-    MakeFace(3, 2, 6, color);
-    MakeFace(3, 7, 6, color);
-    
-    MakeFace(3, 1, 5, color);
-    MakeFace(5, 7, 3, color);
-    
-    MakeFace(5, 4, 6, color);
-    MakeFace(5, 7, 6, color);
-    
     // bottom of pointy part 1
     MakeVertex(-0.05, -0.05, 1);
     MakeVertex(-0.05, 0.05, 1);
     MakeVertex(0.05, -0.05, 1);
     MakeVertex(0.05, 0.05, 1);
     
-    MakeFace(8, 9, 10, color);
-    MakeFace(9, 10, 11, color);
+    MakeFace(0, 1, 2, color);
+    MakeFace(1, 2, 3, color);
     
     // pointy part 1
     MakeVertex(0, 0, 1.1);
     
-    MakeFace(8, 9, 12, color);
-    MakeFace(9, 10, 12, color);
-    MakeFace(10, 11, 12, color);
-    MakeFace(9, 11, 12, color);
+    MakeFace(0, 1, 4, color);
+    MakeFace(1, 2, 4, color);
+    MakeFace(2, 3, 4, color);
+    MakeFace(1, 3, 4, color);
     
     // bottom of pointy part 2
     MakeVertex(-0.05, -0.05, -1);
@@ -67,14 +42,14 @@ void Arrow::MakeArrow() {
     MakeVertex(0.05, -0.05, -1);
     MakeVertex(0.05, 0.05, -1);
     
-    MakeFace(13, 14, 15, color);
-    MakeFace(14, 15, 16, color);
+    MakeFace(5, 6, 7, color);
+    MakeFace(6, 7, 8, color);
     
     // pointy part 2
     MakeVertex(0, 0, -1.1);
     
-    MakeFace(13, 14, 17, color);
-    MakeFace(14, 15, 17, color);
-    MakeFace(15, 16, 17, color);
-    MakeFace(14, 16, 17, color);
+    MakeFace(5, 6, 9, color);
+    MakeFace(6, 7, 9, color);
+    MakeFace(7, 8, 9, color);
+    MakeFace(6, 8, 9, color);
 }
