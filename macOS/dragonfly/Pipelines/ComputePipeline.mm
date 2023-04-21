@@ -26,6 +26,8 @@ void ComputePipeline::SetScheme(Scheme *sch) {
     num_scene_lines = scheme->NumSceneLines();
     num_controls_vertices = scheme->NumControlsVertices();
     num_controls_faces = scheme->NumControlsFaces();
+    num_ui_vertices = scheme->NumUIVertices();
+    num_ui_faces = scheme->NumUIFaces();
 }
 
 void ComputePipeline::SetPipeline() {
@@ -38,6 +40,7 @@ void ComputePipeline::SetPipeline() {
     compute_projected_nodes_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateProjectedNodes"] error:nil];
     compute_lighting_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateFaceLighting"] error:nil];
     compute_slice_plates_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateSlicePlates"] error:nil];
+    compute_ui_vertices_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateUIVertices"] error:nil];
 }
 
 void ComputePipeline::SetEmptyBuffers() {
@@ -48,6 +51,8 @@ void ComputePipeline::SetEmptyBuffers() {
     int num_scene_slices = scheme->GetSlices()->size();
     num_controls_vertices = scheme->NumControlsVertices();
     num_controls_faces = scheme->NumControlsFaces();
+    num_ui_vertices = scheme->NumUIVertices();
+    num_ui_faces = scheme->NumUIFaces();
     
     std::vector<Vertex> empty_scene_vertices;
     for (int i = 0; i < num_scene_vertices; i++) {
@@ -74,6 +79,11 @@ void ComputePipeline::SetEmptyBuffers() {
         empty_scene_slice_plates.push_back(simd_make_float3(0, 0, 0));
     }
     
+    std::vector<Vertex> output_ui_vertices;
+    for (int i = 0; i < num_ui_vertices; i++) {
+        output_ui_vertices.push_back(simd_make_float3(0, 0, 0));
+    }
+    
     scene_vertex_buffer = [device newBufferWithBytes:empty_scene_vertices.data() length:(num_scene_vertices * sizeof(Vertex)) options:MTLResourceStorageModeShared];
     scene_projected_vertex_buffer = [device newBufferWithBytes:empty_scene_vertices.data() length:(num_scene_vertices * sizeof(Vertex)) options:MTLResourceStorageModeShared];
     
@@ -85,12 +95,15 @@ void ComputePipeline::SetEmptyBuffers() {
     controls_projected_vertex_buffer = [device newBufferWithBytes:empty_controls_vertices.data() length:(num_controls_vertices * sizeof(Vertex)) options:MTLResourceStorageModeShared];
     
     scene_lit_face_buffer = [device newBufferWithBytes:empty_scene_faces.data() length:(num_scene_faces * sizeof(Face)) options:MTLResourceStorageModeShared];
+    
+    ui_output_vertex_buffer = [device newBufferWithBytes:output_ui_vertices.data() length:(num_ui_vertices * sizeof(Vertex)) options:MTLResourceStorageModeShared];
 }
 
 void ComputePipeline::ResetStaticBuffers() {
     std::vector<Model *> *controls_models = scheme->GetControlsModels();
     std::vector<Model *> *models = scheme->GetModels();
     std::vector<Slice *> *slices = scheme->GetSlices();
+    std::vector<UIElement *> *ui_elements = scheme->GetUIElements();
     std::vector<int> dot_slice_links;
     
     std::vector<Face> controls_faces;
@@ -129,6 +142,20 @@ void ComputePipeline::ResetStaticBuffers() {
     
     std::vector<SliceAttributes> scene_slice_attributes = scheme->GetSliceAttributes();
     
+    std::vector<UIVertex> ui_vertices;
+    std::vector<UIFace> ui_faces;
+    for (std::size_t i = 0; i < ui_elements->size(); i++) {
+        ui_elements->at(i)->AddToBuffers(ui_faces, ui_vertices);
+    }
+    
+    std::vector<uint32_t> ui_element_ids;
+    for (std::size_t i = 0; i < ui_elements->size(); i++) {
+        int numvertices = ui_elements->at(i)->NumVertices();
+        for (int j = 0; j < numvertices; j++) {
+            ui_element_ids.push_back(i);
+        }
+    }
+    
     num_scene_faces = scene_faces.size();
     
     scene_face_buffer = [device newBufferWithBytes:scene_faces.data() length:(scene_faces.size() * sizeof(Face)) options:MTLResourceStorageModeShared];
@@ -152,12 +179,17 @@ void ComputePipeline::ResetStaticBuffers() {
     light->z = 5;
     scene_light_buffer = [device newBufferWithBytes:light length:sizeof(simd_float3) options:MTLResourceStorageModeShared];
     delete light;
+    
+    ui_vertex_buffer = [device newBufferWithBytes:ui_vertices.data() length:(ui_vertices.size() * sizeof(UIVertex)) options:MTLResourceStorageModeShared];
+    ui_face_buffer = [device newBufferWithBytes:ui_faces.data() length:(ui_faces.size() * sizeof(UIFace)) options:MTLResourceStorageModeShared];
+    ui_element_id_buffer = [device newBufferWithBytes:ui_element_ids.data() length:(ui_element_ids.size() * sizeof(uint32_t)) options:MTLResourceStorageModeShared];
 }
 
 void ComputePipeline::ResetDynamicBuffers() {
     std::vector<ModelUniforms> *controls_transforms = scheme->GetControlsModelUniforms();
     std::vector<ModelUniforms> *scene_transforms = scheme->GetModelUniforms();
     std::vector<ModelUniforms> *slice_uniforms = scheme->GetSliceUniforms();
+    std::vector<UIElementUniforms> *ui_element_uniforms = scheme->GetUIElementUniforms();
     
     std::vector<Model *> *models = scheme->GetModels();
     for (std::size_t i = 0; i < models->size(); i++) {
@@ -180,6 +212,9 @@ void ComputePipeline::ResetDynamicBuffers() {
     controls_node_buffer = [device newBufferWithBytes:controls_node_array.data() length:(controls_node_array.size() * sizeof(Node)) options:MTLResourceStorageModeShared];
     
     scene_slice_uniforms_buffer = [device newBufferWithBytes: slice_uniforms->data() length:(slice_uniforms->size() * sizeof(ModelUniforms)) options:{}];
+    
+    ui_element_uniforms_buffer = [device newBufferWithBytes: ui_element_uniforms->data() length:(ui_element_uniforms->size() * sizeof(UIElementUniforms)) options:{}];
+    ui_render_uniforms_buffer = [device newBufferWithBytes: scheme->GetUIRenderUniforms() length:(sizeof(UIRenderUniforms)) options:{}];
     
     simd_float4 window = scheme->GetEditWindow();
     scene_edit_window_buffer = [device newBufferWithBytes: &window length:(slice_uniforms->size() * sizeof(simd_float4)) options:{}];
@@ -350,6 +385,31 @@ void ComputePipeline::Compute() {
         [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
     }
     
+    unsigned long num_ui_element_vertices = scheme->NumUIVertices();
+    unsigned long num_ui_element_faces = scheme->NumUIFaces();
+    
+    if (num_ui_element_vertices > 0 && num_ui_element_faces > 0) {
+        [compute_encoder setComputePipelineState: compute_reset_state];
+        [compute_encoder setBuffer: ui_output_vertex_buffer offset:0 atIndex:0];
+        MTLSize gridSize = MTLSizeMake(num_ui_element_vertices, 1, 1);
+        NSUInteger threadGroupSize = compute_reset_state.maxTotalThreadsPerThreadgroup;
+        if (threadGroupSize > num_ui_element_vertices) threadGroupSize = num_ui_element_vertices;
+        MTLSize threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
+        [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+        
+        [compute_encoder setComputePipelineState: compute_ui_vertices_pipeline_state];
+        [compute_encoder setBuffer: ui_output_vertex_buffer offset:0 atIndex:0];
+        [compute_encoder setBuffer: ui_vertex_buffer offset:0 atIndex:1];
+        [compute_encoder setBuffer: ui_element_id_buffer offset:0 atIndex:2];
+        [compute_encoder setBuffer: ui_element_uniforms_buffer offset:0 atIndex:3];
+        [compute_encoder setBuffer: ui_render_uniforms_buffer offset:0 atIndex:4];
+        gridSize = MTLSizeMake(num_ui_element_vertices, 1, 1);
+        threadGroupSize = compute_vertex_pipeline_state.maxTotalThreadsPerThreadgroup;
+        if (threadGroupSize > num_ui_element_vertices) threadGroupSize = num_ui_element_vertices;
+        threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
+        [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+    }
+    
     [compute_encoder endEncoding];
     [compute_command_buffer commit];
     [compute_command_buffer waitUntilCompleted];
@@ -358,9 +418,9 @@ void ComputePipeline::Compute() {
 
 void ComputePipeline::SendDataToRenderer(RenderPipeline *renderer) {
     if (scheme->LightingEnabled()) {
-        renderer->SetBuffers(scene_projected_vertex_buffer, scene_lit_face_buffer, scene_projected_node_buffer, scene_projected_dot_buffer, scene_line_buffer, scene_projected_slice_plates_buffer, scene_vertex_render_uniforms_buffer, scene_selected_vertices_buffer, scene_node_render_uniforms_buffer, controls_projected_vertex_buffer, controls_faces_buffer);
+        renderer->SetBuffers(scene_projected_vertex_buffer, scene_lit_face_buffer, scene_projected_node_buffer, scene_projected_dot_buffer, scene_line_buffer, scene_projected_slice_plates_buffer, scene_vertex_render_uniforms_buffer, scene_selected_vertices_buffer, scene_node_render_uniforms_buffer, controls_projected_vertex_buffer, controls_faces_buffer, ui_output_vertex_buffer, ui_face_buffer);
     } else {
-        renderer->SetBuffers(scene_projected_vertex_buffer, scene_face_buffer, scene_projected_node_buffer, scene_projected_dot_buffer, scene_line_buffer, scene_projected_slice_plates_buffer, scene_vertex_render_uniforms_buffer, scene_selected_vertices_buffer, scene_node_render_uniforms_buffer, controls_projected_vertex_buffer, controls_faces_buffer);
+        renderer->SetBuffers(scene_projected_vertex_buffer, scene_face_buffer, scene_projected_node_buffer, scene_projected_dot_buffer, scene_line_buffer, scene_projected_slice_plates_buffer, scene_vertex_render_uniforms_buffer, scene_selected_vertices_buffer, scene_node_render_uniforms_buffer, controls_projected_vertex_buffer, controls_faces_buffer, ui_output_vertex_buffer, ui_face_buffer);
     }
 }
 
@@ -374,6 +434,8 @@ void ComputePipeline::SendDataToScheme() {
     Vertex *cpvb = (Vertex *) controls_projected_vertex_buffer.contents;
     Face *cfb = (Face *) controls_faces_buffer.contents;
     Vertex *ssp = (Vertex *) scene_projected_slice_plates_buffer.contents;
+    Vertex *uvb = (Vertex *) ui_output_vertex_buffer.contents;
+    UIFace *ufb = (UIFace *) ui_face_buffer.contents;
     
-    scheme->SetBufferContents(svb, spvb, sfb, snb, spnb, cvb, cpvb, cfb, ssp);
+    scheme->SetBufferContents(svb, spvb, sfb, snb, spnb, cvb, cpvb, cfb, ssp, uvb, ufb);
 }

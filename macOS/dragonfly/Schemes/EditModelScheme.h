@@ -80,7 +80,7 @@ public:
     void HandleMouseDown(simd_float2 loc, bool left);
     void HandleMouseUp(simd_float2 loc, bool left);
     
-    void SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp);
+    void SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp, Vertex *uiv, UIFace *uif);
     void BuildUI();
     
     void SaveSelectedModelToFile(std::string path);

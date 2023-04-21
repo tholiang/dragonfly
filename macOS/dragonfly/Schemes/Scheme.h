@@ -27,6 +27,8 @@
 #include "../Modeling/Arrow.h"
 #include "../Modeling/Rotator.h"
 
+#include "../UI/UIElement.h"
+
 #include "../UserActions/UserAction.h"
 
 class SchemeController;
@@ -40,6 +42,12 @@ enum SchemeType {
     EditSlice
 };
 
+struct UIElementUniforms {
+    simd_int3 position;
+    simd_float3 up;
+    simd_float3 right;
+};
+
 struct VertexRenderUniforms {
     float screen_ratio = 1280.0/720.0;
     int num_selected_vertices = 0;
@@ -49,6 +57,11 @@ struct VertexRenderUniforms {
 struct NodeRenderUniforms {
     float screen_ratio = 1280.0/720.0;
     int selected_node;
+};
+
+struct UIRenderUniforms {
+    int screen_width;
+    int screen_height;
 };
 
 struct KeyPresses {
@@ -99,6 +112,9 @@ protected:
     unsigned long controls_face_length_;
     unsigned long controls_node_length_;
     
+    unsigned long ui_vertex_length_;
+    unsigned long ui_face_length_;
+    
     // given by compute pipeline with SetBufferContents() - used in handling clicks
     Vertex * scene_models_vertices_;
     Vertex * scene_models_projected_vertices_;
@@ -114,10 +130,16 @@ protected:
     
     Vertex * scene_slice_plate_vertices_;
     
+    Vertex * ui_elements_vertices_;
+    UIFace * ui_elements_faces_;
+    
     // actual model data for controls models (arrows, etc)
     std::vector<Model *> controls_models_;
     std::vector<ModelUniforms> controls_model_uniforms_;
     std::vector<Basis> controls_model_default_bases_;
+    
+    std::vector<UIElement *> ui_elements_;
+    std::vector<UIElementUniforms> ui_element_uniforms_;
     
     // where to put the controls models - usually whatever is being edited
     Basis controls_basis_;
@@ -149,6 +171,8 @@ protected:
     
     float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
     
+    int prev_width = 1080;
+    int prev_height = 700;
     int window_width_ = 1080;
     int window_height_ = 700;
     float aspect_ratio_ = 1080/700;
@@ -160,6 +184,8 @@ protected:
     
     // for renderer - also contains the selected node
     NodeRenderUniforms node_render_uniforms_;
+    
+    UIRenderUniforms ui_render_uniforms_;
     
     // whether the compute pipeline should reset empty buffers (usually when something is created or deleted)
     bool should_reset_empty_buffers = true;
@@ -195,6 +221,16 @@ protected:
     void CalculateNumControlsVertices();
     void CalculateNumControlsFaces();
     void CalculateNumControlsNodes();
+    void CalculateNumUIVertices();
+    void CalculateNumUIFaces();
+    
+    void MakeRect(int x, int y, int w, int h, int z, simd_float4 color);
+    void MakeIsoTriangle(int x, int y, int w, int h, int z, simd_float4 color);
+    
+    void ChangeElementLocation(int eid, int x, int y);
+    void ChangeRectDim(int eid, int w, int h);
+    
+    bool DidScreenSizeChange();
     
     void Undo();
 public:
@@ -207,7 +243,7 @@ public:
     void SetCamera(Camera *camera);
     void SetScene(Scene *scene);
     
-    virtual void SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp);
+    virtual void SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp, Vertex *uiv, UIFace *uif);
     
     Camera *GetCamera();
     Scene *GetScene();
@@ -218,6 +254,8 @@ public:
     virtual std::vector<ModelUniforms> *GetSliceUniforms();
     std::vector<Model *> *GetControlsModels();
     std::vector<ModelUniforms> *GetControlsModelUniforms();
+    std::vector<UIElement *> *GetUIElements();
+    std::vector<UIElementUniforms> *GetUIElementUniforms();
     
     void EnableInput(bool enabled);
     bool IsInputEnabled();
@@ -237,6 +275,7 @@ public:
     
     VertexRenderUniforms *GetVertexRenderUniforms();
     NodeRenderUniforms *GetNodeRenderUniforms();
+    UIRenderUniforms *GetUIRenderUniforms();
     
     void SaveSceneToFolder(std::string path);
     
@@ -256,6 +295,8 @@ public:
     unsigned long NumControlsVertices();
     unsigned long NumControlsFaces();
     unsigned long NumControlsNodes();
+    unsigned long NumUIFaces();
+    unsigned long NumUIVertices();
     
     bool ShouldRenderFaces();
     bool ShouldRenderEdges();

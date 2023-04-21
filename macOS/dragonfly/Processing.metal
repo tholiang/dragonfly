@@ -12,6 +12,7 @@ constant float pi = 3.14159265358979;
 constant float render_dist = 50;
 
 typedef simd_float3 Vertex;
+typedef simd_int3 UIVertex;
 typedef simd_float2 Dot;
 
 struct Basis {
@@ -36,6 +37,17 @@ struct Face {
     bool normal_reversed;
     simd_float3 lighting_offset; // if there were a light source directly in front of the face, this is the rotation to get to its brightest orientation
     float shading_multiplier;
+};
+
+struct UIFace {
+    unsigned int vertices[3];
+    simd_float4 color;
+};
+
+struct UIElementUniforms {
+    simd_int3 position;
+    simd_float3 up;
+    simd_float3 right;
 };
 
 struct Node {
@@ -72,6 +84,11 @@ struct VertexRenderUniforms {
 struct NodeRenderUniforms {
     float screen_ratio;
     int selected_node;
+};
+
+struct UIRenderUniforms {
+    int screen_width;
+    int screen_height;
 };
 
 struct SliceAttributes {
@@ -413,6 +430,23 @@ kernel void CalculateSlicePlates (device Vertex *output [[buffer(0)]], const con
     output[vid] = v;
 }
 
+kernel void CalculateUIVertices (device Vertex *output [[buffer(0)]], const constant UIVertex *ui_vertices[[buffer(1)]], const constant unsigned int *element_ids[[buffer(2)]], const constant UIElementUniforms *element_uniforms[[buffer(3)]], const constant UIRenderUniforms *render_uniforms[[buffer(4)]], unsigned int vid [[thread_position_in_grid]]) {
+    UIVertex v = ui_vertices[vid];
+    UIElementUniforms eu = element_uniforms[element_ids[vid]];
+    Vertex ret;
+    ret.x = eu.position.x;
+    ret.y = eu.position.y;
+    ret.z = 0.01+float(eu.position.z + v.z)/100;
+    
+    ret.x += eu.right.x * v.x + eu.up.x * v.y;
+    ret.y += eu.right.y * v.x + eu.up.y * v.y;
+    
+    ret.x /= render_uniforms->screen_width/2;
+    ret.y /= render_uniforms->screen_height/2;
+    
+    output[vid] = ret;
+}
+
 vertex VertexOut SuperDefaultVertexShader (const constant vector_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]]) {
     vector_float3 currentVertex = vertex_array[vid];
     VertexOut output;
@@ -423,6 +457,16 @@ vertex VertexOut SuperDefaultVertexShader (const constant vector_float3 *vertex_
 
 vertex VertexOut DefaultVertexShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant Face *face_array[[buffer(1)]], unsigned int vid [[vertex_id]]) {
     Face currentFace = face_array[vid/3];
+    vector_float3 currentVertex = vertex_array[currentFace.vertices[vid%3]];
+    VertexOut output;
+    output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z, 1);
+    output.color = currentFace.color;
+    output.pos.z += 0.1;
+    return output;
+}
+
+vertex VertexOut UIVertexShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant UIFace *face_array[[buffer(1)]], unsigned int vid [[vertex_id]]) {
+    UIFace currentFace = face_array[vid/3];
     vector_float3 currentVertex = vertex_array[currentFace.vertices[vid%3]];
     VertexOut output;
     output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z, 1);
@@ -444,6 +488,7 @@ vertex VertexOut VertexEdgeShader (const constant vector_float3 *vertex_array [[
     if (uniforms->selected_edge.y == currentFace.vertices[(vid)%3] && uniforms->selected_edge.x == currentFace.vertices[(vid-1)%3]) {
         output.color = vector_float4(1, 0.5, 0, 1);
     }*/
+    output.pos.z += 0.1;
     return output;
 }
 
@@ -454,6 +499,7 @@ vertex VertexOut LineShader (const constant vector_float3 *vertex_array [[buffer
     output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z-0.0001, 1);
     output.color = vector_float4(0, 0, 1, 1);
     
+    output.pos.z += 0.1;
     return output;
 }
 
@@ -481,6 +527,7 @@ vertex VertexOut VertexPointShader (const constant vector_float3 *vertex_array [
     if (!is_selected) {
         output.color = vector_float4(0, 1, 0, 1);
     }
+    output.pos.z += 0.1;
     return output;
 }
 
@@ -498,6 +545,7 @@ vertex VertexOut DotShader (const constant vector_float3 *vertex_array [[buffer(
     }
     
     output.color = vector_float4(0, 1, 0, 1);
+    output.pos.z += 0.1;
     return output;
 }
 
@@ -529,6 +577,7 @@ vertex VertexOut NodeShader (const constant Vertex *node_array [[buffer(0)]], un
         output.color = vector_float4(0.8, 0.8, 0.9, 1);
     }
     
+    output.pos.z += 0.1;
     return output;
 }
 

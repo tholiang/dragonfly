@@ -90,7 +90,7 @@ void RenderPipeline::SetSchemeController(SchemeController *sctr) {
     scheme_controller = sctr;
 }
 
-void RenderPipeline::SetBuffers(id<MTLBuffer> spv, id<MTLBuffer> sf, id<MTLBuffer> spn, id<MTLBuffer> spd, id<MTLBuffer> ssl, id<MTLBuffer> ssp, id<MTLBuffer> svru, id<MTLBuffer> ssv, id<MTLBuffer> snru, id<MTLBuffer> cpv, id<MTLBuffer> cf) {
+void RenderPipeline::SetBuffers(id<MTLBuffer> spv, id<MTLBuffer> sf, id<MTLBuffer> spn, id<MTLBuffer> spd, id<MTLBuffer> ssl, id<MTLBuffer> ssp, id<MTLBuffer> svru, id<MTLBuffer> ssv, id<MTLBuffer> snru, id<MTLBuffer> cpv, id<MTLBuffer> cf, id<MTLBuffer> uvb, id<MTLBuffer> ufb) {
     scene_projected_vertex_buffer = spv;
     scene_face_buffer = sf;
     scene_projected_node_buffer = spn;
@@ -103,6 +103,9 @@ void RenderPipeline::SetBuffers(id<MTLBuffer> spv, id<MTLBuffer> sf, id<MTLBuffe
     
     controls_projected_vertex_buffer = cpv;
     controls_faces_buffer = cf;
+    
+    ui_vertex_buffer = uvb;
+    ui_face_buffer = ufb;
 }
 
 void RenderPipeline::SetPipeline () {
@@ -162,6 +165,13 @@ void RenderPipeline::SetPipeline () {
     scene_node_render_pipeline_descriptor.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
     scene_node_render_pipeline_descriptor.colorAttachments[0].pixelFormat = layer.pixelFormat;
     
+    MTLRenderPipelineDescriptor *ui_vertex_render_pipeline_descriptor = [[MTLRenderPipelineDescriptor alloc] init];
+    
+    ui_vertex_render_pipeline_descriptor.vertexFunction = [library newFunctionWithName:@"UIVertexShader"];
+    ui_vertex_render_pipeline_descriptor.fragmentFunction = [library newFunctionWithName:@"FragmentShader"];
+    ui_vertex_render_pipeline_descriptor.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
+    ui_vertex_render_pipeline_descriptor.colorAttachments[0].pixelFormat = layer.pixelFormat;
+    
     triangle_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:triangle_render_pipeline_descriptor error:nil];
     face_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:render_pipeline_descriptor error:nil];
     scene_edge_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:edge_render_pipeline_descriptor error:nil];
@@ -169,6 +179,7 @@ void RenderPipeline::SetPipeline () {
     scene_point_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:scene_point_render_pipeline_descriptor error:nil];
     scene_dot_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:scene_dot_render_pipeline_descriptor error:nil];
     scene_node_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:scene_node_render_pipeline_descriptor error:nil];
+    ui_vertex_render_pipeline_state = [device newRenderPipelineStateWithDescriptor:ui_vertex_render_pipeline_descriptor error:nil];
     MTLDepthStencilDescriptor *depth_descriptor = [[MTLDepthStencilDescriptor alloc] init];
     [depth_descriptor setDepthCompareFunction: MTLCompareFunctionLessEqual];
     [depth_descriptor setDepthWriteEnabled: true];
@@ -285,6 +296,16 @@ void RenderPipeline::Render() {
         [render_encoder setVertexBuffer:controls_projected_vertex_buffer offset:0 atIndex:0];
         [render_encoder setVertexBuffer:controls_faces_buffer offset:0 atIndex:1];
         [render_encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:num_controls_faces*3];
+    }
+    
+    unsigned long num_ui_vertices = scheme->NumUIVertices();
+    unsigned long num_ui_faces = scheme->NumUIFaces();
+    
+    if (num_ui_vertices > 0 && num_ui_faces > 0) {
+        [render_encoder setRenderPipelineState:ui_vertex_render_pipeline_state];
+        [render_encoder setVertexBuffer:ui_vertex_buffer offset:0 atIndex:0];
+        [render_encoder setVertexBuffer:ui_face_buffer offset:0 atIndex:1];
+        [render_encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:num_ui_faces*3];
     }
     
     // Start the Dear ImGui frame

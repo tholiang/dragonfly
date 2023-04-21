@@ -68,6 +68,7 @@ public:
     Animation(Model *model);
     ~Animation();
     
+    void SetB0(int i, Basis b);
     void SetOrdering();
     float GetLength();
 

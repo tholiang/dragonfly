@@ -51,6 +51,8 @@ private:
     std::string scale_input_y = "1";
     std::string scale_input_z = "1";
     
+    void GenerateCustomUI();
+    
     void CreateControlsModels();
     
     std::pair<std::pair<int, int>, float> NodeClicked(simd_float2 loc);
@@ -69,10 +71,10 @@ private:
     void NodeEditMenu();
     
     void MainWindow();
-    
+    void UpdateCustomUI();
 public:
     void BuildUI();
-    void SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp);
+    void SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp, Vertex *uiv, UIFace *uif);
     
     void HandleMouseMovement(float x, float y, float dx, float dy);
     

@@ -35,6 +35,7 @@ private:
     id <MTLComputePipelineState> compute_scaled_dots_pipeline_state;
     id <MTLComputePipelineState> compute_projected_dots_pipeline_state;
     id <MTLComputePipelineState> compute_slice_plates_state;
+    id <MTLComputePipelineState> compute_ui_vertices_pipeline_state;
     
     // buffers for scene compute
     id <MTLBuffer> camera_buffer;
@@ -84,6 +85,13 @@ private:
     
     id <MTLBuffer> controls_transform_uniforms_buffer;
     
+    id <MTLBuffer> ui_vertex_buffer;
+    id <MTLBuffer> ui_output_vertex_buffer;
+    id <MTLBuffer> ui_face_buffer;
+    id <MTLBuffer> ui_element_uniforms_buffer;
+    id <MTLBuffer> ui_render_uniforms_buffer;
+    id <MTLBuffer> ui_element_id_buffer;
+    
     // scheme and scheme variables
     Scheme *scheme;
     unsigned int num_scene_vertices = 0;
@@ -93,6 +101,9 @@ private:
     
     unsigned int num_scene_dots = 0;
     unsigned int num_scene_lines = 0;
+    
+    unsigned int num_ui_vertices = 0;
+    unsigned int num_ui_faces = 0;
 public:
     void init();
     void SetScheme(Scheme *sch);

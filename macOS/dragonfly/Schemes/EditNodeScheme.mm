@@ -20,10 +20,27 @@ EditNodeScheme::EditNodeScheme() {
     should_render.slices = false;
     
     CreateControlsModels();
+    GenerateCustomUI();
 }
 
 EditNodeScheme::~EditNodeScheme() {
     
+}
+
+void EditNodeScheme::GenerateCustomUI() {
+    MakeRect(-window_width_/2, -window_height_/2, window_width_-right_menu_width_, 200, 9, simd_make_float4(0.3, 0.3, 0.3, 1));
+    MakeIsoTriangle(100, -window_height_/2+50, 20, 20, 5, simd_make_float4(1, 0, 0, 1));
+}
+
+void EditNodeScheme::UpdateCustomUI() {
+    if (DidScreenSizeChange()) {
+        ChangeElementLocation(0, -window_width_/2, -window_height_/2);
+        ChangeRectDim(0, window_width_-right_menu_width_, 200);
+        
+        ChangeElementLocation(1, 100, -window_height_/2+50);
+        
+        should_reset_static_buffers = true;
+    }
 }
 
 void EditNodeScheme::CreateControlsModels() {
@@ -602,9 +619,11 @@ void EditNodeScheme::BuildUI() {
     MainWindow();
     
     RightMenu();
+    
+    UpdateCustomUI();
 }
 
-void EditNodeScheme::SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp) {
-    Scheme::SetBufferContents(smv, smpv, smf, smn, smpn, cmv, cmpv, cmf, ssp);
+void EditNodeScheme::SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp, Vertex *uiv, UIFace *uif) {
+    Scheme::SetBufferContents(smv, smpv, smf, smn, smpn, cmv, cmpv, cmf, ssp, uiv, uif);
     SetArrowProjections();
 }

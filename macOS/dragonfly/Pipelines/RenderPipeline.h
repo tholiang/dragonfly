@@ -48,6 +48,8 @@ private:
     id <MTLRenderPipelineState> scene_dot_render_pipeline_state;
 
     id <MTLRenderPipelineState> scene_node_render_pipeline_state;
+    
+    id <MTLRenderPipelineState> ui_vertex_render_pipeline_state;
 
     id <MTLDepthStencilState> depth_state;
     id <MTLTexture> depth_texture;
@@ -70,6 +72,9 @@ private:
     id <MTLBuffer> controls_projected_vertex_buffer;
     id <MTLBuffer> controls_faces_buffer;
     
+    id <MTLBuffer> ui_vertex_buffer;
+    id <MTLBuffer> ui_face_buffer;
+    
     Scheme *scheme;
     SchemeController *scheme_controller;
 public:
@@ -78,7 +83,7 @@ public:
     int init();
     void SetScheme(Scheme *sch);
     void SetSchemeController(SchemeController *sctr);
-    void SetBuffers(id<MTLBuffer> spv, id<MTLBuffer> sf, id<MTLBuffer> spn, id<MTLBuffer> spd, id<MTLBuffer> ssl, id<MTLBuffer> ssp, id<MTLBuffer> svru, id<MTLBuffer> ssv, id<MTLBuffer> snru, id<MTLBuffer> cpv, id<MTLBuffer> cf);
+    void SetBuffers(id<MTLBuffer> spv, id<MTLBuffer> sf, id<MTLBuffer> spn, id<MTLBuffer> spd, id<MTLBuffer> ssl, id<MTLBuffer> ssp, id<MTLBuffer> svru, id<MTLBuffer> ssv, id<MTLBuffer> snru, id<MTLBuffer> cpv, id<MTLBuffer> cf, id<MTLBuffer> uvb, id<MTLBuffer> ufb);
     
     void SetPipeline();
     

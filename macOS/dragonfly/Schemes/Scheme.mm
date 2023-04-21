@@ -48,7 +48,7 @@ void Scheme::SetScene(Scene *scene) {
     should_reset_static_buffers = true;
 }
 
-void Scheme::SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp) {
+void Scheme::SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp, Vertex *uiv, UIFace *uif) {
     scene_models_vertices_ = smv;
     scene_models_projected_vertices_ = smpv;
     scene_models_faces_ = smf;
@@ -58,6 +58,8 @@ void Scheme::SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, 
     control_models_projected_vertices_ = cmpv;
     control_models_faces_ = cmf;
     scene_slice_plate_vertices_ = ssp;
+    ui_elements_vertices_ = uiv;
+    ui_elements_faces_ = uif;
 }
 
 Camera * Scheme::GetCamera() {
@@ -94,6 +96,63 @@ std::vector<Model *> * Scheme::GetControlsModels() {
 
 std::vector<ModelUniforms> * Scheme::GetControlsModelUniforms() {
     return &controls_model_uniforms_;
+}
+
+std::vector<UIElement *> *Scheme::GetUIElements() {
+    return &ui_elements_;
+}
+
+std::vector<UIElementUniforms> *Scheme::GetUIElementUniforms() {
+    return &ui_element_uniforms_;
+}
+
+void Scheme::MakeRect(int x, int y, int w, int h, int z, simd_float4 color) {
+    UIElement *elem = new UIElement(ui_elements_.size());
+    elem->MakeVertex(0, 0, 0);
+    elem->MakeVertex(w, 0, 0);
+    elem->MakeVertex(0, h, 0);
+    elem->MakeVertex(w, h, 0);
+    elem->MakeFace(0, 1, 2, color);
+    elem->MakeFace(1, 2, 3, color);
+    ui_elements_.push_back(elem);
+    
+    UIElementUniforms uni;
+    uni.position = simd_make_int3(x, y, z);
+    uni.right = simd_make_float3(1, 0, 0);
+    uni.up = simd_make_float3(0, 1, 0);
+    ui_element_uniforms_.push_back(uni);
+}
+
+void Scheme::MakeIsoTriangle(int x, int y, int w, int h, int z, simd_float4 color) {
+    UIElement *elem = new UIElement(ui_elements_.size());
+    elem->MakeVertex(0, 0, 0);
+    elem->MakeVertex(w, 0, 0);
+    elem->MakeVertex(w/2, h, 0);
+    elem->MakeFace(0, 1, 2, color);
+    ui_elements_.push_back(elem);
+    
+    UIElementUniforms uni;
+    uni.position = simd_make_int3(x, y, z);
+    uni.right = simd_make_float3(1, 0, 0);
+    uni.up = simd_make_float3(0, 1, 0);
+    ui_element_uniforms_.push_back(uni);
+}
+
+void Scheme::ChangeElementLocation(int eid, int x, int y) {
+    UIElementUniforms *uni = &ui_element_uniforms_[eid];
+    uni->position.x = x;
+    uni->position.y = y;
+}
+
+void Scheme::ChangeRectDim(int eid, int w, int h) {
+    UIElement *elem = ui_elements_[eid];
+    UIVertex *v2 = elem->GetVertex(1);
+    v2->x = w;
+    UIVertex *v3 = elem->GetVertex(2);
+    v3->y = h;
+    UIVertex *v4 = elem->GetVertex(3);
+    v4->x = w;
+    v4->y = h;
 }
 
 void Scheme::EnableInput(bool enabled) {
@@ -336,8 +395,20 @@ void Scheme::UpdateUIVars() {
     
     vertex_render_uniforms.screen_ratio = aspect_ratio_;
     node_render_uniforms_.screen_ratio = aspect_ratio_;
+    ui_render_uniforms_.screen_width = window_width_;
+    ui_render_uniforms_.screen_height = window_height_;
     
     camera_->FOV = {M_PI_2, 2*(atanf((float) window_height_/(float) window_width_))};
+}
+
+bool Scheme::DidScreenSizeChange() {
+    if (window_width_ != prev_width || window_height_ != prev_height) {
+        prev_width = window_width_;
+        prev_height = window_height_;
+        return true;
+    }
+    
+    return false;
 }
 
 void Scheme::MainWindow() {
@@ -362,6 +433,10 @@ VertexRenderUniforms *Scheme::GetVertexRenderUniforms() {
 
 NodeRenderUniforms *Scheme::GetNodeRenderUniforms() {
     return &node_render_uniforms_;
+}
+
+UIRenderUniforms *Scheme::GetUIRenderUniforms() {
+    return &ui_render_uniforms_;
 }
 
 void Scheme::Undo() {
@@ -410,6 +485,8 @@ void Scheme::CalculateCounts() {
     CalculateNumControlsVertices();
     CalculateNumControlsFaces();
     CalculateNumControlsNodes();
+    CalculateNumUIVertices();
+    CalculateNumUIFaces();
 }
 
 void Scheme::CalculateNumSceneVertices() {
@@ -476,6 +553,22 @@ void Scheme::CalculateNumControlsNodes() {
     controls_node_length_ = sum;
 }
 
+void Scheme::CalculateNumUIFaces() {
+    int sum = 0;
+    for (int i = 0; i < ui_elements_.size(); i++) {
+        sum += ui_elements_[i]->NumFaces();
+    }
+    ui_face_length_ = sum;
+}
+
+void Scheme::CalculateNumUIVertices() {
+    int sum = 0;
+    for (int i = 0; i < ui_elements_.size(); i++) {
+        sum += ui_elements_[i]->NumVertices();
+    }
+    ui_vertex_length_ = sum;
+}
+
 unsigned long Scheme::NumSceneVertices() {
     return scene_vertex_length_;
 }
@@ -506,6 +599,14 @@ unsigned long Scheme::NumControlsFaces() {
 
 unsigned long Scheme::NumControlsNodes() {
     return controls_node_length_;
+}
+
+unsigned long Scheme::NumUIFaces() {
+    return ui_face_length_;
+}
+
+unsigned long Scheme::NumUIVertices() {
+    return ui_vertex_length_;
 }
 
 bool Scheme::ShouldRenderFaces() {

@@ -32,6 +32,12 @@ Animation::~Animation() {
     }
 }
 
+void Animation::SetB0(int i, Basis b) {
+    if (i >= 0 && i < b0s.size()) {
+        b0s[i] = b;
+    }
+}
+
 void Animation::SetOrdering() {
     node_ordering.clear();
     
@@ -134,9 +140,7 @@ void Animation::SetAtTime(float time) {
 
         std::pair<int, int> loc = FindFrameIdx(i, time);
         if (loc.first < 0 || loc.second >= node_animations[i]->size()) {
-            if (time <= 0.1) {
-                b0s[i] = node->b;
-            } else if (node_animations.at(i)->size() > 0) {
+            if (node_animations.at(i)->size() > 0) {
                 NodeKeyFrame *next = node_animations.at(i)->at(0);
                 float weight = time / next->time;
 
@@ -682,6 +686,11 @@ unsigned Model::MakeAnimation() {
 void Model::StartAnimation(int aid) {
     curr_aid = aid;
     curr_anim_time = 0;
+    
+    Animation *anim = animations.at(aid);
+    for (int i = 0; i < nodes.size(); i++) {
+        anim->SetB0(i, nodes[i]->b);
+    }
 }
 
 void Model::SetKeyFrame(int aid, int nid, float time) {
