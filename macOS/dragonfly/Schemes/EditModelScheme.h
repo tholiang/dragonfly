@@ -44,6 +44,7 @@ private:
     int selected_model = -1;
     
     unsigned long wanted_aid = 0;
+    std::pair<int, int> loopanim;
     
     std::string angle_input_x = "0";
     std::string angle_input_y = "0";

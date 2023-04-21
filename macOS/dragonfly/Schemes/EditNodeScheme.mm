@@ -175,11 +175,11 @@ void EditNodeScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
             Model *model = scene_->GetModel(selected_model_);
             Node *n = model->GetNode(selected_node_ - model->NodeStart());
             if (selected_rotator == 0) {
-                RotateBasisOnY(&n->b, -mvmt / 100);
+                model->RotateNodeOnY(selected_node_ - model->NodeStart(), -mvmt / 100);
             } else if (selected_rotator == 1) {
-                RotateBasisOnZ(&n->b, -mvmt / 100);
+                model->RotateNodeOnZ(selected_node_ - model->NodeStart(), -mvmt / 100);
             } else {
-                RotateBasisOnX(&n->b, -mvmt / 100);
+                model->RotateNodeOnX(selected_node_ - model->NodeStart(), -mvmt / 100);
             }
         }
     }
@@ -308,7 +308,7 @@ void EditNodeScheme::HandleSelection(simd_float2 loc) {
 void EditNodeScheme::SetControlsBasis() {
     if (selected_node_ != -1) {
         Model *model = scene_->GetModel(selected_model_);
-        unsigned long modelNodeId = selected_node_ - model->FaceStart();
+        unsigned long modelNodeId = selected_node_ - model->NodeStart();
         if (modelNodeId > 0) {
             controls_basis_ = scene_models_nodes_[selected_node_].b;
         }
@@ -389,7 +389,7 @@ void EditNodeScheme::NodeEditMenu() {
     std::string x_input = TextField(std::to_string(node->b.pos.x), "##nodex");
     if (isFloat(x_input) && selected_node_ != model->NodeStart()) {
         float new_x = std::stof(x_input);
-        node->b.pos.x = new_x;
+        model->MoveNodeTo(selected_node_ - model->NodeStart(), new_x, node->b.pos.y, node->b.pos.z);
     }
     
     ImGui::SetCursorPos(ImVec2(50, 110));
@@ -398,7 +398,7 @@ void EditNodeScheme::NodeEditMenu() {
     std::string y_input = TextField(std::to_string(node->b.pos.y), "##nodey");
     if (isFloat(y_input) && selected_node_ != model->NodeStart()) {
         float new_y = std::stof(y_input);
-        node->b.pos.y = new_y;
+        model->MoveNodeTo(selected_node_ - model->NodeStart(), node->b.pos.x, new_y, node->b.pos.z);
     }
     
     ImGui::SetCursorPos(ImVec2(50, 140));
@@ -407,7 +407,7 @@ void EditNodeScheme::NodeEditMenu() {
     std::string z_input = TextField(std::to_string(node->b.pos.z), "##nodez");
     if (isFloat(z_input) && selected_node_ != model->NodeStart()) {
         float new_z = std::stof(z_input);
-        node->b.pos.z = new_z;
+        model->MoveNodeTo(selected_node_ - model->NodeStart(), node->b.pos.x, node->b.pos.y, new_z);
     }
     
     
@@ -433,17 +433,20 @@ void EditNodeScheme::NodeEditMenu() {
     if (ImGui::Button("Rotate", ImVec2(80,30))) {
         if (isFloat(angle_input_x) && selected_node_ != model->NodeStart()) {
             float new_x = std::stof(angle_input_x);
-            RotateBasisOnX(&node->b, new_x * M_PI / 180);
+            //RotateBasisOnX(&node->b, new_x * M_PI / 180);
+            model->RotateNodeOnX(selected_node_ - model->NodeStart(), new_x * M_PI / 180);
             //node->angle.x = new_x * M_PI / 180;
         }
         if (isFloat(angle_input_y) && selected_node_ != model->NodeStart()) {
             float new_y = std::stof(angle_input_y);
-            RotateBasisOnY(&node->b, new_y * M_PI / 180);
+            //RotateBasisOnY(&node->b, new_y * M_PI / 180);
+            model->RotateNodeOnY(selected_node_ - model->NodeStart(), new_y * M_PI / 180);
             //node->angle.y = new_y * M_PI / 180;
         }
         if (isFloat(angle_input_z) && selected_node_ != model->NodeStart()) {
             float new_z = std::stof(angle_input_z);
-            RotateBasisOnZ(&node->b, new_z * M_PI / 180);
+            //RotateBasisOnZ(&node->b, new_z * M_PI / 180);
+            model->RotateNodeOnZ(selected_node_ - model->NodeStart(), new_z * M_PI / 180);
             //node->angle.z = new_z * M_PI / 180;
         }
         
@@ -470,7 +473,7 @@ void EditNodeScheme::NodeEditMenu() {
     ImGui::SetCursorPos(ImVec2(70, 400));
     scale_input_z = TextField(scale_input_z, "##modelsz");
     
-    ImGui::SetCursorPos(ImVec2(50, 390));
+    ImGui::SetCursorPos(ImVec2(50, 430));
     if (ImGui::Button("Scale", ImVec2(80,30))) {
         float new_x = 1;
         float new_y = 1;
@@ -485,17 +488,42 @@ void EditNodeScheme::NodeEditMenu() {
             new_z = std::stof(scale_input_z);
         }
         
-        node->scale.x = new_x;
-        node->scale.y = new_y;
-        node->scale.z = new_z;
+        // x
+        float currmagx = Magnitude(node->b.x);
+        node->b.x.x *= new_x/currmagx;
+        node->b.x.y *= new_x/currmagx;
+        node->b.x.z *= new_x/currmagx;
+        // y
+        float currmagy = Magnitude(node->b.y);
+        node->b.y.x *= new_y/currmagy;
+        node->b.y.y *= new_y/currmagy;
+        node->b.y.z *= new_y/currmagy;
+        // z
+        float currmagz = Magnitude(node->b.z);
+        node->b.z.x *= new_z/currmagz;
+        node->b.z.y *= new_z/currmagz;
+        node->b.z.z *= new_z/currmagz;
     }
     
-    ImGui::SetCursorPos(ImVec2(150, 390));
+    ImGui::SetCursorPos(ImVec2(150, 430));
     if (ImGui::Button("Set Default", ImVec2(120,30))) {
-        model->ScaleOnNodeBy(node->scale.x, node->scale.y, node->scale.z, selected_node_-model->NodeStart());
-        node->scale.x = 1;
-        node->scale.y = 1;
-        node->scale.z = 1;
+        float currmagx = Magnitude(node->b.x);
+        float currmagy = Magnitude(node->b.y);
+        float currmagz = Magnitude(node->b.z);
+        
+        model->ScaleOnNodeBy(currmagx, currmagy, currmagz, selected_node_-model->NodeStart());
+        // x
+        node->b.x.x *= 1/currmagx;
+        node->b.x.y *= 1/currmagx;
+        node->b.x.z *= 1/currmagx;
+        // y
+        node->b.y.x *= 1/currmagy;
+        node->b.y.y *= 1/currmagy;
+        node->b.y.z *= 1/currmagy;
+        // z
+        node->b.z.x *= 1/currmagz;
+        node->b.z.y *= 1/currmagz;
+        node->b.z.z *= 1/currmagz;
         
         scale_input_x = "1";
         scale_input_y = "1";

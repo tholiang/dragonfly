@@ -39,7 +39,6 @@ struct Face {
 
 struct Node {
     int locked_to = -1;
-    simd_float3 scale = {1,1,1};
     Basis b;
 };
 
@@ -59,14 +58,17 @@ class Animation {
 private:
     float length = 0.0;
     Model *model_;
+    std::vector<Basis> b0s;
     // a vector of vectors of frames for each node
     std::vector<std::vector<NodeKeyFrame *> *> node_animations;
+    std::vector<int> node_ordering;
 
     std::pair<int, int> FindFrameIdx(uint32_t nid, float time);
 public:
     Animation(Model *model);
     ~Animation();
     
+    void SetOrdering();
     float GetLength();
 
     void AddNode();
@@ -131,6 +133,11 @@ public:
     void MoveVertexTo(unsigned vid, float x, float y, float z);
     void MoveNodeTo(unsigned nid, float x, float y, float z);
     
+    void RotateNodeOnX(unsigned nid, float angle);
+    void RotateNodeOnY(unsigned nid, float angle);
+    void RotateNodeOnZ(unsigned nid, float angle);
+    void RotateNodeToBasis(unsigned nid, Basis *b);
+    
     void RemoveVertex(int vid);
     void RemoveFace(int fid);
     
@@ -141,6 +148,7 @@ public:
     void StartAnimation(int aid);
     void SetKeyFrame(int aid, int nid, float time);
     void UpdateAnimation(float dt);
+    bool InAnimation();
     unsigned NumAnimations();
     
     Vertex GetVertex(unsigned long vid);

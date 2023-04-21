@@ -40,7 +40,6 @@ struct Face {
 
 struct Node {
     int locked_to;
-    simd_float3 scale;
     Basis b;
 };
 
@@ -57,7 +56,6 @@ struct VertexOut {
 
 struct ModelUniforms {
     vector_float3 rotate_origin;
-    simd_float3 scale;
     Basis b;
 };
 
@@ -282,10 +280,6 @@ kernel void CalculateModelNodeTransforms(device Node *nodes [[buffer(0)]], unsig
 //    offset_node.y += uniform.b.pos.y;
 //    offset_node.z += uniform.b.pos.z;
 //    nodes[vid].pos = RotateAround(offset_node, uniform.rotate_origin, uniform.angle);
-    nodes[vid].b.pos.x *= uniform.scale.x;
-    nodes[vid].b.pos.y *= uniform.scale.y;
-    nodes[vid].b.pos.z *= uniform.scale.z;
-    nodes[vid].scale *= uniform.scale;
     nodes[vid].b.pos = TranslatePointToStandard(uniform.b, nodes[vid].b.pos);
     nodes[vid].b.x = RotatePointToStandard(uniform.b, nodes[vid].b.x);
     nodes[vid].b.y = RotatePointToStandard(uniform.b, nodes[vid].b.y);
@@ -307,11 +301,7 @@ kernel void CalculateVertices(device Vertex *vertices [[buffer(0)]], const const
         
 //        Vertex desired1 = vector_float3(n.pos.x + link1.vector.x, n.pos.y + link1.vector.y, n.pos.z + link1.vector.z);
 //        desired1 = RotateAround(desired1, n.pos, n.angle);
-        Vertex scaled_link_vec;
-        scaled_link_vec.x = link1.vector.x * n.scale.x;
-        scaled_link_vec.y = link1.vector.y * n.scale.y;
-        scaled_link_vec.z = link1.vector.z * n.scale.z;
-        Vertex desired1 = TranslatePointToStandard(n.b, scaled_link_vec);
+        Vertex desired1 = TranslatePointToStandard(n.b, link1.vector);
         
         v.x += link1.weight*desired1.x;
         v.y += link1.weight*desired1.y;
@@ -323,11 +313,7 @@ kernel void CalculateVertices(device Vertex *vertices [[buffer(0)]], const const
         
 //        Vertex desired2 = vector_float3(n.pos.x + link2.vector.x, n.pos.y + link2.vector.y, n.pos.z + link2.vector.z);
 //        desired2 = RotateAround(desired2, n.pos, n.angle);
-        Vertex scaled_link_vec;
-        scaled_link_vec.x = link2.vector.x * n.scale.x;
-        scaled_link_vec.y = link2.vector.y * n.scale.y;
-        scaled_link_vec.z = link2.vector.z * n.scale.z;
-        Vertex desired2 = TranslatePointToStandard(n.b, scaled_link_vec);
+        Vertex desired2 = TranslatePointToStandard(n.b, link2.vector);
         
         v.x += link2.weight*desired2.x;
         v.y += link2.weight*desired2.y;

@@ -22,6 +22,9 @@ EditModelScheme::EditModelScheme() {
     should_render.slices = false;
     
     CreateControlsModels();
+    
+    loopanim.first = -1;
+    loopanim.second = -1;
 }
 
 EditModelScheme::~EditModelScheme() {
@@ -522,18 +525,42 @@ void EditModelScheme::ModelEditMenu() {
         }
         
         ModelUniforms *mu = scene_->GetModelUniforms(selected_model);
-        mu->scale.x = new_x;
-        mu->scale.y = new_y;
-        mu->scale.z = new_z;
+        // x
+        float currmagx = Magnitude(mu->b.x);
+        mu->b.x.x *= new_x/currmagx;
+        mu->b.x.y *= new_x/currmagx;
+        mu->b.x.z *= new_x/currmagx;
+        // y
+        float currmagy = Magnitude(mu->b.y);
+        mu->b.y.x *= new_y/currmagy;
+        mu->b.y.y *= new_y/currmagy;
+        mu->b.y.z *= new_y/currmagy;
+        // z
+        float currmagz = Magnitude(mu->b.z);
+        mu->b.z.x *= new_z/currmagz;
+        mu->b.z.y *= new_z/currmagz;
+        mu->b.z.z *= new_z/currmagz;
     }
     
     ImGui::SetCursorPos(ImVec2(150, 390));
     if (ImGui::Button("Set Default", ImVec2(120,30))) {
         ModelUniforms *mu = scene_->GetModelUniforms(selected_model);
-        scene_->GetModel(selected_model)->ScaleBy(mu->scale.x, mu->scale.y, mu->scale.z);
-        mu->scale.x = 1;
-        mu->scale.y = 1;
-        mu->scale.z = 1;
+        float currmagx = Magnitude(mu->b.x);
+        float currmagy = Magnitude(mu->b.y);
+        float currmagz = Magnitude(mu->b.z);
+        scene_->GetModel(selected_model)->ScaleBy(currmagx, currmagy, currmagz);
+        // x
+        mu->b.x.x *= 1/currmagx;
+        mu->b.x.y *= 1/currmagx;
+        mu->b.x.z *= 1/currmagx;
+        // y
+        mu->b.y.x *= 1/currmagy;
+        mu->b.y.y *= 1/currmagy;
+        mu->b.y.z *= 1/currmagy;
+        // z
+        mu->b.z.x *= 1/currmagz;
+        mu->b.z.y *= 1/currmagz;
+        mu->b.z.z *= 1/currmagz;
         
         scale_input_x = "1";
         scale_input_y = "1";
@@ -556,6 +583,16 @@ void EditModelScheme::ModelEditMenu() {
     ImGui::SetCursorPos(ImVec2(70, 480));
     if (ImGui::Button("Play", ImVec2(100,30))) {
         scene_->GetModel(selected_model)->StartAnimation(wanted_aid);
+    }
+    
+    ImGui::SetCursorPos(ImVec2(150, 480));
+    if (ImGui::Button("Loop", ImVec2(100,30))) {
+        if (loopanim.first == -1) {
+            scene_->GetModel(selected_model)->StartAnimation(wanted_aid);
+            loopanim = std::make_pair(selected_model, wanted_aid);
+        } else {
+            loopanim.first = -1;;
+        }
     }
     
     ImGui::SetCursorPos(ImVec2(70, 510));
@@ -616,5 +653,9 @@ void EditModelScheme::Update() {
     
     for (std::size_t mid = 0; mid < scene_->NumModels(); mid++) {
         scene_->GetModel(mid)->UpdateAnimation(1 / fps);
+    }
+    
+    if (loopanim.first != -1 && !scene_->GetModel(loopanim.first)->InAnimation()) {
+        scene_->GetModel(loopanim.first)->StartAnimation(loopanim.second);
     }
 }

@@ -26,7 +26,6 @@ using namespace DragonflyUtils;
 
 struct ModelUniforms {
     simd_float3 rotate_origin;
-    simd_float3 scale = {1,1,1};
     Basis b;
 };
 

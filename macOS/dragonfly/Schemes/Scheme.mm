@@ -278,12 +278,25 @@ void Scheme::MoveControlsModels() {
     }
     
     float camtocontrols = dist3to3(camera_->pos, controls_basis_.pos);
-    float scale = camtocontrols/3;
+    float scale = 0.5+camtocontrols/4;
     
     for (int i = 0; i < controls_models_.size(); i++) {
-        controls_model_uniforms_[i].scale.x = scale;
-        controls_model_uniforms_[i].scale.y = scale;
-        controls_model_uniforms_[i].scale.z = scale;
+        ModelUniforms *mu = &controls_model_uniforms_[i];
+        // x
+        float currmagx = Magnitude(mu->b.x);
+        mu->b.x.x *= scale/currmagx;
+        mu->b.x.y *= scale/currmagx;
+        mu->b.x.z *= scale/currmagx;
+        // y
+        float currmagy = Magnitude(mu->b.y);
+        mu->b.y.x *= scale/currmagy;
+        mu->b.y.y *= scale/currmagy;
+        mu->b.y.z *= scale/currmagy;
+        // z
+        float currmagz = Magnitude(mu->b.z);
+        mu->b.z.x *= scale/currmagz;
+        mu->b.z.y *= scale/currmagz;
+        mu->b.z.z *= scale/currmagz;
     }
 }
 

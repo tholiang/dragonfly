@@ -917,22 +917,33 @@ void EditFEVScheme::VertexEditMenu() {
         }
     }
     if (same_links) {
-        for (int i = 0; i < linked_nodes0.size(); i++) {
-            ImGui::SetCursorPos(ImVec2(30, current_y));
-            ImGui::Text("Linked to node %lu", linked_nodes0[i]);
-            
-            if (linked_nodes0.size() > 1) {
-                ImGui::SetCursorPos(ImVec2(150, current_y));
-                if (ImGui::Button("Unlink")) {
-                    for (int j = 0; j < vertex_render_uniforms.selected_vertices.size(); j++) {
-                        model->UnlinkNodeAndVertex(vertex_render_uniforms.selected_vertices[j] - model->VertexStart(), linked_nodes0[i]);
-                    }
-                    should_reset_static_buffers = true;
+        ImGui::SetCursorPos(ImVec2(30, current_y));
+        ImGui::Text("Linked to node %lu", linked_nodes0[0]);
+        
+        if (linked_nodes0.size() > 1) {
+            ImGui::SetCursorPos(ImVec2(150, current_y));
+            if (ImGui::Button("Unlink")) {
+                for (int j = 0; j < vertex_render_uniforms.selected_vertices.size(); j++) {
+                    model->UnlinkNodeAndVertex(vertex_render_uniforms.selected_vertices[j] - model->VertexStart(), linked_nodes0[0]);
                 }
+                should_reset_static_buffers = true;
             }
             
             current_y += 30;
+            
+            ImGui::SetCursorPos(ImVec2(30, current_y));
+            ImGui::Text("Linked to node %lu", linked_nodes0[1]);
+            
+            ImGui::SetCursorPos(ImVec2(150, current_y));
+            if (ImGui::Button("Unlink2")) {
+                for (int j = 0; j < vertex_render_uniforms.selected_vertices.size(); j++) {
+                    model->UnlinkNodeAndVertex(vertex_render_uniforms.selected_vertices[j] - model->VertexStart(), linked_nodes0[1]);
+                }
+                should_reset_static_buffers = true;
+            }
         }
+        
+        current_y += 30;
         
         ImGui::SetCursorPos(ImVec2(30, current_y));
         ImGui::Text("Link to node: ");

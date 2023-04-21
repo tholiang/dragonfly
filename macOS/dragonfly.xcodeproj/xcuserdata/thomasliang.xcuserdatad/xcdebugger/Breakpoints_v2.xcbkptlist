@@ -30,8 +30,8 @@
             filePath = "dragonfly/Modeling/Model.mm"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "576"
-            endingLineNumber = "576"
+            startingLineNumber = "761"
+            endingLineNumber = "761"
             landmarkName = "Model::GetEdgeFaces(vid1, vid2)"
             landmarkType = "7">
          </BreakpointContent>
@@ -46,9 +46,25 @@
             filePath = "dragonfly/Modeling/Model.mm"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "583"
-            endingLineNumber = "583"
+            startingLineNumber = "768"
+            endingLineNumber = "768"
             landmarkName = "Model::GetEdgeFaces(vid1, vid2)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "8627D586-2F96-4393-9FA8-BE97CA59D998"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "dragonfly/Modeling/Model.mm"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "594"
+            endingLineNumber = "594"
+            landmarkName = "Model::RotateNodeToBasis(nid, b)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

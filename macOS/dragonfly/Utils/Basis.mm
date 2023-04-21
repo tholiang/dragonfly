@@ -9,61 +9,83 @@
 
 void DragonflyUtils::RotateBasisOnX(Basis *b, float angle) {
     // https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
+    float magx = Magnitude(b->x);
+    simd_float3 unitx = simd_make_float3(b->x.x / magx, b->x.y / magx, b->x.z / magx);
+    float magy = Magnitude(b->y);
+    simd_float3 unity = simd_make_float3(b->y.x / magy, b->y.y / magy, b->y.z / magy);
+    float magz = Magnitude(b->z);
+    simd_float3 unitz = simd_make_float3(b->z.x / magz, b->z.y / magz, b->z.z / magz);
     
     simd_float3 newY;
     float costh = cos(angle);
-    newY = ScaleVector(b->y, costh);
+    newY = ScaleVector(unity, costh);
     float sinth = sin(angle);
-    newY = AddVectors(newY, ScaleVector(CrossProduct(b->x, b->y), sinth));
-    float doty = DotProduct(b->x, b->y);
-    newY = AddVectors(newY, ScaleVector(b->x, doty * (1-costh)));
+    newY = AddVectors(newY, ScaleVector(CrossProduct(unitx, unity), sinth));
+    float doty = DotProduct(unitx, unity);
+    newY = AddVectors(newY, ScaleVector(unitx, doty * (1-costh)));
     
     simd_float3 newZ;
-    newZ = ScaleVector(b->z, costh);
-    newZ = AddVectors(newZ, ScaleVector(CrossProduct(b->x, b->z), sinth));
-    float dotz = DotProduct(b->x, b->z);
-    newZ = AddVectors(newZ, ScaleVector(b->x, dotz * (1-costh)));
+    newZ = ScaleVector(unitz, costh);
+    newZ = AddVectors(newZ, ScaleVector(CrossProduct(unitx, unitz), sinth));
+    float dotz = DotProduct(unitx, unitz);
+    newZ = AddVectors(newZ, ScaleVector(unitx, dotz * (1-costh)));
     
-    b->y = newY;
-    b->z = newZ;
+    b->y = simd_make_float3(newY.x * magy, newY.y * magy, newY.z * magy);
+    b->z = simd_make_float3(newZ.x * magz, newZ.y * magz, newZ.z * magz);
 }
 
 void DragonflyUtils::RotateBasisOnY(Basis *b, float angle) {
+    // https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
+    float magx = Magnitude(b->x);
+    simd_float3 unitx = simd_make_float3(b->x.x / magx, b->x.y / magx, b->x.z / magx);
+    float magy = Magnitude(b->y);
+    simd_float3 unity = simd_make_float3(b->y.x / magy, b->y.y / magy, b->y.z / magy);
+    float magz = Magnitude(b->z);
+    simd_float3 unitz = simd_make_float3(b->z.x / magz, b->z.y / magz, b->z.z / magz);
+    
     simd_float3 newX;
     float costh = cos(angle);
-    newX = ScaleVector(b->x, costh);
+    newX = ScaleVector(unitx, costh);
     float sinth = sin(angle);
-    newX = AddVectors(newX, ScaleVector(CrossProduct(b->y, b->x), sinth));
-    float dotx = DotProduct(b->y, b->x);
-    newX = AddVectors(newX, ScaleVector(b->y, dotx * (1-costh)));
+    newX = AddVectors(newX, ScaleVector(CrossProduct(unity, unitx), sinth));
+    float dotx = DotProduct(unity, unitx);
+    newX = AddVectors(newX, ScaleVector(unity, dotx * (1-costh)));
     
     simd_float3 newZ;
-    newZ = ScaleVector(b->z, costh);
-    newZ = AddVectors(newZ, ScaleVector(CrossProduct(b->y, b->z), sinth));
-    float dotz = DotProduct(b->y, b->z);
-    newZ = AddVectors(newZ, ScaleVector(b->y, dotz * (1-costh)));
+    newZ = ScaleVector(unitz, costh);
+    newZ = AddVectors(newZ, ScaleVector(CrossProduct(unity, unitz), sinth));
+    float dotz = DotProduct(unity, unitz);
+    newZ = AddVectors(newZ, ScaleVector(unity, dotz * (1-costh)));
     
-    b->x = newX;
-    b->z = newZ;
+    b->x = simd_make_float3(newX.x * magx, newX.y * magx, newX.z * magx);
+    b->z = simd_make_float3(newZ.x * magz, newZ.y * magz, newZ.z * magz);
 }
 
 void DragonflyUtils::RotateBasisOnZ(Basis *b, float angle) {
+    // https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
+    float magx = Magnitude(b->x);
+    simd_float3 unitx = simd_make_float3(b->x.x / magx, b->x.y / magx, b->x.z / magx);
+    float magy = Magnitude(b->y);
+    simd_float3 unity = simd_make_float3(b->y.x / magy, b->y.y / magy, b->y.z / magy);
+    float magz = Magnitude(b->z);
+    simd_float3 unitz = simd_make_float3(b->z.x / magz, b->z.y / magz, b->z.z / magz);
+    
     simd_float3 newX;
     float costh = cos(angle);
-    newX = ScaleVector(b->x, costh);
+    newX = ScaleVector(unitx, costh);
     float sinth = sin(angle);
-    newX = AddVectors(newX, ScaleVector(CrossProduct(b->z, b->x), sinth));
-    float dotx = DotProduct(b->z, b->x);
-    newX = AddVectors(newX, ScaleVector(b->z, dotx * (1-costh)));
+    newX = AddVectors(newX, ScaleVector(CrossProduct(unitz, unitx), sinth));
+    float dotx = DotProduct(unitz, unitx);
+    newX = AddVectors(newX, ScaleVector(unitz, dotx * (1-costh)));
     
     simd_float3 newY;
-    newY = ScaleVector(b->y, costh);
-    newY = AddVectors(newY, ScaleVector(CrossProduct(b->z, b->y), sinth));
-    float doty = DotProduct(b->z, b->y);
-    newY = AddVectors(newY, ScaleVector(b->z, doty * (1-costh)));
+    newY = ScaleVector(unity, costh);
+    newY = AddVectors(newY, ScaleVector(CrossProduct(unitz, unity), sinth));
+    float doty = DotProduct(unitz, unity);
+    newY = AddVectors(newY, ScaleVector(unitz, doty * (1-costh)));
     
-    b->x = newX;
-    b->y = newY;
+    b->x = simd_make_float3(newX.x * magx, newX.y * magx, newX.z * magx);
+    b->y = simd_make_float3(newY.x * magy, newY.y * magy, newY.z * magy);
 }
 
 simd_float3 DragonflyUtils::TranslatePointToStandard(Basis *b, simd_float3 point) {
@@ -89,19 +111,26 @@ simd_float3 DragonflyUtils::TranslatePointToStandard(Basis *b, simd_float3 point
 }
 
 simd_float3 DragonflyUtils::RotatePointToStandard(Basis *b, simd_float3 point) {
+    float magx = Magnitude(b->x);
+    simd_float3 unitx = simd_make_float3(b->x.x / magx, b->x.y / magx, b->x.z / magx);
+    float magy = Magnitude(b->y);
+    simd_float3 unity = simd_make_float3(b->y.x / magy, b->y.y / magy, b->y.z / magy);
+    float magz = Magnitude(b->z);
+    simd_float3 unitz = simd_make_float3(b->z.x / magz, b->z.y / magz, b->z.z / magz);
+    
     simd_float3 ret;
     // x component
-    ret.x = point.x * b->x.x;
-    ret.y = point.x * b->x.y;
-    ret.z = point.x * b->x.z;
+    ret.x = point.x * unitx.x;
+    ret.y = point.x * unitx.y;
+    ret.z = point.x * unitx.z;
     // y component
-    ret.x += point.y * b->y.x;
-    ret.y += point.y * b->y.y;
-    ret.z += point.y * b->y.z;
+    ret.x += point.y * unity.x;
+    ret.y += point.y * unity.y;
+    ret.z += point.y * unity.z;
     // z component
-    ret.x += point.z * b->z.x;
-    ret.y += point.z * b->z.y;
-    ret.z += point.z * b->z.z;
+    ret.x += point.z * unitz.x;
+    ret.y += point.z * unitz.y;
+    ret.z += point.z * unitz.z;
     
     return ret;
 }
@@ -120,6 +149,23 @@ simd_float3 DragonflyUtils::TranslatePointToBasis(Basis *b, simd_float3 point) {
     
     return ret;
 };
+
+simd_float3 DragonflyUtils::RotatePointToBasis(Basis *b, simd_float3 point) {
+    float magx = Magnitude(b->x);
+    simd_float3 unitx = simd_make_float3(b->x.x / magx, b->x.y / magx, b->x.z / magx);
+    float magy = Magnitude(b->y);
+    simd_float3 unity = simd_make_float3(b->y.x / magy, b->y.y / magy, b->y.z / magy);
+    float magz = Magnitude(b->z);
+    simd_float3 unitz = simd_make_float3(b->z.x / magz, b->z.y / magz, b->z.z / magz);
+    
+    simd_float3 ret;
+    
+    ret.x = Projection(point, unitx);
+    ret.y = Projection(point, unity);
+    ret.z = Projection(point, unitz);
+    
+    return ret;
+}
 
 DragonflyUtils::Basis DragonflyUtils::TranslateBasis(Basis *b, Basis *onto) {
     Basis newb;

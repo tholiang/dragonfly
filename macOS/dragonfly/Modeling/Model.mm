@@ -15,7 +15,10 @@ Animation::Animation(Model *model) {
     
     for (int i = 0; i < model_->NumNodes(); i++) {
         node_animations.push_back(new std::vector<NodeKeyFrame *>());
+        b0s.push_back(Basis());
     }
+    
+    SetOrdering();
 }
 
 Animation::~Animation() {
@@ -26,6 +29,21 @@ Animation::~Animation() {
             free(kfs->at(j));
         }
         free(kfs);
+    }
+}
+
+void Animation::SetOrdering() {
+    node_ordering.clear();
+    
+    while (node_ordering.size() < model_->NumNodes()) {
+        for (int i = 0; i < model_->NumNodes(); i++) {
+            Node *n = model_->GetNode(i);
+            if (!DragonflyUtils::InIntVector(node_ordering, i)) {
+                if (n->locked_to == -1 || DragonflyUtils::InIntVector(node_ordering, n->locked_to)) {
+                    node_ordering.push_back(i);
+                }
+            }
+        }
     }
 }
 
@@ -75,6 +93,7 @@ std::pair<int, int> Animation::FindFrameIdx(uint32_t nid, float time) {
 
 void Animation::AddNode() {
     node_animations.push_back(new std::vector<NodeKeyFrame *>());
+    b0s.push_back(Basis());
 }
 
 void Animation::SetKeyFrame(uint32_t nid, float time, Basis basis) {
@@ -109,29 +128,69 @@ void Animation::RemoveKeyFrame(uint32_t nid, uint32_t kfid) {
 }
 
 void Animation::SetAtTime(float time) {
-    for (int i = 0; i < model_->NumNodes(); i++) {
+    for (int n = 0; n < model_->NumNodes(); n++) {
+        int i = node_ordering[n];
         Node *node = model_->GetNode(i);
 
         std::pair<int, int> loc = FindFrameIdx(i, time);
         if (loc.first < 0 || loc.second >= node_animations[i]->size()) {
-            continue;
+            if (time <= 0.1) {
+                b0s[i] = node->b;
+            } else if (node_animations.at(i)->size() > 0) {
+                NodeKeyFrame *next = node_animations.at(i)->at(0);
+                float weight = time / next->time;
+
+                float posx = (b0s[i].pos.x * (1-weight)) + (next->b.pos.x * (weight));
+                float posy = (b0s[i].pos.y * (1-weight)) + (next->b.pos.y * (weight));
+                float posz = (b0s[i].pos.z * (1-weight)) + (next->b.pos.z * (weight));
+                
+                model_->MoveNodeTo(i, posx, posy, posz);
+                
+                Basis b;
+                b.x.x = (b0s[i].x.x * (1-weight)) + (next->b.x.x * (weight));
+                b.x.y = (b0s[i].x.y * (1-weight)) + (next->b.x.y * (weight));
+                b.x.z = (b0s[i].x.z * (1-weight)) + (next->b.x.z * (weight));
+                
+                b.y.x = (b0s[i].y.x * (1-weight)) + (next->b.y.x * (weight));
+                b.y.y = (b0s[i].y.y * (1-weight)) + (next->b.y.y * (weight));
+                b.y.z = (b0s[i].y.z * (1-weight)) + (next->b.y.z * (weight));
+                
+                b.z.x = (b0s[i].z.x * (1-weight)) + (next->b.z.x * (weight));
+                b.z.y = (b0s[i].z.y * (1-weight)) + (next->b.z.y * (weight));
+                b.z.z = (b0s[i].z.z * (1-weight)) + (next->b.z.z * (weight));
+                
+                model_->RotateNodeToBasis(i, &b);
+            }
         } else if (loc.first < loc.second) {
             NodeKeyFrame *prev = node_animations.at(i)->at(loc.first);
             NodeKeyFrame *next = node_animations.at(i)->at(loc.second);
 
             float weight = (time - prev->time) / (next->time - prev->time);
 
-//            node->pos.x = (prev->pos.x * (1-weight)) + (next->pos.x * (weight));
-//            node->pos.y = (prev->pos.y * (1-weight)) + (next->pos.y * (weight));
-//            node->pos.z = (prev->pos.z * (1-weight)) + (next->pos.z * (weight));
-
-//            node->angle.x = (prev->angle.x * (1-weight)) + (next->angle.x * weight);
-//            node->angle.y = (prev->angle.y * (1-weight)) + (next->angle.y * weight);
-//            node->angle.z = (prev->angle.z * (1-weight)) + (next->angle.z * weight);
+            float posx = (prev->b.pos.x * (1-weight)) + (next->b.pos.x * (weight));
+            float posy = (prev->b.pos.y * (1-weight)) + (next->b.pos.y * (weight));
+            float posz = (prev->b.pos.z * (1-weight)) + (next->b.pos.z * (weight));
+            
+            model_->MoveNodeTo(i, posx, posy, posz);
+            
+            Basis b;
+            b.x.x = (prev->b.x.x * (1-weight)) + (next->b.x.x * (weight));
+            b.x.y = (prev->b.x.y * (1-weight)) + (next->b.x.y * (weight));
+            b.x.z = (prev->b.x.z * (1-weight)) + (next->b.x.z * (weight));
+            
+            b.y.x = (prev->b.y.x * (1-weight)) + (next->b.y.x * (weight));
+            b.y.y = (prev->b.y.y * (1-weight)) + (next->b.y.y * (weight));
+            b.y.z = (prev->b.y.z * (1-weight)) + (next->b.y.z * (weight));
+            
+            b.z.x = (prev->b.z.x * (1-weight)) + (next->b.z.x * (weight));
+            b.z.y = (prev->b.z.y * (1-weight)) + (next->b.z.y * (weight));
+            b.z.z = (prev->b.z.z * (1-weight)) + (next->b.z.z * (weight));
+            
+            model_->RotateNodeToBasis(i, &b);
         } else {
             NodeKeyFrame *curr = node_animations.at(i)->at(loc.first);
-
-            node->b = curr->b;
+            model_->MoveNodeTo(i, curr->b.pos.x, curr->b.pos.y, curr->b.pos.z);
+            model_->RotateNodeToBasis(i, &curr->b);
         }
     }
 }
@@ -153,10 +212,10 @@ void Animation::FromFile(std::ifstream &file) {
         std::vector<NodeKeyFrame *> *frames = node_animations[i];
         for (int j = 0; j < numkeys; j++) {
             getline(file, line);
-            float time, posx, posy, posz, angx, angy, angz;
-            
-            sscanf(line.c_str(), "%f %f %f %f %f %f %f", &time, &posx, &posy, &posz, &angx, &angy, &angz);
-            //SetKeyFrame(i, time, simd_make_float3(posx, posy, posz), simd_make_float3(angx, angy, angz));
+            float time;
+            sscanf(line.c_str(), "%f", &time);
+            Basis b = BasisFromFile(file);
+            SetKeyFrame(i, time, b);
         }
     }
 }
@@ -166,7 +225,8 @@ void Animation::AddToFile(std::ofstream &file) {
         file << "nid " << i << std::endl;
         file << node_animations[i]->size() << " keys" << std::endl;
         for (int j = 0; j < node_animations[i]->size(); j++) {
-            file << node_animations[i]->at(j)->time << " ";
+            file << node_animations[i]->at(j)->time << std::endl;
+            BasisToFile(file, &node_animations[i]->at(j)->b);
 //            file << node_animations[i]->at(j)->pos.x << " ";
 //            file << node_animations[i]->at(j)->pos.y << " ";
 //            file << node_animations[i]->at(j)->pos.z << " ";
@@ -234,7 +294,6 @@ unsigned Model::MakeNode(float x, float y, float z) {
     Node *node = new Node();
     node->b = Basis();
     node->b.pos = simd_make_float3(x, y, z);
-    node->scale = simd_make_float3(1, 1, 1);
     nodes.push_back(node);
     
     for (int i = 0; i < animations.size(); i++) {
@@ -261,9 +320,9 @@ void Model::LinkNodeAndVertex(unsigned long vid, unsigned long nid) {
     
     NodeVertexLink *nvlink = nvlinks[setIndex];
     nvlink->nid = nid;
-    nvlink->vector.x = vertex.x - node->b.pos.x;
-    nvlink->vector.y = vertex.y - node->b.pos.y;
-    nvlink->vector.z = vertex.z - node->b.pos.z;
+//    nvlink->vector.x = vertex.x - node->b.pos.x;
+//    nvlink->vector.y = vertex.y - node->b.pos.y;
+//    nvlink->vector.z = vertex.z - node->b.pos.z;
     
 //    simd_float3 reverse_angle = simd_make_float3(-node->angle.x, -node->angle.y, -node->angle.z);
 //    nvlink->vector = RotateAround(nvlink->vector, simd_make_float3(0, 0, 0), reverse_angle);
@@ -319,6 +378,9 @@ void Model::DetermineLinkWeights(Vertex loc, unsigned long vid) {
 }
 
 void Model::LockNodeToNode(unsigned nid1, unsigned nid2) {
+    if (nid1 == nid2) {
+        return;
+    }
     nodes[nid1]->locked_to = nid2;
 }
 
@@ -386,6 +448,8 @@ void Model::MoveVertexBy(unsigned vid, float dx, float dy, float dz) {
 }
 
 void Model::MoveNodeBy(unsigned nid, float dx, float dy, float dz) {
+    simd_float3 nodepos = nodes[nid]->b.pos;
+    
     float new_x = nodes[nid]->b.pos.x + dx;
     float new_y = nodes[nid]->b.pos.y + dy;
     float new_z = nodes[nid]->b.pos.z + dz;
@@ -395,11 +459,27 @@ void Model::MoveNodeBy(unsigned nid, float dx, float dy, float dz) {
         nodes[nid]->b.pos.y = new_y;
         nodes[nid]->b.pos.z = new_z;
     } else {
-        float curr_dist = dist3to3(nodes[nid]->b.pos, nodes[nodes[nid]->locked_to]->b.pos);
-        float new_dist = dist3to3(simd_make_float3(new_x, new_y, new_z), nodes[nodes[nid]->locked_to]->b.pos);
-        nodes[nid]->b.pos.x = new_x * curr_dist / new_dist;
-        nodes[nid]->b.pos.y = new_y * curr_dist / new_dist;
-        nodes[nid]->b.pos.z = new_z * curr_dist / new_dist;
+        simd_float3 lockpos = nodes[nodes[nid]->locked_to]->b.pos;
+        simd_float3 vec = simd_make_float3(nodepos.x-lockpos.x, nodepos.y-lockpos.y, nodepos.z-lockpos.z);
+        float curr_dist = Magnitude(vec);
+        simd_float3 newvec = simd_make_float3(new_x-lockpos.x, new_y-lockpos.y, new_z-lockpos.z);
+        float new_dist = Magnitude(newvec);
+        nodes[nid]->b.pos.x = lockpos.x+(newvec.x * curr_dist / new_dist);
+        nodes[nid]->b.pos.y = lockpos.y+(newvec.y * curr_dist / new_dist);
+        nodes[nid]->b.pos.z = lockpos.z+(newvec.z * curr_dist / new_dist);
+    }
+    
+    simd_float3 change;
+    change.x = nodes[nid]->b.pos.x - nodepos.x;
+    change.y = nodes[nid]->b.pos.y - nodepos.y;
+    change.z = nodes[nid]->b.pos.z - nodepos.z;
+    
+    for (int i = 0; i < nodes.size(); i++) {
+        if (nodes[i]->locked_to == nid && i != nid) {
+            nodes[i]->locked_to = -1;
+            MoveNodeBy(i, change.x, change.y, change.z);
+            nodes[i]->locked_to = nid;
+        }
     }
 }
 
@@ -419,16 +499,117 @@ void Model::MoveVertexTo(unsigned vid, float x, float y, float z) {
 }
 
 void Model::MoveNodeTo(unsigned nid, float x, float y, float z) {
-    if (nodes[nid]->locked_to == -1) {
-        nodes[nid]->b.pos.x = x;
-        nodes[nid]->b.pos.y = y;
-        nodes[nid]->b.pos.z = z;
-    } else {
-        float curr_dist = dist3to3(nodes[nid]->b.pos, nodes[nodes[nid]->locked_to]->b.pos);
-        float new_dist = dist3to3(simd_make_float3(x, y, z), nodes[nodes[nid]->locked_to]->b.pos);
-        nodes[nid]->b.pos.x = x * new_dist / curr_dist;
-        nodes[nid]->b.pos.y = y * new_dist / curr_dist;
-        nodes[nid]->b.pos.z = z * new_dist / curr_dist;
+    simd_float3 nodepos = nodes[nid]->b.pos;
+    MoveNodeBy(nid, x - nodepos.x, y - nodepos.y, z - nodepos.z);
+//    if (nodes[nid]->locked_to == -1) {
+//        nodes[nid]->b.pos.x = x;
+//        nodes[nid]->b.pos.y = y;
+//        nodes[nid]->b.pos.z = z;
+//    } else {
+//        simd_float3 nodepos = nodes[nid]->b.pos;
+//        simd_float3 lockpos = nodes[nodes[nid]->locked_to]->b.pos;
+//        simd_float3 vec = simd_make_float3(nodepos.x-lockpos.x, nodepos.y-lockpos.y, nodepos.z-lockpos.z);
+//        float curr_dist = Magnitude(vec);
+//        simd_float3 newvec = simd_make_float3(x-lockpos.x, y-lockpos.y, z-lockpos.z);
+//        float new_dist = Magnitude(newvec);
+//        nodes[nid]->b.pos.x = lockpos.x+(newvec.x * curr_dist / new_dist);
+//        nodes[nid]->b.pos.y = lockpos.y+(newvec.y * curr_dist / new_dist);
+//        nodes[nid]->b.pos.z = lockpos.z+(newvec.z * curr_dist / new_dist);
+//    }
+}
+
+
+void Model::RotateNodeOnX(unsigned nid, float angle) {
+    Basis origb = nodes[nid]->b;
+    RotateBasisOnX(&nodes[nid]->b, angle);
+    
+    //std::cout<<Magnitude(nodes[nid]->b.x)<<" "<<Magnitude(nodes[nid]->b.y)<<" "<<Magnitude(nodes[nid]->b.z)<<std::endl;
+    
+    simd_float3 nodepos = nodes[nid]->b.pos;
+    for (int i = 0; i < nodes.size(); i++) {
+        if (nodes[i]->locked_to == nid) {
+            nodes[i]->locked_to = -1;
+            simd_float3 childpos = nodes[i]->b.pos;
+            simd_float3 vec = simd_make_float3(childpos.x - nodepos.x, childpos.y - nodepos.y, childpos.z - nodepos.z);
+            vec = RotatePointToBasis(&origb, vec);
+            vec = RotatePointToStandard(&nodes[nid]->b, vec);
+            MoveNodeTo(i, nodepos.x+vec.x, nodepos.y+vec.y, nodepos.z+vec.z);
+            RotateNodeOnX(i, angle);
+            nodes[i]->locked_to = nid;
+        }
+    }
+}
+
+void Model::RotateNodeOnY(unsigned nid, float angle) {
+    Basis origb = nodes[nid]->b;
+    RotateBasisOnY(&nodes[nid]->b, angle);
+    
+    simd_float3 nodepos = nodes[nid]->b.pos;
+    for (int i = 0; i < nodes.size(); i++) {
+        if (nodes[i]->locked_to == nid) {
+            nodes[i]->locked_to = -1;
+            simd_float3 childpos = nodes[i]->b.pos;
+            simd_float3 vec = simd_make_float3(childpos.x - nodepos.x, childpos.y - nodepos.y, childpos.z - nodepos.z);
+            vec = RotatePointToBasis(&origb, vec);
+            vec = RotatePointToStandard(&nodes[nid]->b, vec);
+            MoveNodeTo(i, nodepos.x+vec.x, nodepos.y+vec.y, nodepos.z+vec.z);
+            RotateNodeOnY(i, angle);
+            nodes[i]->locked_to = nid;
+        }
+    }
+}
+
+void Model::RotateNodeOnZ(unsigned nid, float angle) {
+    Basis origb = nodes[nid]->b;
+    RotateBasisOnZ(&nodes[nid]->b, angle);
+    
+    simd_float3 nodepos = nodes[nid]->b.pos;
+    for (int i = 0; i < nodes.size(); i++) {
+        if (nodes[i]->locked_to == nid) {
+            nodes[i]->locked_to = -1;
+            simd_float3 childpos = nodes[i]->b.pos;
+            simd_float3 vec = simd_make_float3(childpos.x - nodepos.x, childpos.y - nodepos.y, childpos.z - nodepos.z);
+            vec = RotatePointToBasis(&origb, vec);
+            vec = RotatePointToStandard(&nodes[nid]->b, vec);
+            MoveNodeTo(i, nodepos.x+vec.x, nodepos.y+vec.y, nodepos.z+vec.z);
+            RotateNodeOnZ(i, angle);
+            nodes[i]->locked_to = nid;
+        }
+    }
+}
+
+void Model::RotateNodeToBasis(unsigned nid, Basis *b) {
+    Basis origb = nodes[nid]->b;
+    nodes[nid]->b.x = b->x;
+    nodes[nid]->b.y = b->y;
+    nodes[nid]->b.z = b->z;
+    
+    simd_float3 nodepos = nodes[nid]->b.pos;
+    for (int i = 0; i < nodes.size(); i++) {
+        if (nodes[i]->locked_to == nid) {
+            nodes[i]->locked_to = -1;
+            simd_float3 childpos = nodes[i]->b.pos;
+            simd_float3 vec = simd_make_float3(childpos.x - nodepos.x, childpos.y - nodepos.y, childpos.z - nodepos.z);
+            vec = RotatePointToBasis(&origb, vec);
+            vec = RotatePointToStandard(&nodes[nid]->b, vec);
+            MoveNodeTo(i, nodepos.x+vec.x, nodepos.y+vec.y, nodepos.z+vec.z);
+            
+            simd_float3 childx = nodes[i]->b.x;
+            childx = RotatePointToBasis(&origb, childx);
+            childx = RotatePointToStandard(&nodes[nid]->b, childx);
+            nodes[i]->b.x = childx;
+
+            simd_float3 childy = nodes[i]->b.y;
+            childy = RotatePointToBasis(&origb, childy);
+            childy = RotatePointToStandard(&nodes[nid]->b, childy);
+            nodes[i]->b.y = childy;
+
+            simd_float3 childz = nodes[i]->b.z;
+            childz = RotatePointToBasis(&origb, childz);
+            childz = RotatePointToStandard(&nodes[nid]->b, childz);
+            nodes[i]->b.z = childz;
+            nodes[i]->locked_to = nid;
+        }
     }
 }
 
@@ -524,6 +705,10 @@ void Model::UpdateAnimation(float dt) {
     } else {
         curr_anim_time = 0;
     }
+}
+
+bool Model::InAnimation() {
+    return curr_aid != -1;
 }
 
 unsigned Model::NumAnimations() {
@@ -739,8 +924,8 @@ void Model::SaveToFile(std::string path) {
     myfile << nodes.size() << " nodes" << std::endl;
     for (int i = 0; i < nodes.size(); i++) {
         Node *n = nodes[i];
+        myfile << n->locked_to << std::endl;
         DragonflyUtils::BasisToFile(myfile, &n->b);
-        myfile << n->scale.x << " " << n->scale.y << " " << n->scale.z << std::endl;
     }
     
     myfile << nvlinks.size() << " vertices" << std::endl;
@@ -781,12 +966,11 @@ void Model::FromFile(std::string path) {
         sscanf(line.c_str(), "%d nodes", &num_nodes);
         for (int i = 0; i < num_nodes; i++) {
             Node *n = new Node();
-            n->b = DragonflyUtils::BasisFromFile(myfile);
-            n->locked_to = -1;
-            float scalex, scaley, scalez;
             getline(myfile, line);
-            sscanf(line.c_str(), "%f %f %f", &scalex, &scaley, &scalez);
-            n->scale = simd_make_float3(scalex, scaley, scalez);
+            int lockedto;
+            sscanf(line.c_str(), "%d", &lockedto);
+            n->b = DragonflyUtils::BasisFromFile(myfile);
+            n->locked_to = lockedto;
             
             nodes.push_back(n);
         }
