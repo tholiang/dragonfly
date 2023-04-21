@@ -30,6 +30,7 @@ EditNodeScheme::~EditNodeScheme() {
 void EditNodeScheme::GenerateCustomUI() {
     MakeRect(-window_width_/2, -window_height_/2, window_width_-right_menu_width_, 200, 9, simd_make_float4(0.3, 0.3, 0.3, 1));
     MakeIsoTriangle(100, -window_height_/2+50, 20, 20, 5, simd_make_float4(1, 0, 0, 1));
+    clickable_ui.push_back(1);
 }
 
 void EditNodeScheme::UpdateCustomUI() {
@@ -289,6 +290,16 @@ bool EditNodeScheme::ClickOnScene(simd_float2 loc) {
 void EditNodeScheme::HandleSelection(simd_float2 loc) {
     std::pair<int, float> controls_selection = ControlModelClicked(loc);
     std::pair<std::pair<int, int>, float> node_selection = NodeClicked(loc);
+    std::pair<int, float> ui_selection = UIElementClicked(loc);
+    
+    if (ui_selection.first != -1) {
+        for (int i = 0; i < clickable_ui.size(); i++) {
+            if (clickable_ui[i] == ui_selection.first) {
+                selected_ui_elem = ui_selection.first;
+            }
+        }
+        return;
+    }
     
     if (node_selection.first.first != -1 && controls_selection.first != -1) {
         if (node_selection.second > controls_selection.second) {

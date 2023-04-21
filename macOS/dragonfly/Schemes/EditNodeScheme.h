@@ -40,6 +40,9 @@ private:
     int selected_node_ = -1;
     int selected_model_ = -1;
     
+    int selected_ui_elem = -1;
+    std::vector<int> clickable_ui;
+    
     unsigned long wanted_aid = 0;
     float wanted_time = 0;
     

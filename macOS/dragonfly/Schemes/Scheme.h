@@ -202,6 +202,7 @@ protected:
     virtual bool ClickOnScene(simd_float2 loc);
     
     virtual std::pair<int,float> ControlModelClicked(simd_float2 loc);
+    virtual std::pair<int, float> UIElementClicked(simd_float2 loc);
     
     virtual void SetControlsBasis();
     virtual void MoveControlsModels();

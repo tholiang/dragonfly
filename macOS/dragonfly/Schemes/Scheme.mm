@@ -329,6 +329,36 @@ std::pair<int,float> Scheme::ControlModelClicked(simd_float2 loc) {
     return std::make_pair(clickedIdx, minZ);
 }
 
+std::pair<int, float> Scheme::UIElementClicked(simd_float2 loc) {
+    float d1, d2, d3;
+    bool has_neg, has_pos;
+    
+    float minZ = -1;
+    int clickedIdx = -1;
+    
+    int fid = 0;
+    for (int eid = 0; eid < ui_elements_.size(); eid++) {
+        UIElement *e = ui_elements_[eid];
+        int fid_end = fid + e->NumFaces();
+        for (; fid < fid_end; fid++) {
+            UIFace face = ui_elements_faces_[fid];
+            Vertex v1 = ui_elements_vertices_[face.vertices[0]];
+            Vertex v2 = ui_elements_vertices_[face.vertices[1]];
+            Vertex v3 = ui_elements_vertices_[face.vertices[2]];
+            
+            if (InTriangle(loc, v1, v2, v3)) {
+                float z = WeightedZ(loc, v1, v2, v3);
+                if (minZ == -1 || z < minZ) {
+                    minZ = z;
+                    clickedIdx = eid;
+                }
+            }
+        }
+    }
+    
+    return std::make_pair(clickedIdx, minZ);
+}
+
 void Scheme::MoveControlsModels() {
     for (int i = 0; i < controls_model_uniforms_.size(); i++) {
         controls_model_uniforms_[i].rotate_origin = controls_basis_.pos;
