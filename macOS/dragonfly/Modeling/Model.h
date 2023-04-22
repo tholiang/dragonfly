@@ -80,6 +80,8 @@ public:
     
     void FromFile(std::ifstream &file);
     void AddToFile(std::ofstream &file);
+    
+    std::vector<std::vector<NodeKeyFrame *> *> *GetAnimations();
 };
 
 class Model {
@@ -145,11 +147,16 @@ public:
     void ScaleBy(float x, float y, float z);
     void ScaleOnNodeBy(float x, float y, float z, int nid);
     
+    Animation *GetAnimation(int aid);
     unsigned MakeAnimation();
     void StartAnimation(int aid);
     void SetKeyFrame(int aid, int nid, float time);
+    void RemoveKeyFrame(int aid, int nid, int kfid);
     void UpdateAnimation(float dt);
+    void SetAnimationTime(float t);
     bool InAnimation();
+    int CurrAid();
+    float CurrAnimationTime();
     unsigned NumAnimations();
     
     Vertex GetVertex(unsigned long vid);

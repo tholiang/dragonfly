@@ -241,6 +241,10 @@ void Animation::AddToFile(std::ofstream &file) {
     }
 }
 
+std::vector<std::vector<NodeKeyFrame *> *> *Animation::GetAnimations() {
+    return &node_animations;
+}
+
 Model::Model(uint32 mid) : modelID(mid) {
     name_ = "model"+std::to_string(mid);
     face_start = 0;
@@ -677,6 +681,10 @@ void Model::ScaleOnNodeBy(float x, float y, float z, int nid) {
     }
 }
 
+Animation *Model::GetAnimation(int aid) {
+    return animations[aid];
+}
+
 unsigned Model::MakeAnimation() {
     Animation *animation = new Animation(this);
     animations.push_back(animation);
@@ -700,10 +708,31 @@ void Model::SetKeyFrame(int aid, int nid, float time) {
     anim->SetKeyFrame(nid, time, n->b);
 }
 
+void Model::RemoveKeyFrame(int aid, int nid, int kfid) {
+    Animation *anim = animations.at(aid);
+    Node *n = nodes.at(nid);
+    
+    anim->RemoveKeyFrame(nid, kfid);
+}
+
 void Model::UpdateAnimation(float dt) {
     if (curr_aid >= 0) {
         curr_anim_time += dt;
-        //std::cout<<curr_anim_time<<std::endl;
+        Animation *anim = animations.at(curr_aid);
+        if (curr_anim_time > anim->GetLength()) {
+            curr_aid = -1;
+            curr_anim_time = 0;
+        } else {
+            anim->SetAtTime(curr_anim_time);
+        }
+    } else {
+        curr_anim_time = 0;
+    }
+}
+
+void Model::SetAnimationTime(float t) {
+    if (curr_aid >= 0) {
+        curr_anim_time = t;
         Animation *anim = animations.at(curr_aid);
         if (curr_anim_time > anim->GetLength()) {
             curr_aid = -1;
@@ -718,6 +747,14 @@ void Model::UpdateAnimation(float dt) {
 
 bool Model::InAnimation() {
     return curr_aid != -1;
+}
+
+int Model::CurrAid() {
+    return curr_aid;
+}
+
+float Model::CurrAnimationTime() {
+    return curr_anim_time;
 }
 
 unsigned Model::NumAnimations() {

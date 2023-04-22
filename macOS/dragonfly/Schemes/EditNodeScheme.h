@@ -13,6 +13,7 @@
 class EditNodeScheme : public Scheme {
 private:
     int right_menu_width_ = 300;
+    int bottom_menu_height_ = 200;
     
     bool render_rightclick_popup_ = false;
     simd_float2 rightclick_popup_loc_;
@@ -41,10 +42,13 @@ private:
     int selected_model_ = -1;
     
     int selected_ui_elem = -1;
+    int selected_key = -1;
     std::vector<int> clickable_ui;
+    int key_ui_start = 5;
     
-    unsigned long wanted_aid = 0;
+    int wanted_aid = -1;
     float wanted_time = 0;
+    bool anim_paused = true;
     
     std::string angle_input_x = "0";
     std::string angle_input_y = "0";
@@ -55,10 +59,15 @@ private:
     std::string scale_input_z = "1";
     
     void GenerateCustomUI();
+    void UpdateCustomUI();
+    void SetNewAnimations(int aid);
+    void UpdateTimeKey();
     
     void CreateControlsModels();
     
     std::pair<std::pair<int, int>, float> NodeClicked(simd_float2 loc);
+    
+    float GetTimeFromLocation(simd_float2 loc);
     
     bool ClickOnScene(simd_float2 loc);
     
@@ -70,11 +79,12 @@ private:
     
     void RightClickPopup();
     
+    void BottomMenu();
     void RightMenu();
     void NodeEditMenu();
+    void AnimationMenu();
     
     void MainWindow();
-    void UpdateCustomUI();
 public:
     void BuildUI();
     void SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp, Vertex *uiv, UIFace *uif);
@@ -86,6 +96,8 @@ public:
     
     EditNodeScheme();
     ~EditNodeScheme();
+    
+    virtual void Update();
 };
 
 #endif /* EditNodeScheme_h */

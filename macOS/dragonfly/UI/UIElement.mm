@@ -12,7 +12,9 @@ UIElement::UIElement(uint32_t eid) : elementID(eid) {
 }
 
 UIElement::~UIElement() {
-    
+    for (int i = 0; i < faces.size(); i++) {
+        delete faces[i];
+    }
 }
 
 int UIElement::MakeVertex(int x, int y, int z) {

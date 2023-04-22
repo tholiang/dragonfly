@@ -29,8 +29,13 @@ EditNodeScheme::~EditNodeScheme() {
 
 void EditNodeScheme::GenerateCustomUI() {
     MakeRect(-window_width_/2, -window_height_/2, window_width_-right_menu_width_, 200, 9, simd_make_float4(0.3, 0.3, 0.3, 1));
-    MakeIsoTriangle(100, -window_height_/2+50, 20, 20, 5, simd_make_float4(1, 0, 0, 1));
-    clickable_ui.push_back(1);
+    MakeRect(-window_width_/2+50, -window_height_/2 + 75, window_width_-right_menu_width_-100, 2, 8, simd_make_float4(0.9, 0.9, 0.9, 1));
+    MakeRect(-window_width_/2+50, -window_height_/2 + 55, window_width_-right_menu_width_-100, 20, 7, simd_make_float4(0.55, 0.35, 0.35, 0.2));
+    MakeRect(-window_width_/2+50, -window_height_/2 + 77, window_width_-right_menu_width_-100, 20, 7, simd_make_float4(0.35, 0.35, 0.55, 0.2));
+    clickable_ui.push_back(2);
+    clickable_ui.push_back(3);
+    
+    MakeIsoTriangle(-window_width_/2+40, -window_height_/2 + 95, 20, -20, 5, simd_make_float4(0, 0, 1, 1));
 }
 
 void EditNodeScheme::UpdateCustomUI() {
@@ -38,10 +43,85 @@ void EditNodeScheme::UpdateCustomUI() {
         ChangeElementLocation(0, -window_width_/2, -window_height_/2);
         ChangeRectDim(0, window_width_-right_menu_width_, 200);
         
-        ChangeElementLocation(1, 100, -window_height_/2+50);
+        ChangeElementLocation(1, -window_width_/2+50, -window_height_/2 + 75);
+        ChangeRectDim(1, window_width_-right_menu_width_-100, 2);
+        
+        ChangeElementLocation(2, -window_width_/2+50, -window_height_/2 + 55);
+        ChangeRectDim(2, window_width_-right_menu_width_-100, 20);
+        
+        ChangeElementLocation(3, -window_width_/2+50, -window_height_/2 + 77);
+        ChangeRectDim(3, window_width_-right_menu_width_-100, 20);
+        
+        SetNewAnimations(wanted_aid);
+        UpdateTimeKey();
         
         should_reset_static_buffers = true;
     }
+}
+
+void EditNodeScheme::SetNewAnimations(int aid) {
+    selected_key = -1;
+    for (int i = clickable_ui.size()-1; i >= 0; i--) {
+        if (clickable_ui.at(i) >= key_ui_start) {
+            clickable_ui.erase(clickable_ui.begin()+i);
+        }
+    }
+    
+    // remove current keys
+    for (int i = ui_elements_.size()-1; i >= key_ui_start; i--) {
+        delete ui_elements_[i];
+        ui_elements_.erase(ui_elements_.begin() + i);
+        ui_element_uniforms_.erase(ui_element_uniforms_.begin() + i);
+    }
+    
+    // add new keys
+    if (selected_model_ < 0) return;
+    Model *m = scene_->GetModel(selected_model_);
+    if (aid < 0 || aid >= m->NumAnimations()) return;
+    Animation *anim = m->GetAnimation(aid);
+    
+    std::vector<std::vector<NodeKeyFrame *>*>* allkeys = anim->GetAnimations();
+    std::vector<NodeKeyFrame *>* nodekeys = allkeys->at(selected_node_ - m->NodeStart());
+    for (int i = 0; i < nodekeys->size(); i++) {
+        NodeKeyFrame *kf = nodekeys->at(i);
+        float ratio = kf->time / anim->GetLength();
+        int x = -window_width_/2+40+(ratio * (window_width_-right_menu_width_-100));
+        clickable_ui.push_back(ui_elements_.size()-1);
+        MakeIsoTriangle(x, -window_height_/2 + 55, 20, 20, 5, simd_make_float4(1, 0, 0, 1));
+    }
+    
+    CalculateNumUIFaces();
+    CalculateNumUIVertices();
+    should_reset_empty_buffers = true;
+    should_reset_static_buffers = true;
+}
+
+void EditNodeScheme::UpdateTimeKey() {
+    if (selected_model_ < 0) return;
+    Model *m = scene_->GetModel(selected_model_);
+    if (!m->InAnimation()) return;
+    Animation *anim = m->GetAnimation(m->CurrAid());
+    
+    UIElementUniforms *eu = &ui_element_uniforms_[4];
+    float ratio = m->CurrAnimationTime() / anim->GetLength();
+    int x = -window_width_/2+40+(ratio * (window_width_-right_menu_width_-100));
+    eu->position.x = x;
+}
+
+float EditNodeScheme::GetTimeFromLocation(simd_float2 loc) {
+    int x = window_width_*loc.x/2;
+    
+    if (selected_model_ < 0) return 0;
+    Model *m = scene_->GetModel(selected_model_);
+    if (wanted_aid < 0) return 0;
+    if (!m->InAnimation()) {
+        m->StartAnimation(wanted_aid);
+        anim_paused = true;
+    }
+    Animation *anim = m->GetAnimation(m->CurrAid());
+    
+    float ratio = float(x-50+window_width_/2) / (window_width_-right_menu_width_-100);
+    return ratio * anim->GetLength();
 }
 
 void EditNodeScheme::CreateControlsModels() {
@@ -141,7 +221,7 @@ void EditNodeScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
     Scheme::HandleMouseMovement(x, y, dx, dy);
     
     if (input_enabled) {
-        if (selected_arrow != -1) {
+        if (selected_arrow != -1 && selected_model_ != -1) {
             // find the projected location of the tip and the base
             simd_float2 top = arrow_projections[selected_arrow*2];
             simd_float2 bot = arrow_projections[selected_arrow*2+1];
@@ -293,10 +373,30 @@ void EditNodeScheme::HandleSelection(simd_float2 loc) {
     std::pair<int, float> ui_selection = UIElementClicked(loc);
     
     if (ui_selection.first != -1) {
+        int eid = -1;
         for (int i = 0; i < clickable_ui.size(); i++) {
             if (clickable_ui[i] == ui_selection.first) {
-                selected_ui_elem = ui_selection.first;
+                eid = ui_selection.first;
             }
+        }
+        
+        if (eid == 3) {
+            float time = GetTimeFromLocation(loc);
+            if (selected_model_ > 0) {
+                Model *m = scene_->GetModel(selected_model_);
+                m->SetAnimationTime(time);
+            }
+        } else if (eid >= key_ui_start) {
+            selected_key = eid - key_ui_start;
+            float time = GetTimeFromLocation(loc);
+            if (selected_model_ > 0) {
+                Model *m = scene_->GetModel(selected_model_);
+                m->SetAnimationTime(time);
+            }
+        } else if (eid == 2) {
+            selected_key = -1;
+        } else {
+            selected_ui_elem = eid;
         }
         return;
     }
@@ -307,12 +407,20 @@ void EditNodeScheme::HandleSelection(simd_float2 loc) {
                 selected_arrow = controls_selection.first;
             }
         } else {
+            if (selected_node_ != node_selection.first.first) {
+                wanted_aid = -1;
+                SetNewAnimations(-1);
+            }
             selected_node_ = node_selection.first.first;
             selected_model_ = node_selection.first.second;
             
             node_render_uniforms_.selected_node = selected_node_;
         }
     } else if (node_selection.first.first != -1 ) {
+        if (selected_node_ != node_selection.first.first) {
+            wanted_aid = -1;
+            SetNewAnimations(-1);
+        }
         selected_node_ = node_selection.first.first;
         selected_model_ = node_selection.first.second;
         
@@ -328,6 +436,8 @@ void EditNodeScheme::HandleSelection(simd_float2 loc) {
         selected_model_ = -1;
         selected_arrow = -1;
         selected_rotator = -1;
+        wanted_aid = -1;
+        SetNewAnimations(-1);
         
         node_render_uniforms_.selected_node = -1;
     }
@@ -584,7 +694,7 @@ void EditNodeScheme::NodeEditMenu() {
         wanted_aid = std::stoul(aidin);
         wanted_time = std::stof(timein);
     }
-    
+
     if (ImGui::Button("Add", ImVec2(40,30))) {
         model->SetKeyFrame(wanted_aid, selected_node_ - model->NodeStart(), wanted_time);
     }
@@ -608,9 +718,71 @@ void EditNodeScheme::RightMenu() {
     ImGui::End();
 }
 
+void EditNodeScheme::AnimationMenu() {
+    ImGui::SetCursorPos(ImVec2(20, 20));
+    ImGui::Text("animation id: ");
+    ImGui::SetCursorPos(ImVec2(120, 18));
+    
+    Model *m = scene_->GetModel(selected_model_);
+    std::string aidin = TextField(std::to_string(wanted_aid), "##naid");
+    if (isInt(aidin)) {
+        if (std::stoi(aidin) != wanted_aid) {
+            SetNewAnimations(std::stoi(aidin));
+        }
+        wanted_aid = std::stoi(aidin);
+    }
+    
+    if (anim_paused || !m->InAnimation()) {
+        if (ImGui::Button("Play", ImVec2(40,30))) {
+            anim_paused = false;
+            if (!m->InAnimation()) {
+                m->StartAnimation(wanted_aid);
+            }
+        }
+    } else {
+        if (ImGui::Button("Pause", ImVec2(40,30))) {
+            anim_paused = true;
+        }
+    }
+    
+    ImGui::SetCursorPos(ImVec2(20, 150));
+    if (ImGui::Button("Key", ImVec2(40,30))) {
+        m->SetKeyFrame(wanted_aid, selected_node_ - m->NodeStart(), m->CurrAnimationTime());
+        SetNewAnimations(wanted_aid);
+    }
+    
+    if (selected_key >= 0) {
+        ImGui::SetCursorPos(ImVec2(70, 150));
+        if (ImGui::Button("Save", ImVec2(40,30))) {
+            m->RemoveKeyFrame(wanted_aid, selected_node_ - m->NodeStart(), selected_key);
+            m->SetKeyFrame(wanted_aid, selected_node_ - m->NodeStart(), m->CurrAnimationTime());
+            SetNewAnimations(wanted_aid);
+            selected_key = -1;
+        }
+    }
+}
+
+void EditNodeScheme::BottomMenu() {
+    ImGui::SetNextWindowPos(ImVec2(0, window_height_ - bottom_menu_height_));
+    ImGui::SetNextWindowSize(ImVec2(window_width_ - right_menu_width_, bottom_menu_height_));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+    ImGui::Begin("bottom", &show_UI, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);
+    
+    ImGui::SetCursorPos(ImVec2(20, 10));
+    if (selected_node_ != -1) {
+        AnimationMenu();
+    } else {
+        ImGui::Text("Nothing Selected");
+    }
+    
+    ImGui::PopStyleColor();
+    
+    ImGui::End();
+}
+
 void EditNodeScheme::MainWindow() {
     ImGui::SetNextWindowPos(ImVec2(UI_start_.x, UI_start_.y));
-    ImGui::SetNextWindowSize(ImVec2(window_width_ - right_menu_width_, window_height_));
+    ImGui::SetNextWindowSize(ImVec2(window_width_ - right_menu_width_, window_height_ - bottom_menu_height_ - UI_start_.y));
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
     ImGui::Begin("main", &show_UI, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);
     
@@ -631,10 +803,24 @@ void EditNodeScheme::BuildUI() {
     
     RightMenu();
     
+    BottomMenu();
+    
     UpdateCustomUI();
 }
 
 void EditNodeScheme::SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp, Vertex *uiv, UIFace *uif) {
     Scheme::SetBufferContents(smv, smpv, smf, smn, smpn, cmv, cmpv, cmf, ssp, uiv, uif);
     SetArrowProjections();
+}
+
+
+void EditNodeScheme::Update() {
+    Scheme::Update();
+    
+    for (std::size_t mid = 0; mid < scene_->NumModels(); mid++) {
+        UpdateTimeKey();
+        if (!anim_paused) {
+            scene_->GetModel(mid)->UpdateAnimation(1 / fps);
+        }
+    }
 }
