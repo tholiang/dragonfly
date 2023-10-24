@@ -69,3 +69,5 @@ iOSInjectionProject/
 
 *.drpd
 *.png
+
+.DS_Store

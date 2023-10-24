@@ -569,23 +569,54 @@ void EditModelScheme::ModelEditMenu() {
         should_reset_static_buffers = true;
     }
     
-    ImGui::SetCursorPos(ImVec2(50, 420));
+    ImGui::SetCursorPos(ImVec2(30, 420));
+    ImGui::Text("Add To Model");
+
+    ImGui::SetCursorPos(ImVec2(50, 450));
+    ImGui::Text("id: ");
+    ImGui::SetCursorPos(ImVec2(70, 450));
+    add_model_input = TextField(add_model_input, "##modelat");
+    
+    ImGui::SetCursorPos(ImVec2(150, 450));
+    if (ImGui::Button("Add", ImVec2(120,30))) {
+        Model *m = scene_->GetModel(selected_model);
+        ModelUniforms *mu = scene_->GetModelUniforms(selected_model);
+        if (isInt(add_model_input) && std::stoi(add_model_input) >= 0) {
+            int nextm = std::stoi(add_model_input);
+            
+            Model *mb = scene_->GetModel(nextm);
+            ModelUniforms *mub = scene_->GetModelUniforms(nextm);
+            
+            DragonflyUtils::AddModels(mb, mub, m, mu);
+            scene_->RemoveModel(selected_model);
+            selected_model = -1;
+            add_model_input = "-1";
+            
+            CalculateCounts();
+            should_reset_empty_buffers = true;
+            should_reset_static_buffers = true;
+            
+            return;
+        }
+    }
+    
+    ImGui::SetCursorPos(ImVec2(50, 480));
     ImGui::Text("Number of Animations: %u", scene_->GetModel(selected_model)->NumAnimations());
     
-    ImGui::SetCursorPos(ImVec2(70, 450));
+    ImGui::SetCursorPos(ImVec2(70, 510));
     ImGui::Text("play: ");
-    ImGui::SetCursorPos(ImVec2(110, 450));
+    ImGui::SetCursorPos(ImVec2(110, 510));
     std::string aid = TextField(std::to_string(wanted_aid), "##aid");
     if (isUnsignedLong(aid)) {
         wanted_aid = std::stoul(aid);
         
     }
-    ImGui::SetCursorPos(ImVec2(70, 480));
+    ImGui::SetCursorPos(ImVec2(70, 540));
     if (ImGui::Button("Play", ImVec2(100,30))) {
         scene_->GetModel(selected_model)->StartAnimation(wanted_aid);
     }
     
-    ImGui::SetCursorPos(ImVec2(150, 480));
+    ImGui::SetCursorPos(ImVec2(150, 540));
     if (ImGui::Button("Loop", ImVec2(100,30))) {
         if (loopanim.first == -1) {
             scene_->GetModel(selected_model)->StartAnimation(wanted_aid);
@@ -595,7 +626,7 @@ void EditModelScheme::ModelEditMenu() {
         }
     }
     
-    ImGui::SetCursorPos(ImVec2(70, 510));
+    ImGui::SetCursorPos(ImVec2(70, 600));
     if (ImGui::Button("New Animation", ImVec2(100,30))) {
         scene_->GetModel(selected_model)->MakeAnimation();
     }

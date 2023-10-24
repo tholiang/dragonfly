@@ -653,6 +653,26 @@ void Model::RemoveFace(int fid) {
     }
 }
 
+void Model::RemoveNode(int nid) {
+    if (nid < nodes.size()) {
+        for (int i = NumVertices()-1; i >= 0; i--) {
+            if (nvlinks[i*2]->nid == nid || nvlinks[i*2+1]->nid == nid) {
+                RemoveVertex(i);
+            }
+            
+            if (nvlinks[i*2]->nid > nid) {
+                nvlinks[i*2]->nid--;
+            }
+            if (nvlinks[i*2+1]->nid > nid) {
+                nvlinks[i*2+1]->nid--;
+            }
+        }
+        
+        delete nodes[nid];
+        nodes.erase(nodes.begin() + nid);
+    }
+}
+
 void Model::ScaleBy(float x, float y, float z) {
     for (int i = 0; i < nodes.size(); i++) {
         Node *n = GetNode(i);

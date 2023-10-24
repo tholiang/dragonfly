@@ -143,6 +143,7 @@ public:
     
     void RemoveVertex(int vid);
     void RemoveFace(int fid);
+    void RemoveNode(int nid);
     
     void ScaleBy(float x, float y, float z);
     void ScaleOnNodeBy(float x, float y, float z, int nid);

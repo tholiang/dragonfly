@@ -30,8 +30,8 @@
             filePath = "dragonfly/Modeling/Model.mm"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "807"
-            endingLineNumber = "807"
+            startingLineNumber = "827"
+            endingLineNumber = "827"
             landmarkName = "Model::GetEdgeFaces(vid1, vid2)"
             landmarkType = "7">
          </BreakpointContent>
@@ -46,10 +46,10 @@
             filePath = "dragonfly/Modeling/Model.mm"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "814"
-            endingLineNumber = "814"
-            landmarkName = "unknown"
-            landmarkType = "0">
+            startingLineNumber = "834"
+            endingLineNumber = "834"
+            landmarkName = "Model::GetEdgeFaces(vid1, vid2)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -62,8 +62,8 @@
             filePath = "dragonfly/Schemes/EditNodeScheme.mm"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "757"
-            endingLineNumber = "757"
+            startingLineNumber = "773"
+            endingLineNumber = "773"
             landmarkName = "EditNodeScheme::AnimationMenu()"
             landmarkType = "7">
          </BreakpointContent>

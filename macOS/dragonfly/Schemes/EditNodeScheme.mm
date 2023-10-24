@@ -246,7 +246,7 @@ void EditNodeScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
             y_vec *= 0.01*mvmt;
             z_vec *= 0.01*mvmt;
             Vertex mvmt_vec = simd_make_float3(x_vec, y_vec, z_vec);
-            mvmt_vec = TranslatePointToBasis(&scene_->GetModelUniforms(selected_model_)->b, mvmt_vec);
+            //mvmt_vec = TranslatePointToBasis(&scene_->GetModelUniforms(selected_model_)->b, mvmt_vec);
             
             if (selected_node_ != -1) {
                 Model *model = scene_->GetModel(selected_model_);
@@ -292,7 +292,7 @@ void EditNodeScheme::HandleMouseDown(simd_float2 loc, bool left) {
     if (!left) {
         if (selected_node_ != -1) {
             rightclick_popup_loc_ = loc;
-            rightclick_popup_size_ = simd_make_float2(90/(float)(window_width_/2), 20/(float)(window_height_/2));
+            rightclick_popup_size_ = simd_make_float2(90/(float)(window_width_/2), 40/(float)(window_height_/2));
             render_rightclick_popup_ = true;
         } else {
             render_rightclick_popup_ = false;
@@ -496,7 +496,7 @@ void EditNodeScheme::RightClickPopup() {
     ImVec2 pixel_loc = ImVec2(window_width_ * (rightclick_popup_loc_.x+1)/2 - UI_start_.x, window_height_ * (2-(rightclick_popup_loc_.y+1))/2 - UI_start_.y);
     ImGui::SetCursorPos(pixel_loc);
     
-    ImVec2 button_size = ImVec2(window_width_ * rightclick_popup_size_.x/2, window_height_ * rightclick_popup_size_.y/2);
+    ImVec2 button_size = ImVec2(window_width_ * rightclick_popup_size_.x/2, window_height_ * rightclick_popup_size_.y/4);
     
     if (selected_model_ != -1) {
         if (ImGui::Button("Add Node", ImVec2(button_size.x, button_size.y))) {
@@ -506,6 +506,22 @@ void EditNodeScheme::RightClickPopup() {
             
             scene_node_length_++;
             should_reset_static_buffers = true;
+        }
+    }
+    
+    pixel_loc.y += button_size.y;
+    ImGui::SetCursorPos(ImVec2(pixel_loc.x, pixel_loc.y));
+    if (selected_node_ != -1) {
+        if (ImGui::Button("Delete Node", ImVec2(button_size.x, button_size.y))) {
+            render_rightclick_popup_ = false;
+            Model* m = scene_->GetModel(selected_model_);
+            m->RemoveNode(selected_node_ - m->NodeStart());
+            
+            CalculateCounts();
+            should_reset_empty_buffers = true;
+            should_reset_static_buffers = true;
+            selected_node_ = -1;
+            selected_model_ = -1;
         }
     }
 }

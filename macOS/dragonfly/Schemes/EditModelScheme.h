@@ -11,6 +11,7 @@
 #include "Scheme.h"
 #include "../UserActions/ModelMoveAction.h"
 #include "../Utils/Normals.h"
+#include "../Utils/JoinModels.h"
 
 class EditModelScheme : public Scheme {
 private:
@@ -53,6 +54,8 @@ private:
     std::string scale_input_x = "1";
     std::string scale_input_y = "1";
     std::string scale_input_z = "1";
+    
+    std::string add_model_input = "-1";
     
     void CreateControlsModels();
     
