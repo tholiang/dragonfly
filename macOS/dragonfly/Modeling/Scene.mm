@@ -361,13 +361,13 @@ std::vector<Slice *> * Scene::GetSlices() {
 std::vector<ModelUniforms> * Scene::GetAllSliceUniforms() {
     return &slice_uniforms;
 }
-std::vector<SliceAttributes> Scene::GetAllSliceAttributes() {
+/*std::vector<SliceAttributes> Scene::GetAllSliceAttributes() {
     std::vector<SliceAttributes> attr;
     for (int i = 0; i < slices.size(); i++) {
         attr.push_back(slices[i]->GetAttributes());
     }
     return attr;
-}
+}*/
 
 std::string Scene::GetName() {
     return name_;

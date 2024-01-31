@@ -387,7 +387,7 @@ kernel void CalculateScaledDots(device Vertex *output [[buffer(0)]], const const
     output[did].y += edit_window->y;
 }
 
-kernel void CalculateProjectedDots(device Vertex *output [[buffer(0)]], const constant Dot *dots[[buffer(1)]], const constant ModelUniforms *model_uniforms[[buffer(2)]], const constant int *dot_slice_links[[buffer(3)]], const constant SliceAttributes *attr[[buffer(4)]], const constant VertexRenderUniforms *uniforms [[buffer(5)]], constant Camera &camera [[buffer(6)]], unsigned int did [[thread_position_in_grid]]) {
+kernel void CalculateProjectedDots(device Vertex *output [[buffer(0)]], const constant Dot *dots[[buffer(1)]], const constant ModelUniforms *model_uniforms[[buffer(2)]], const constant int *dot_slice_links[[buffer(3)]], const constant VertexRenderUniforms *uniforms [[buffer(4)]], constant Camera &camera [[buffer(5)]], unsigned int did [[thread_position_in_grid]]) {
     Dot d = dots[did];
     Vertex dot3d;
     dot3d.x = d.x;
@@ -398,6 +398,7 @@ kernel void CalculateProjectedDots(device Vertex *output [[buffer(0)]], const co
     dot3d = TranslatePointToStandard(model_uniforms[sid].b, dot3d);
     
     output[did] = PointToPixel(dot3d, camera);
+    output[did].z -= 0.01;
 }
 
 kernel void CalculateSlicePlates (device Vertex *output [[buffer(0)]], const constant ModelUniforms *model_uniforms[[buffer(1)]], const constant SliceAttributes *attr[[buffer(2)]], constant Camera &camera [[buffer(3)]], unsigned int vid [[thread_position_in_grid]]) {
@@ -425,7 +426,7 @@ kernel void CalculateSlicePlates (device Vertex *output [[buffer(0)]], const con
     
     v = TranslatePointToStandard(model_uniforms[sid].b, v);
     v = PointToPixel(v, camera);
-    v.z += 0.01;
+    v.z += 0.1;
     
     output[vid] = v;
 }

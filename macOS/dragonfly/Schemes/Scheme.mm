@@ -82,8 +82,14 @@ std::vector<Slice *> *Scheme::GetSlices() {
     return scene_->GetSlices();
 }
 
-std::vector<SliceAttributes> Scheme::GetSliceAttributes() {
+/*std::vector<SliceAttributes> Scheme::GetSliceAttributes() {
     return scene_->GetAllSliceAttributes();
+}*/
+
+void Scheme::AddSliceAttributesToBuffer(std::vector<SliceAttributes> *buf) {
+    for (int i = 0; i < scene_->NumSlices(); i++) {
+        buf->push_back(scene_->GetSlice(i)->GetAttributes());
+    }
 }
 
 std::vector<ModelUniforms> *Scheme::GetSliceUniforms() {

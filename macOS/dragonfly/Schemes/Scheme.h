@@ -12,6 +12,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <deque>
 
 #include <simd/SIMD.h>
 
@@ -251,7 +252,8 @@ public:
     virtual std::vector<Model *> *GetModels();
     virtual std::vector<ModelUniforms> *GetModelUniforms();
     virtual std::vector<Slice *> *GetSlices();
-    virtual std::vector<SliceAttributes> GetSliceAttributes();
+    //virtual std::vector<SliceAttributes> GetSliceAttributes();
+    virtual void AddSliceAttributesToBuffer(std::vector<SliceAttributes> *buf);
     virtual std::vector<ModelUniforms> *GetSliceUniforms();
     std::vector<Model *> *GetControlsModels();
     std::vector<ModelUniforms> *GetControlsModelUniforms();

@@ -60,7 +60,7 @@ void ComputePipeline::SetEmptyBuffers() {
     }
     
     std::vector<Vertex> empty_controls_vertices;
-    for (int i = 0; i < num_scene_faces; i++) {
+    for (int i = 0; i < num_controls_vertices; i++) {
         empty_controls_vertices.push_back(simd_make_float3(0, 0, 0));
     }
     
@@ -140,7 +140,8 @@ void ComputePipeline::ResetStaticBuffers() {
         slices->at(i)->AddToBuffers(scene_dots, scene_slice_edges, dot_slice_links, i);
     }
     
-    std::vector<SliceAttributes> scene_slice_attributes = scheme->GetSliceAttributes();
+    std::vector<SliceAttributes> scene_slice_attributes;// = scheme->GetSliceAttributes();
+    scheme->AddSliceAttributesToBuffer(&scene_slice_attributes);
     
     std::vector<UIVertex> ui_vertices;
     std::vector<UIFace> ui_faces;
@@ -217,7 +218,7 @@ void ComputePipeline::ResetDynamicBuffers() {
     ui_render_uniforms_buffer = [device newBufferWithBytes: scheme->GetUIRenderUniforms() length:(sizeof(UIRenderUniforms)) options:{}];
     
     simd_float4 window = scheme->GetEditWindow();
-    scene_edit_window_buffer = [device newBufferWithBytes: &window length:(slice_uniforms->size() * sizeof(simd_float4)) options:{}];
+    scene_edit_window_buffer = [device newBufferWithBytes: &window length:(sizeof(window)) options:{}];
 }
 
 void ComputePipeline::Compute() {
@@ -315,9 +316,8 @@ void ComputePipeline::Compute() {
             [compute_encoder setBuffer: scene_dot_buffer offset:0 atIndex:1];
             [compute_encoder setBuffer: scene_slice_uniforms_buffer offset:0 atIndex:2];
             [compute_encoder setBuffer: scene_dot_slice_link_buffer offset:0 atIndex:3];
-            //[compute_encoder setBuffer: scene_slice_attributes_buffer offset:0 atIndex:4];
-            [compute_encoder setBuffer: scene_vertex_render_uniforms_buffer offset:0 atIndex:5];
-            [compute_encoder setBuffer: camera_buffer offset:0 atIndex:6];
+            [compute_encoder setBuffer: scene_vertex_render_uniforms_buffer offset:0 atIndex:4];
+            [compute_encoder setBuffer: camera_buffer offset:0 atIndex:5];
             MTLSize gridSize = MTLSizeMake(num_scene_dots, 1, 1);
             NSUInteger threadGroupSize = compute_projected_dots_pipeline_state.maxTotalThreadsPerThreadgroup;
             if (threadGroupSize > num_scene_dots) threadGroupSize = num_scene_dots;

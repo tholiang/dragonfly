@@ -48,10 +48,10 @@ simd_float2 EditSliceScheme::screen_to_eloc(simd_float2 loc) {
 void EditSliceScheme::CreateDotAtClick(simd_float2 click_loc) {
     Slice *s = scene_->GetSlice(slice_id);
     
-    SliceAttributes *attr = &slice_attr_vector.at(0);
-    float scale = attr->height / 2;
-    if (attr->height < attr->width) {
-        scale = attr->width / 2;
+    SliceAttributes attr = slice_vector[0]->GetAttributes();
+    float scale = attr.height / 2;
+    if (attr.height < attr.width) {
+        scale = attr.width / 2;
     }
     
     float ewidth = window_width_ - right_menu_width_;
@@ -104,10 +104,10 @@ int EditSliceScheme::DotClicked(simd_float2 loc) {
         
         float x,y;
         
-        SliceAttributes *attr = &slice_attr_vector.at(0);
-        float scale = attr->height / 2;
-        if (attr->height < attr->width) {
-            scale = attr->width / 2;
+        SliceAttributes attr = slice_vector[0]->GetAttributes();
+        float scale = attr.height / 2;
+        if (attr.height < attr.width) {
+            scale = attr.width / 2;
         }
         
         if (eratio < 1) {
@@ -151,10 +151,10 @@ int EditSliceScheme::LineClicked(simd_float2 loc) {
         
         float x1,y1,x2,y2;
         
-        SliceAttributes *attr = &slice_attr_vector.at(0);
-        float scale = attr->height / 2;
-        if (attr->height < attr->width) {
-            scale = attr->width / 2;
+        SliceAttributes attr = slice_vector[0]->GetAttributes();
+        float scale = attr.height / 2;
+        if (attr.height < attr.width) {
+            scale = attr.width / 2;
         }
         
         if (eratio < 1) {
@@ -372,10 +372,10 @@ void EditSliceScheme::HandleMouseMovement(float x, float y, float dx, float dy) 
         
         simd_float2 eloc = screen_to_eloc(simd_make_float2(x, y));
         
-        SliceAttributes *attr = &slice_attr_vector.at(0);
-        float scale = attr->height / 2;
-        if (attr->height < attr->width) {
-            scale = attr->width / 2;
+        SliceAttributes attr = slice_vector[0]->GetAttributes();
+        float scale = attr.height / 2;
+        if (attr.height < attr.width) {
+            scale = attr.width / 2;
         }
         
         if (eratio < 1) {
@@ -450,8 +450,6 @@ void EditSliceScheme::SetSliceID(int sid) {
     slice_vector.clear();
     slice_vector.push_back(s);
     
-    slice_attr_vector.clear();
-    slice_attr_vector.push_back(s->GetAttributes());
     should_reset_static_buffers = true;
     should_reset_empty_buffers = true;
 }
@@ -464,8 +462,12 @@ std::vector<Slice *> *EditSliceScheme::GetSlices() {
     return &slice_vector;
 }
 
-std::vector<SliceAttributes> EditSliceScheme::GetSliceAttributes() {
+/*std::vector<SliceAttributes> EditSliceScheme::GetSliceAttributes() {
     return slice_attr_vector;
+}*/
+
+void EditSliceScheme::AddSliceAttributesToBuffer(std::vector<SliceAttributes> *buf) {
+    buf->push_back(scene_->GetSlice(slice_id)->GetAttributes());
 }
 
 simd_float4 EditSliceScheme::GetEditWindow() {

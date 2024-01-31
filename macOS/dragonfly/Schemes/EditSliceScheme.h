@@ -34,7 +34,6 @@ private:
     bool rightclick_popup_clicked_ = false;
     
     std::vector<Slice *> slice_vector;
-    std::vector<SliceAttributes> slice_attr_vector;
     
     simd_float2 drag_size;
     
@@ -88,7 +87,8 @@ public:
     int GetSliceID();
     
     std::vector<Slice *> *GetSlices();
-    std::vector<SliceAttributes> GetSliceAttributes();
+//    std::vector<SliceAttributes> GetSliceAttributes();
+    void AddSliceAttributesToBuffer(std::vector<SliceAttributes> *buf);
     
     simd_float4 GetEditWindow();
     

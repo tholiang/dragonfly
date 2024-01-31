@@ -87,7 +87,7 @@ public:
     std::vector<ModelUniforms> *GetAllModelUniforms();
     
     std::vector<Slice *> *GetSlices();
-    std::vector<SliceAttributes> GetAllSliceAttributes();
+    //std::vector<SliceAttributes> GetAllSliceAttributes();
     std::vector<ModelUniforms> *GetAllSliceUniforms();
     
     std::string GetName();
