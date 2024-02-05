@@ -549,14 +549,14 @@ kernel void CalculateProjectedNodes(
         float angle = i*pi/4;
         
         // calculate value (with trig) and add to cvb
-        compiled_vertices[cvb_node_circle_idx+1+i] = Vertex(proj_node_center.x + radius * cos(angle), proj_node_center.y + (radius * sin(angle) * screen_ratio), proj_node_center.z+0.05);
+        compiled_vertices[cvb_node_circle_idx+1+i] = Vertex(proj_node_center.x + radius * cos(angle), proj_node_center.y + (radius * sin(angle) / screen_ratio), proj_node_center.z+0.05);
         
         // add face to cfb
         Face f;
         f.color = vector_float4(0.8, 0.8, 0.9, 1);
         f.vertices[0] = cvb_node_circle_idx; // center
         f.vertices[1] = cvb_node_circle_idx+1+i; // just added vertex
-        f.vertices[2] = cvb_node_circle_idx+((2+i)%8); // next vertex (or first added if at the end)
+        f.vertices[2] = cvb_node_circle_idx+(1+(1+i)%8); // next vertex (or first added if at the end)
         compiled_faces[cfb_node_circle_idx+i] = f;
         
         // TODO: COLOR SELECTED NODE IN CPU
