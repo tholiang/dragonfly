@@ -6,12 +6,11 @@
 //
 
 #include "SchemeController.h"
+#include "../Pipelines/ComputePipeline.h"
 
 using namespace DragonflyUtils;
 
 Scheme::Scheme() {
-    node_render_uniforms_.selected_node = -1;
-    
     UI_start_.x = 0;
     UI_start_.y = 20;
 }
@@ -24,6 +23,14 @@ Scheme::~Scheme() {
 
 SchemeType Scheme::GetType() {
     return type;
+}
+
+void Scheme::Update() {
+    HandleCameraMovement();
+    SetControlsBasis();
+    MoveControlsModels();
+    
+    UpdateUIVars();
 }
 
 void Scheme::SetController(SchemeController *sc) {
@@ -48,72 +55,153 @@ void Scheme::SetScene(Scene *scene) {
     should_reset_static_buffers = true;
 }
 
-void Scheme::SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp, Vertex *uiv, UIFace *uif) {
-    scene_models_vertices_ = smv;
-    scene_models_projected_vertices_ = smpv;
-    scene_models_faces_ = smf;
-    scene_models_nodes_ = smn;
-    scene_models_projected_nodes_ = smpn;
-    control_models_vertices_ = cmv;
-    control_models_projected_vertices_ = cmpv;
-    control_models_faces_ = cmf;
-    scene_slice_plate_vertices_ = ssp;
-    ui_elements_vertices_ = uiv;
-    ui_elements_faces_ = uif;
-}
-
-Camera * Scheme::GetCamera() {
-    return camera_;
-}
-
-Scene * Scheme::GetScene() {
-    return scene_;
-}
-
-std::vector<Model *> *Scheme::GetModels() {
-    return scene_->GetModels();
-}
-
-std::vector<ModelUniforms> *Scheme::GetModelUniforms() {
-    return scene_->GetAllModelUniforms();
-}
-
-std::vector<Slice *> *Scheme::GetSlices() {
-    return scene_->GetSlices();
-}
-
-/*std::vector<SliceAttributes> Scheme::GetSliceAttributes() {
-    return scene_->GetAllSliceAttributes();
-}*/
-
-void Scheme::AddSliceAttributesToBuffer(std::vector<SliceAttributes> *buf) {
-    for (int i = 0; i < scene_->NumSlices(); i++) {
-        buf->push_back(scene_->GetSlice(i)->GetAttributes());
+void Scheme::HandleCameraMovement() {
+    // find unit vector of xy camera vector
+    float magnitude = sqrt(pow(camera_->vector.x, 2)+pow(camera_->vector.y, 2));
+    float unit_x = camera_->vector.x/magnitude;
+    float unit_y = camera_->vector.y/magnitude;
+    
+    if (keypresses_.w) {
+        camera_->pos.x += (3.0/fps)*unit_x;
+        camera_->pos.y += (3.0/fps)*unit_y;
+    }
+    if (keypresses_.a) {
+        camera_->pos.y -= (3.0/fps)*unit_x;
+        camera_->pos.x += (3.0/fps)*unit_y;
+    }
+    if (keypresses_.s) {
+        camera_->pos.x -= (3.0/fps)*unit_x;
+        camera_->pos.y -= (3.0/fps)*unit_y;
+    }
+    if (keypresses_.d) {
+        camera_->pos.y += (3.0/fps)*unit_x;
+        camera_->pos.x -= (3.0/fps)*unit_y;
+    }
+    if (keypresses_.space) {
+        camera_->pos.z += (3.0/fps);
+    }
+    if (keypresses_.option) {
+        camera_->pos.z -= (3.0/fps);
     }
 }
 
-std::vector<ModelUniforms> *Scheme::GetSliceUniforms() {
-    return scene_->GetAllSliceUniforms();
+void Scheme::Undo() {
+    if (!past_actions.empty()) {
+        UserAction *action = past_actions.back();
+        past_actions.pop_back();
+        action->Undo();
+        delete action;
+        
+        CalculateCounts();
+        should_reset_empty_buffers = true;
+        should_reset_static_buffers = true;
+    }
 }
 
-std::vector<Model *> * Scheme::GetControlsModels() {
-    return &controls_models_;
+bool Scheme::ClickOnScene(simd_float2 loc) {
+    int pixelX = window_width_ * (loc.x+1)/2;
+    int pixelY = window_height_ * (loc.y+1)/2;
+    
+    if (pixelX < UI_start_.x || pixelX > UI_start_.x + window_width_) {
+        return false;
+    }
+    
+    if (pixelY < UI_start_.y || pixelY > UI_start_.y + window_height_) {
+        return false;
+    }
+    
+    return true;
 }
 
-std::vector<ModelUniforms> * Scheme::GetControlsModelUniforms() {
-    return &controls_model_uniforms_;
+std::pair<int,float> Scheme::ControlModelClicked(simd_float2 loc) {
+    if (computed_compiled_faces_ == NULL || computed_compiled_vertices_ == NULL || computed_key_indices_ == NULL) {
+        return std::make_pair(-1, -1);
+    }
+    
+    // for calculating if a point is in a triangle
+    float d1, d2, d3;
+    bool has_neg, has_pos;
+    
+    // to return
+    float minZ = -1;
+    int clickedIdx = -1;
+    
+    int fid = 0; // fid relative to control models
+    for (int mid = 0; mid < controls_models_.size(); mid++) {
+        Model *cm = controls_models_[mid];
+        int fid_end = fid + cm->NumFaces();
+        for (; fid < fid_end; fid++) {
+            // get face from kernel calculated array
+            // control faces found after scene faces
+            Face face = computed_compiled_faces_[fid+computed_key_indices_->compiled_face_control_start];
+            
+            // get projected vertices
+            // projected vertices found after scene vertices
+            Vertex v1 = computed_compiled_vertices_[face.vertices[0]];
+            Vertex v2 = computed_compiled_vertices_[face.vertices[1]];
+            Vertex v3 = computed_compiled_vertices_[face.vertices[2]];
+            
+            // if click is in triangle, set selected if lower than previous minimum
+            if (InTriangle(loc, v1, v2, v3)) {
+                float z = WeightedZ(loc, v1, v2, v3);
+                if (minZ == -1 || z < minZ) {
+                    minZ = z;
+                    clickedIdx = mid;
+                }
+            }
+        }
+    }
+    
+    return std::make_pair(clickedIdx, minZ);
 }
 
-std::vector<UIElement *> *Scheme::GetUIElements() {
-    return &ui_elements_;
+std::pair<int, float> Scheme::UIElementClicked(simd_float2 loc) {
+    if (computed_compiled_faces_ == NULL || computed_compiled_vertices_ == NULL || computed_key_indices_ == NULL) {
+        return std::make_pair(-1, -1);
+    }
+
+    // for calculating if a point is in a triangle
+    float d1, d2, d3;
+    bool has_neg, has_pos;
+    
+    // to return
+    float minZ = -1;
+    int clickedIdx = -1;
+    
+    int fid = 0; // fid relative to ui elements
+    for (int eid = 0; eid < ui_elements_.size(); eid++) {
+        UIElement *e = ui_elements_[eid];
+        int fid_end = fid + e->NumFaces();
+        for (; fid < fid_end; fid++) {
+            Face face = computed_compiled_faces_[fid];
+            Vertex v1 = computed_compiled_vertices_[face.vertices[0]];
+            Vertex v2 = computed_compiled_vertices_[face.vertices[1]];
+            Vertex v3 = computed_compiled_vertices_[face.vertices[2]];
+            
+            // if click is in triangle, set selected if lower than previous minimum
+            if (InTriangle(loc, v1, v2, v3)) {
+                float z = WeightedZ(loc, v1, v2, v3);
+                if (minZ == -1 || z < minZ) {
+                    minZ = z;
+                    clickedIdx = eid;
+                }
+            }
+        }
+    }
+    
+    return std::make_pair(clickedIdx, minZ);
 }
 
-std::vector<UIElementUniforms> *Scheme::GetUIElementUniforms() {
-    return &ui_element_uniforms_;
+void Scheme::SetBufferContents(CompiledBufferKeyIndices *cki, Vertex *ccv, Face *ccf, Vertex *cmv, Node *cmn) {
+    computed_key_indices_ = cki;
+    computed_compiled_vertices_ = ccv;
+    computed_compiled_faces_ = ccf;
+    computed_model_vertices_ = cmv;
+    computed_model_nodes_ = cmn;
 }
 
 void Scheme::MakeRect(int x, int y, int w, int h, int z, simd_float4 color) {
-    UIElement *elem = new UIElement(ui_elements_.size());
+    UIElement *elem = new UIElement();
     elem->MakeVertex(0, 0, 0);
     elem->MakeVertex(w, 0, 0);
     elem->MakeVertex(0, h, 0);
@@ -122,7 +210,7 @@ void Scheme::MakeRect(int x, int y, int w, int h, int z, simd_float4 color) {
     elem->MakeFace(1, 2, 3, color);
     ui_elements_.push_back(elem);
     
-    UIElementUniforms uni;
+    UIElementTransform uni;
     uni.position = simd_make_int3(x, y, z);
     uni.right = simd_make_float3(1, 0, 0);
     uni.up = simd_make_float3(0, 1, 0);
@@ -130,14 +218,14 @@ void Scheme::MakeRect(int x, int y, int w, int h, int z, simd_float4 color) {
 }
 
 void Scheme::MakeIsoTriangle(int x, int y, int w, int h, int z, simd_float4 color) {
-    UIElement *elem = new UIElement(ui_elements_.size());
+    UIElement *elem = new UIElement();
     elem->MakeVertex(0, 0, 0);
     elem->MakeVertex(w, 0, 0);
     elem->MakeVertex(w/2, h, 0);
     elem->MakeFace(0, 1, 2, color);
     ui_elements_.push_back(elem);
     
-    UIElementUniforms uni;
+    UIElementTransform uni;
     uni.position = simd_make_int3(x, y, z);
     uni.right = simd_make_float3(1, 0, 0);
     uni.up = simd_make_float3(0, 1, 0);
@@ -145,7 +233,7 @@ void Scheme::MakeIsoTriangle(int x, int y, int w, int h, int z, simd_float4 colo
 }
 
 void Scheme::ChangeElementLocation(int eid, int x, int y) {
-    UIElementUniforms *uni = &ui_element_uniforms_[eid];
+    UIElementTransform *uni = &ui_element_uniforms_[eid];
     uni->position.x = x;
     uni->position.y = y;
 }
@@ -237,51 +325,6 @@ void Scheme::HandleKeyPresses(int key, bool keydown) {
     }
 }
 
-void Scheme::HandleCameraMovement() {
-    // find unit vector of xy camera vector
-    float magnitude = sqrt(pow(camera_->vector.x, 2)+pow(camera_->vector.y, 2));
-    float unit_x = camera_->vector.x/magnitude;
-    float unit_y = camera_->vector.y/magnitude;
-    
-    if (keypresses_.w) {
-        camera_->pos.x += (3.0/fps)*unit_x;
-        camera_->pos.y += (3.0/fps)*unit_y;
-    }
-    if (keypresses_.a) {
-        camera_->pos.y -= (3.0/fps)*unit_x;
-        camera_->pos.x += (3.0/fps)*unit_y;
-    }
-    if (keypresses_.s) {
-        camera_->pos.x -= (3.0/fps)*unit_x;
-        camera_->pos.y -= (3.0/fps)*unit_y;
-    }
-    if (keypresses_.d) {
-        camera_->pos.y += (3.0/fps)*unit_x;
-        camera_->pos.x -= (3.0/fps)*unit_y;
-    }
-    if (keypresses_.space) {
-        camera_->pos.z += (3.0/fps);
-    }
-    if (keypresses_.option) {
-        camera_->pos.z -= (3.0/fps);
-    }
-}
-
-bool Scheme::ClickOnScene(simd_float2 loc) {
-    int pixelX = window_width_ * (loc.x+1)/2;
-    int pixelY = window_height_ * (loc.y+1)/2;
-    
-    if (pixelX < UI_start_.x || pixelX > UI_start_.x + window_width_) {
-        return false;
-    }
-    
-    if (pixelY < UI_start_.y || pixelY > UI_start_.y + window_height_) {
-        return false;
-    }
-    
-    return true;
-}
-
 void Scheme::HandleMouseDown(simd_float2 loc, bool left) {
     loc.x = ((float) loc.x / (float) window_width_)*2 - 1;
     loc.y = -(((float) loc.y / (float) window_height_)*2 - 1);
@@ -305,66 +348,6 @@ void Scheme::HandleMouseUp(simd_float2 loc, bool left) {
     }
 }
 
-std::pair<int,float> Scheme::ControlModelClicked(simd_float2 loc) {
-    float d1, d2, d3;
-    bool has_neg, has_pos;
-    
-    float minZ = -1;
-    int clickedIdx = -1;
-    
-    int fid = 0;
-    for (int mid = 0; mid < controls_models_.size(); mid++) {
-        Model *cm = controls_models_[mid];
-        int fid_end = fid + cm->NumFaces();
-        for (; fid < fid_end; fid++) {
-            Face face = control_models_faces_[fid];
-            Vertex v1 = control_models_projected_vertices_[face.vertices[0]];
-            Vertex v2 = control_models_projected_vertices_[face.vertices[1]];
-            Vertex v3 = control_models_projected_vertices_[face.vertices[2]];
-            
-            if (InTriangle(loc, v1, v2, v3)) {
-                float z = WeightedZ(loc, v1, v2, v3);
-                if (minZ == -1 || z < minZ) {
-                    minZ = z;
-                    clickedIdx = mid;
-                }
-            }
-        }
-    }
-    
-    return std::make_pair(clickedIdx, minZ);
-}
-
-std::pair<int, float> Scheme::UIElementClicked(simd_float2 loc) {
-    float d1, d2, d3;
-    bool has_neg, has_pos;
-    
-    float minZ = -1;
-    int clickedIdx = -1;
-    
-    int fid = 0;
-    for (int eid = 0; eid < ui_elements_.size(); eid++) {
-        UIElement *e = ui_elements_[eid];
-        int fid_end = fid + e->NumFaces();
-        for (; fid < fid_end; fid++) {
-            UIFace face = ui_elements_faces_[fid];
-            Vertex v1 = ui_elements_vertices_[face.vertices[0]];
-            Vertex v2 = ui_elements_vertices_[face.vertices[1]];
-            Vertex v3 = ui_elements_vertices_[face.vertices[2]];
-            
-            if (InTriangle(loc, v1, v2, v3)) {
-                float z = WeightedZ(loc, v1, v2, v3);
-                if (minZ == -1 || z < minZ) {
-                    minZ = z;
-                    clickedIdx = eid;
-                }
-            }
-        }
-    }
-    
-    return std::make_pair(clickedIdx, minZ);
-}
-
 void Scheme::MoveControlsModels() {
     for (int i = 0; i < controls_model_uniforms_.size(); i++) {
         controls_model_uniforms_[i].rotate_origin = controls_basis_.pos;
@@ -376,7 +359,7 @@ void Scheme::MoveControlsModels() {
     float scale = 0.5+camtocontrols/4;
     
     for (int i = 0; i < controls_models_.size(); i++) {
-        ModelUniforms *mu = &controls_model_uniforms_[i];
+        ModelTransform *mu = &controls_model_uniforms_[i];
         // x
         float currmagx = Magnitude(mu->b.x);
         mu->b.x.x *= scale/currmagx;
@@ -429,10 +412,8 @@ void Scheme::UpdateUIVars() {
     aspect_ratio_ = (float) window_width_/ (float) window_height_;
     fps = ImGui::GetIO().Framerate;
     
-    vertex_render_uniforms.screen_ratio = aspect_ratio_;
-    node_render_uniforms_.screen_ratio = aspect_ratio_;
-    ui_render_uniforms_.screen_width = window_width_;
-    ui_render_uniforms_.screen_height = window_height_;
+    window_attributes.screen_width = window_width_;
+    window_attributes.screen_height = window_height_;
     
     camera_->FOV = {M_PI_2, 2*(atanf((float) window_height_/(float) window_width_))};
 }
@@ -463,29 +444,26 @@ void Scheme::MainWindow() {
     ImGui::End();
 }
 
-VertexRenderUniforms *Scheme::GetVertexRenderUniforms() {
-    return &vertex_render_uniforms;
+WindowAttributes *Scheme::GetWindowAttributes() {
+    return &window_attributes;
 }
 
-NodeRenderUniforms *Scheme::GetNodeRenderUniforms() {
-    return &node_render_uniforms_;
+std::vector<uint32_t> Scheme::GetSelectedVertices() {
+    return selected_vertices;
 }
 
-UIRenderUniforms *Scheme::GetUIRenderUniforms() {
-    return &ui_render_uniforms_;
+int Scheme::GetSelectedNode() {
+    return selected_node_;
 }
 
-void Scheme::Undo() {
-    if (!past_actions.empty()) {
-        UserAction *action = past_actions.back();
-        past_actions.pop_back();
-        action->Undo();
-        delete action;
-        
-        CalculateCounts();
-        should_reset_empty_buffers = true;
-        should_reset_static_buffers = true;
-    }
+simd_float4 Scheme::GetEditWindow() {
+    simd_float4 window;
+    window.x = 0;
+    window.y = float(-2*UI_start_.y) / window_height_;
+    window.z = 1;
+    window.w = float(window_height_ - UI_start_.y)/window_height_;
+    
+    return window;
 }
 
 void Scheme::SaveSceneToFolder(std::string path) {
@@ -605,80 +583,455 @@ void Scheme::CalculateNumUIVertices() {
     ui_vertex_length_ = sum;
 }
 
-unsigned long Scheme::NumSceneVertices() {
-    return scene_vertex_length_;
-}
-
-unsigned long Scheme::NumSceneFaces() {
-    return scene_face_length_;
-}
-
-unsigned long Scheme::NumSceneNodes() {
-    return scene_node_length_;
-}
-
-unsigned long Scheme::NumSceneDots() {
-    return scene_dot_length_;
-}
-
-unsigned long Scheme::NumSceneLines() {
-    return scene_line_length_;
-}
-
-unsigned long Scheme::NumControlsVertices() {
-    return controls_vertex_length_;
-}
-
-unsigned long Scheme::NumControlsFaces() {
-    return controls_face_length_;
-}
-
-unsigned long Scheme::NumControlsNodes() {
-    return controls_node_length_;
-}
-
-unsigned long Scheme::NumUIFaces() {
-    return ui_face_length_;
-}
-
-unsigned long Scheme::NumUIVertices() {
-    return ui_vertex_length_;
-}
-
-bool Scheme::ShouldRenderFaces() {
-    return should_render.faces;
-}
-
-bool Scheme::ShouldRenderEdges() {
-    return should_render.edges;
-}
-
-bool Scheme::ShouldRenderVertices() {
-    return should_render.vertices;
-}
-
-bool Scheme::ShouldRenderNodes() {
-    return should_render.nodes;
-}
-
-bool Scheme::ShouldRenderSlices() {
-    return should_render.slices;
-}
-
-void Scheme::Update() {
-    HandleCameraMovement();
-    SetControlsBasis();
-    MoveControlsModels();
+std::pair<int, int> Scheme::GetModelVertexIdx(int compiled_idx) {
+    int cur_model_vertex_end = 0;
+    for (int mid = 0; mid < scene_->NumModels(); mid++) {
+        int next_model_vertex_end = cur_model_vertex_end+scene_->GetModel(mid)->NumVertices();
+        
+        if (compiled_idx < next_model_vertex_end) {
+            return std::make_pair(mid, compiled_idx - cur_model_vertex_end);
+        }
+        
+        cur_model_vertex_end = next_model_vertex_end;
+    }
     
-    UpdateUIVars();
+    return std::make_pair(-1, -1);
 }
 
-simd_float4 Scheme::GetEditWindow() {
-    simd_float4 window;
-    window.x = 0;
-    window.y = float(-2*UI_start_.y) / window_height_;
-    window.z = 1;
-    window.w = float(window_height_ - UI_start_.y)/window_height_;
+std::pair<int, int> Scheme::GetModelFaceIdx(int compiled_idx) {
+    int cur_model_face_end = 0;
+    for (int mid = 0; mid < scene_->NumModels(); mid++) {
+        int next_model_face_end = cur_model_face_end+scene_->GetModel(mid)->NumFaces();
+        
+        if (compiled_idx < next_model_face_end) {
+            return std::make_pair(mid, compiled_idx - cur_model_face_end);
+        }
+        
+        cur_model_face_end = next_model_face_end;
+    }
     
-    return window;
+    return std::make_pair(-1, -1);
+}
+
+std::pair<int, int> Scheme::GetModelNodeIdx(int node_idx) {
+    int cur_model_node_end = 0;
+    for (int mid = 0; mid < scene_->NumModels(); mid++) {
+        int next_model_node_end = cur_model_node_end+scene_->GetModel(mid)->NumNodes();
+        
+        if (node_idx < next_model_node_end) {
+            return std::make_pair(mid, node_idx - cur_model_node_end);
+        }
+        
+        cur_model_node_end = next_model_node_end;
+    }
+    
+    return std::make_pair(-1, -1);
+}
+
+int Scheme::GetCompiledVertexIdx(int model_idx, int vertex_idx) {
+    int cur_model_vertex_start = 0;
+    for (int mid = 0; mid < scene_->NumModels(); mid++) {
+        if (mid == model_idx) {
+            return cur_model_vertex_start + vertex_idx;
+        }
+        cur_model_vertex_start += scene_->GetModel(mid)->NumVertices();
+    }
+    
+    return -1;
+}
+
+int Scheme::GetCompiledFaceIdx(int model_idx, int face_idx) {
+    int cur_model_face_start = 0;
+    for (int mid = 0; mid < scene_->NumModels(); mid++) {
+        if (mid == model_idx) {
+            return cur_model_face_start + face_idx;
+        }
+        cur_model_face_start += scene_->GetModel(mid)->NumFaces();
+    }
+    
+    return -1;
+}
+
+int Scheme::GetArrayNodeIdx(int model_idx, int node_idx) {
+    int cur_model_node_start = 0;
+    for (int mid = 0; mid < scene_->NumModels(); mid++) {
+        if (mid == model_idx) {
+            return cur_model_node_start + node_idx;
+        }
+        cur_model_node_start += scene_->GetModel(mid)->NumNodes();
+    }
+    
+    return -1;
+}
+
+Camera * Scheme::GetCamera() {
+    return camera_;
+}
+
+Scene * Scheme::GetScene() {
+    return scene_;
+}
+
+/*std::vector<Model *> *Scheme::GetModels() {
+    return scene_->GetModels();
+}
+
+std::vector<ModelTransform> *Scheme::GetModelUniforms() {
+    return scene_->GetAllModelUniforms();
+}
+
+std::vector<Slice *> *Scheme::GetSlices() {
+    return scene_->GetSlices();
+}
+
+std::vector<ModelTransform> *Scheme::GetSliceUniforms() {
+    return scene_->GetAllSliceUniforms();
+}
+
+std::vector<Model *> * Scheme::GetControlsModels() {
+    return &controls_models_;
+}
+
+std::vector<ModelTransform> * Scheme::GetControlsModelUniforms() {
+    return &controls_model_uniforms_;
+}
+
+std::vector<UIElement *> *Scheme::GetUIElements() {
+    return &ui_elements_;
+}
+
+std::vector<UIElementTransform> *Scheme::GetUIElementUniforms() {
+    return &ui_element_uniforms_;
+}*/
+
+unsigned long Scheme::NumSceneModels() { return scene_->NumModels(); }
+unsigned long Scheme::NumSceneVertices() { return scene_vertex_length_; }
+unsigned long Scheme::NumSceneFaces() { return scene_face_length_; }
+unsigned long Scheme::NumSceneNodes() { return scene_node_length_; }
+unsigned long Scheme::NumSceneSlices() { return scene_->NumSlices(); }
+unsigned long Scheme::NumSceneDots() { return scene_dot_length_; }
+unsigned long Scheme::NumSceneLines() { return scene_line_length_; }
+unsigned long Scheme::NumControlsModels() { return controls_models_.size(); }
+unsigned long Scheme::NumControlsVertices() { return controls_vertex_length_; }
+unsigned long Scheme::NumControlsFaces() { return controls_face_length_; }
+unsigned long Scheme::NumControlsNodes() { return controls_node_length_; }
+unsigned long Scheme::NumUIElements() { return ui_elements_.size(); }
+unsigned long Scheme::NumUIFaces() { return ui_face_length_; }
+unsigned long Scheme::NumUIVertices() { return ui_vertex_length_; }
+
+bool Scheme::ShouldRenderFaces() { return should_render.faces; }
+bool Scheme::ShouldRenderEdges() { return should_render.edges; }
+bool Scheme::ShouldRenderVertices() { return should_render.vertices; }
+bool Scheme::ShouldRenderNodes() { return should_render.nodes; }
+bool Scheme::ShouldRenderSlices() { return should_render.slices; }
+
+
+void Scheme::SetSceneFaceBuffer(Face *buf, unsigned long vertex_start) {
+    // track the current face index in the buffer
+    unsigned long cur_fid = 0;
+    
+    // track the starting vertex index of the current model in the compiled buffer
+    // vertex ids are local to the model - the buffer vertex ids will line up if the models are iterated in the same order
+    unsigned long cur_vertex_start = vertex_start;
+    
+    for (int i = 0; i < scene_->NumModels(); i++) { // iterate through models
+        Model *m = scene_->GetModel(i); // get current model
+        for (int j = 0; j < m->NumFaces(); j++) { // iterate through current models faces
+            // copy face
+            Face face = *m->GetFace(j);
+            // add current vertex start to original face vids (which are local to the model)
+            face.vertices[0] += cur_vertex_start;
+            face.vertices[1] += cur_vertex_start;
+            face.vertices[2] += cur_vertex_start;
+            buf[cur_fid++] = face;
+        }
+        
+        // increment the current vertex start to the next model
+        cur_vertex_start += m->NumVertices();
+    }
+}
+
+void Scheme::SetSceneEdgeBuffer(simd_int2 *buf, unsigned long vertex_start) {
+    // track the current edge index in the buffer
+    unsigned long cur_eid = 0;
+    
+    // track the starting vertex index of the current model in the compiled buffer
+    // vertex ids are local to the model - the buffer vertex ids will line up if the models are iterated in the same order
+    unsigned long cur_vertex_start = vertex_start;
+    
+    for (int i = 0; i < scene_->NumModels(); i++) { // iterate through models
+        Model *m = scene_->GetModel(i); // get current model
+        for (int j = 0; j < m->NumFaces(); j++) { // iterate through current models faces
+            // three edges per face
+            Face face = *m->GetFace(j);
+            // create edges
+            // add current vertex starts to original face vids (which are local to the model)
+            buf[cur_eid++] = simd_make_int2(face.vertices[0]+cur_vertex_start, face.vertices[1]+cur_vertex_start);
+            buf[cur_eid++] = simd_make_int2(face.vertices[1]+cur_vertex_start, face.vertices[2]+cur_vertex_start);
+            buf[cur_eid++] = simd_make_int2(face.vertices[2]+cur_vertex_start, face.vertices[0]+cur_vertex_start);
+        }
+        
+        // increment the current vertex start to the next model
+        cur_vertex_start += m->NumVertices();
+    }
+}
+
+void Scheme::SetSceneNodeBuffer(Node *buf) {
+    // track the current node index in the buffer
+    unsigned long cur_nid = 0;
+    
+    for (int i = 0; i < scene_->NumModels(); i++) { // iterate through models
+        Model *m = scene_->GetModel(i); // get current model
+        for (int j = 0; j < m->NumNodes(); j++) { // iterate through current models nodes
+            // copy node exactly
+            buf[cur_nid++] = *m->GetNode(j);
+        }
+    }
+}
+
+void Scheme::SetSceneNodeModelIDBuffer(uint32_t *buf, unsigned long model_start) {
+    // track the current node index in the buffer
+    unsigned long cur_nid = 0;
+    
+    for (int i = 0; i < scene_->NumModels(); i++) { // iterate through models
+        Model *m = scene_->GetModel(i); // get current model
+        for (int j = 0; j < m->NumNodes(); j++) { // iterate through current models nodes
+            // put model index in buffer
+            buf[cur_nid++] = i+model_start;
+        }
+    }
+}
+
+void Scheme::SetSceneNodeVertexLinkBuffer(NodeVertexLink *buf, unsigned long node_start) {
+    // track the current nvlink index in the buffer
+    unsigned long cur_nvlid = 0;
+    
+    // track the current node in the node buffer
+    unsigned long cur_node_start = node_start;
+    
+    for (int i = 0; i < scene_->NumModels(); i++) { // iterate through models
+        Model *m = scene_->GetModel(i); // get current model
+        for (int j = 0; j < m->NumVertices()*2; j++) { // iterate through current models nodes
+            // copy nvlink
+            NodeVertexLink nvlink = *m->GetNodeVertexLink(j);
+            // add current node start to original nvlink nids (which are local to the model)
+            nvlink.nid += cur_node_start;
+            buf[cur_nvlid++] = nvlink;
+        }
+        
+        // increment the current node start to the next model
+        cur_node_start += m->NumNodes();
+    }
+}
+
+void Scheme::SetSceneModelTransformBuffer(ModelTransform *buf) {
+    // track the current model id in the buffer
+    unsigned long cur_mid = 0;
+    
+    for (int i = 0; i < scene_->NumModels(); i++) { // iterate through models
+        // copy model uniforms into buffer
+        buf[cur_mid] = *scene_->GetModelUniforms(i);
+    }
+}
+
+void Scheme::SetControlFaceBuffer(Face *buf, unsigned long vertex_start) {
+    // track the current face index in the buffer
+    unsigned long cur_fid = 0;
+    
+    // track the starting vertex index of the current model in the compiled buffer
+    // vertex ids are local to the model - the buffer vertex ids will line up if the models are iterated in the same order
+    unsigned long cur_vertex_start = vertex_start;
+    
+    for (int i = 0; i < controls_models_.size(); i++) { // iterate through models
+        Model *m = controls_models_.at(i); // get current model
+        for (int j = 0; j < m->NumFaces(); j++) { // iterate through current models faces
+            // copy face
+            Face face = *m->GetFace(j);
+            // add current vertex start to original face vids (which are local to the model)
+            face.vertices[0] += cur_vertex_start;
+            face.vertices[1] += cur_vertex_start;
+            face.vertices[2] += cur_vertex_start;
+            buf[cur_fid++] = face;
+        }
+        
+        // increment the current vertex start to the next model
+        cur_vertex_start += m->NumVertices();
+    }
+}
+
+void Scheme::SetControlNodeBuffer(Node *buf) {
+    // track the current node index in the buffer
+    unsigned long cur_nid = 0;
+    
+    for (int i = 0; i < controls_models_.size(); i++) { // iterate through models
+        Model *m = controls_models_.at(i); // get current model
+        for (int j = 0; j < m->NumNodes(); j++) { // iterate through current models nodes
+            // copy node exactly
+            buf[cur_nid++] = *m->GetNode(j);
+        }
+    }
+}
+
+void Scheme::SetControlNodeModelIDBuffer(uint32_t *buf, unsigned long model_start) {
+    // track the current node index in the buffer
+    unsigned long cur_nid = 0;
+    
+    for (int i = 0; i < controls_models_.size(); i++) { // iterate through models
+        Model *m = controls_models_.at(i); // get current model
+        for (int j = 0; j < m->NumNodes(); j++) { // iterate through current models nodes
+            // put model index in buffer
+            buf[cur_nid++] = i+model_start;
+        }
+    }
+}
+
+void Scheme::SetControlNodeVertexLinkBuffer(NodeVertexLink *buf, unsigned long node_start) {
+    // track the current nvlink index in the buffer
+    unsigned long cur_nvlid = 0;
+    
+    // track the current node in the node buffer
+    unsigned long cur_node_start = node_start;
+    
+    for (int i = 0; i < controls_models_.size(); i++) { // iterate through models
+        Model *m = controls_models_.at(i); // get current model
+        for (int j = 0; j < m->NumVertices()*2; j++) { // iterate through current models nodes
+            // copy nvlink
+            NodeVertexLink nvlink = *m->GetNodeVertexLink(j);
+            // add current node start to original nvlink nids (which are local to the model)
+            nvlink.nid += cur_node_start;
+            buf[cur_nvlid++] = nvlink;
+        }
+        
+        // increment the current node start to the next model
+        cur_node_start += m->NumNodes();
+    }
+}
+
+void Scheme::SetControlModelTransformBuffer(ModelTransform *buf) {
+    // track the current model id in the buffer
+    unsigned long cur_mid = 0;
+    
+    for (int i = 0; i < controls_models_.size(); i++) { // iterate through models
+        // copy model uniforms into buffer
+        buf[cur_mid++] = controls_model_uniforms_.at(i);
+    }
+}
+
+void Scheme::SetSliceDotBuffer(Dot *buf) {
+    // track the current dot id in the buffer
+    unsigned long cur_did = 0;
+    
+    for (int i = 0; i < scene_->NumSlices(); i++) { // iterate through slices
+        Slice *s = scene_->GetSlice(i); // get current slice
+        for (int j = 0; j < s->NumDots(); j++) { // iterate through dots
+            // add dot to buffer
+            buf[cur_did++] = *s->GetDot(j);
+        }
+    }
+}
+
+void Scheme::SetSliceLineBuffer(simd_int2 *buf, unsigned long dot_start) {
+    // track the current line index in the buffer
+    unsigned long cur_lid = 0;
+    
+    // track the starting dot index of the current slice in the compiled buffer
+    // dot ids are local to the slice - the buffer dot ids will line up if the slices are iterated in the same order
+    unsigned long cur_dot_start = dot_start;
+    
+    for (int i = 0; i < scene_->NumSlices(); i++) { // iterate through slices
+        Slice *s = scene_->GetSlice(i); // get current slice
+        for (int j = 0; j < s->NumLines(); j++) { // iterate through current models faces
+            // copy line
+            Line l = *s->GetLine(j);
+            // add dot start to original line dids
+            l.d1 += dot_start;
+            l.d2 += dot_start;
+            
+            // TODO: MAYBE CHANGE EDGE/LINE FORMAT
+            buf[cur_lid++] = simd_make_int2(l.d1, l.d2);
+        }
+        
+        // increment the current dot start to the next model
+        cur_dot_start += s->NumDots();
+    }
+}
+
+void Scheme::SetSliceAttributesBuffer(SliceAttributes *buf) {
+    // track the current slice index in the buffer
+    unsigned long cur_sid = 0;
+    
+    for (int i = 0; i < scene_->NumSlices(); i++) { // iterate through slices
+        buf[cur_sid++] = scene_->GetSlice(i)->GetAttributes(); // copy slice attributes
+    }
+}
+
+void Scheme::SetSliceTransformBuffer(ModelTransform *buf) {
+    // track the current slice index in the buffer
+    unsigned long cur_sid = 0;
+    
+    for (int i = 0; i < scene_->NumSlices(); i++) { // iterate through slices
+        buf[cur_sid++] = *scene_->GetSliceUniforms(i); // copy slice transform
+    }
+}
+
+void Scheme::SetUIFaceBuffer(Face *buf, unsigned long vertex_start) {
+    // track the current face index in the buffer
+    unsigned long cur_fid = 0;
+    
+    // track the starting vertex index of the current element in the compiled buffer
+    // vertex ids are local to the element - the buffer vertex ids will line up if the elements are iterated in the same order
+    unsigned long cur_vertex_start = vertex_start;
+    
+    for (int i = 0; i < ui_elements_.size(); i++) { // iterate through elements
+        UIElement *e = ui_elements_.at(i); // get current element
+        for (int j = 0; j < e->NumFaces(); j++) { // iterate through current elements faces
+            UIFace *uif = e->GetFace(j); // get ui face
+            
+            Face face; // create new face - have to translate UIFace to normal Face
+            face.color = uif->color; // copy color over
+            // add current vertex start to original face vids (which are local to the model)
+            face.vertices[0] = face.vertices[0] + cur_vertex_start;
+            face.vertices[1] = face.vertices[1] + cur_vertex_start;
+            face.vertices[2] = face.vertices[2] + cur_vertex_start;
+            // lighting values don't matter - lighting only calculated for scene models
+            
+            buf[cur_fid++] = face;
+        }
+        
+        // increment the current vertex start to the next element
+        cur_vertex_start += e->NumVertices();
+    }
+}
+
+void Scheme::SetUIVertexBuffer(UIVertex *buf) {
+    // track the current vertex index in the buffer
+    unsigned long cur_vid = 0;
+    
+    for (int i = 0; i < ui_elements_.size(); i++) { // iterate through elements
+        UIElement *e = ui_elements_.at(i); // get current element
+        for (int j = 0; j < e->NumVertices(); j++) { // iterate through current elements faces
+            buf[cur_vid++] = *e->GetVertex(j); // copy vertex
+        }
+    }
+}
+
+void Scheme::SetUIElementIDBuffer(uint32_t *buf) {
+    // track the current element index in the buffer
+    unsigned long cur_eid = 0;
+    
+    for (int i = 0; i < ui_elements_.size(); i++) { // iterate through elements
+        UIElement *e = ui_elements_.at(i); // get current element
+        for (int j = 0; j < e->NumVertices(); j++) { // iterate through current elements faces
+            buf[cur_eid++] = i; // set element id
+        }
+    }
+}
+
+void Scheme::SetUITransformBuffer(UIElementTransform *buf) {
+    // track the current element index in the buffer
+    unsigned long cur_eid = 0;
+    
+    for (int i = 0; i < ui_elements_.size(); i++) { // iterate through elements
+        buf[cur_eid++] = ui_element_uniforms_[i];
+    }
 }

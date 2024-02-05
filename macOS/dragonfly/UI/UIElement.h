@@ -35,7 +35,7 @@ private:
     unsigned long vertex_start = 0;
     
 public:
-    UIElement(uint32_t eid);
+    UIElement();
     ~UIElement();
     
     int MakeVertex(int x, int y, int z);

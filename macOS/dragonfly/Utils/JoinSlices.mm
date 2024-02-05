@@ -8,7 +8,7 @@
 #include "JoinSlices.h"
 
 
-Vertex DragonflyUtils::GetStandardVertexFromDot(Slice *s, ModelUniforms *mu, int i) {
+Vertex DragonflyUtils::GetStandardVertexFromDot(Slice *s, ModelTransform *mu, int i) {
     Dot *d = s->GetDot(i);
     Vertex v;
     v.x = d->x;// * s->GetAttributes().width / 2;
@@ -19,7 +19,7 @@ Vertex DragonflyUtils::GetStandardVertexFromDot(Slice *s, ModelUniforms *mu, int
     return v;
 }
 
-void DragonflyUtils::BuildSliceOnModel(Model *m, ModelUniforms *mu, Slice *s, ModelUniforms *su, int lastslicestart) {
+void DragonflyUtils::BuildSliceOnModel(Model *m, ModelTransform *mu, Slice *s, ModelTransform *su, int lastslicestart) {
     int newslicestart = m->NumVertices();
     if (newslicestart == 0) {
         *mu = *su;
@@ -50,7 +50,7 @@ void DragonflyUtils::BuildSliceOnModel(Model *m, ModelUniforms *mu, Slice *s, Mo
     }
 }
 
-std::vector<int> DragonflyUtils::LinesAcross(Slice *a, ModelUniforms *au, ModelUniforms *bu) {
+std::vector<int> DragonflyUtils::LinesAcross(Slice *a, ModelTransform *au, ModelTransform *bu) {
     std::vector<int> ret;
     
     for (int i = 0; i < a->NumLines(); i++) {
@@ -70,7 +70,7 @@ std::vector<int> DragonflyUtils::LinesAcross(Slice *a, ModelUniforms *au, ModelU
     return ret;
 }
 
-std::vector<int> DragonflyUtils::LowerDotsOnLinesAcross(Slice *a, ModelUniforms *au, ModelUniforms *bu) {
+std::vector<int> DragonflyUtils::LowerDotsOnLinesAcross(Slice *a, ModelTransform *au, ModelTransform *bu) {
     std::vector<int> ret;
     
     for (int i = 0; i < a->NumLines(); i++) {
@@ -92,7 +92,7 @@ std::vector<int> DragonflyUtils::LowerDotsOnLinesAcross(Slice *a, ModelUniforms 
     return ret;
 }
 
-std::vector<simd_float3> DragonflyUtils::CrossedPointsOnLinesAcross(Slice *a, ModelUniforms *au, ModelUniforms *bu) {
+std::vector<simd_float3> DragonflyUtils::CrossedPointsOnLinesAcross(Slice *a, ModelTransform *au, ModelTransform *bu) {
     std::vector<simd_float3> ret;
     
     for (int i = 0; i < a->NumLines(); i++) {
@@ -117,7 +117,7 @@ std::vector<simd_float3> DragonflyUtils::CrossedPointsOnLinesAcross(Slice *a, Mo
     return ret;
 }
 
-std::pair<int,int> DragonflyUtils::GetNextMergeDots(std::pair<int, int> curr, bool up, Slice *a, Slice *b, ModelUniforms *au, ModelUniforms *bu) {
+std::pair<int,int> DragonflyUtils::GetNextMergeDots(std::pair<int, int> curr, bool up, Slice *a, Slice *b, ModelTransform *au, ModelTransform *bu) {
     std::pair<int, int> ret;
     if (curr.first == -1) {
         // get first merge dots
@@ -199,7 +199,7 @@ std::pair<int,int> DragonflyUtils::GetNextMergeDots(std::pair<int, int> curr, bo
     return ret;
 }
 
-void DragonflyUtils::MoveToMerge(Slice *a, ModelUniforms *au, Slice *b, ModelUniforms *bu, std::pair<int, int> bdots) {
+void DragonflyUtils::MoveToMerge(Slice *a, ModelTransform *au, Slice *b, ModelTransform *bu, std::pair<int, int> bdots) {
     Vertex v1 = GetStandardVertexFromDot(b, bu, bdots.first);
     Vertex v2 = GetStandardVertexFromDot(b, bu, bdots.second);
     
@@ -297,8 +297,8 @@ void DragonflyUtils::MoveToMerge(Slice *a, ModelUniforms *au, Slice *b, ModelUni
     }
 }
 
-void DragonflyUtils::JoinSlices(Model *m, ModelUniforms *mu, Slice *a, Slice *b, ModelUniforms *au, ModelUniforms *bu, float merge_threshold) {
-    ModelUniforms initau = *au;
+void DragonflyUtils::JoinSlices(Model *m, ModelTransform *mu, Slice *a, Slice *b, ModelTransform *au, ModelTransform *bu, float merge_threshold) {
+    ModelTransform initau = *au;
     SliceAttributes initaa = a->GetAttributes();
     
     // get first dots closest to slice a (going down)
@@ -389,13 +389,13 @@ int DragonflyUtils::GetNextDot(Slice *s, int cur, int last) {
     return -1;
 }
 
-float DragonflyUtils::DotDist(Slice *a, ModelUniforms *au, Slice *b, ModelUniforms *bu, int adot, int bdot) {
+float DragonflyUtils::DotDist(Slice *a, ModelTransform *au, Slice *b, ModelTransform *bu, int adot, int bdot) {
     Vertex av = GetStandardVertexFromDot(a, au, adot);
     Vertex bv = GetStandardVertexFromDot(b, bu, bdot);
     return dist3to3(av, bv);
 }
 
-std::pair<std::vector<int>, float> DragonflyUtils::MatchSlicesFrom(Slice *a, ModelUniforms *au, Slice *b, ModelUniforms *bu, int a1, int a2, int b1, int b2) {
+std::pair<std::vector<int>, float> DragonflyUtils::MatchSlicesFrom(Slice *a, ModelTransform *au, Slice *b, ModelTransform *bu, int a1, int a2, int b1, int b2) {
     std::vector<int> matching;
     for (int i = 0; i < a->NumDots(); i++) {
         matching.push_back(-1);
@@ -436,7 +436,7 @@ std::pair<std::vector<int>, float> DragonflyUtils::MatchSlicesFrom(Slice *a, Mod
     return std::make_pair(matching, score);
 }
 
-std::vector<int> DragonflyUtils::MatchEqualSlices(Slice *a, ModelUniforms *au, Slice *b, ModelUniforms *bu) {
+std::vector<int> DragonflyUtils::MatchEqualSlices(Slice *a, ModelTransform *au, Slice *b, ModelTransform *bu) {
     std::vector<int> bestmatching;
     float bestmatchingscore = -1;
     
@@ -474,7 +474,7 @@ std::vector<int> DragonflyUtils::MatchEqualSlices(Slice *a, ModelUniforms *au, S
     return bestmatching;
 }
 
-void DragonflyUtils::BridgeEqualSlices(Model *m, ModelUniforms *mu, Slice *a, Slice *b, ModelUniforms *au, ModelUniforms *bu) {
+void DragonflyUtils::BridgeEqualSlices(Model *m, ModelTransform *mu, Slice *a, Slice *b, ModelTransform *au, ModelTransform *bu) {
     
     
     std::vector<int> matching = MatchEqualSlices(a, au, b, bu);

@@ -245,12 +245,9 @@ std::vector<std::vector<NodeKeyFrame *> *> *Animation::GetAnimations() {
     return &node_animations;
 }
 
-Model::Model(uint32 mid) : modelID(mid) {
-    name_ = "model"+std::to_string(mid);
-    face_start = 0;
-    vertex_start = 0;
+Model::Model() {
+    name_ = "model";
     num_vertices = 0;
-    node_start = 0;
     
     Node *node = new Node();
     node->b = Basis();
@@ -781,6 +778,10 @@ unsigned Model::NumAnimations() {
     return animations.size();
 }
 
+NodeVertexLink *Model::GetNodeVertexLink(unsigned long nvlid) {
+    return nvlinks.at(nvlid);
+}
+
 Vertex Model::GetVertex(unsigned long vid) {
     Vertex ret = simd_make_float3(0, 0, 0);
     
@@ -893,72 +894,6 @@ std::vector<Node *> &Model::GetNodes() {
     return nodes;
 }
 
-void Model::AddToBuffers(std::vector<Face> &faceBuffer, std::vector<Node> &nodeBuffer, std::vector<NodeVertexLink> &nvlinkBuffer, std::vector<uint32_t> &node_modelIDs, unsigned &total_vertices) {
-    face_start = faceBuffer.size();
-    vertex_start = total_vertices;
-    
-    total_vertices += num_vertices;
-    
-    for (int i = 0; i < faces.size(); i++) {
-        Face *og = faces[i];
-        Face face;
-        face.color = og->color;
-        face.vertices[0] = og->vertices[0]+vertex_start;
-        face.vertices[1] = og->vertices[1]+vertex_start;
-        face.vertices[2] = og->vertices[2]+vertex_start;
-        face.normal_reversed = og->normal_reversed;
-        face.lighting_offset = og->lighting_offset;
-        face.shading_multiplier = og->shading_multiplier;
-        faceBuffer.push_back(face);
-    }
-    
-    node_start = nodeBuffer.size();
-    
-    for (int i = 0; i < nodes.size(); i++) {
-        Node *og = nodes[i];
-        Node node;
-        node.b = og->b;
-        nodeBuffer.push_back(node);
-        node_modelIDs.push_back(modelID);
-    }
-    
-    for (int i = 0; i < nvlinks.size(); i++) {
-        NodeVertexLink *og = nvlinks[i];
-        NodeVertexLink nvlink;
-        if (og->nid != -1) {
-            nvlink.nid = og->nid + node_start;
-        } else {
-            nvlink.nid = -1;
-        }
-        nvlink.vector = og->vector;
-        nvlink.weight = og->weight;
-        nvlinkBuffer.push_back(nvlink);
-    }
-}
-
-void Model::UpdateNodeBuffers(std::vector<Node> &nodeBuffer) {
-    for (int i = 0; i < nodes.size(); i++) {
-        Node *node = &nodeBuffer.at(i+node_start);
-        node->b = nodes[i]->b;
-    }
-}
-
-uint32 Model::ModelID() {
-    return modelID;
-}
-
-unsigned long Model::FaceStart() {
-    return face_start;
-}
-
-unsigned long Model::VertexStart() {
-    return vertex_start;
-}
-
-unsigned long Model::NodeStart() {
-    return node_start;
-}
-
 unsigned long Model::NumFaces() {
     return faces.size();
 }
@@ -969,10 +904,6 @@ unsigned long Model::NumVertices() {
 
 unsigned long Model::NumNodes() {
     return nodes.size();
-}
-
-void Model::SetId(uint32_t mid) {
-    modelID = mid;
 }
 
 void Model::SetName(std::string name) {

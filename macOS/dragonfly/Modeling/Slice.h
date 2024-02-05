@@ -34,14 +34,9 @@ private:
     std::vector<Dot *> dots;
     std::vector<Line *> lines;
     
-    unsigned long dot_start;
-    unsigned long line_start;
-    
-    uint32_t sliceID;
-    
     SliceAttributes attr;
 public:
-    Slice(uint32_t mid);
+    Slice();
     ~Slice();
     
     void SetWidth(float w);
@@ -70,12 +65,6 @@ public:
     
     std::vector<Dot*> &GetDots();
     std::vector<Line*> &GetLines();
-    
-    void AddToBuffers(std::vector<Dot> &dotBuffer, std::vector<Line> &lineBuffer, std::vector<int> &dotSliceLinkBuffer, int sid);
-    uint32_t SliceID();
-    
-    unsigned long DotStart();
-    unsigned long LineStart();
     
     unsigned long NumDots();
     unsigned long NumLines();

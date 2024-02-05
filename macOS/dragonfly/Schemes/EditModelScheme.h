@@ -15,8 +15,8 @@
 
 class EditModelScheme : public Scheme {
 private:
+    // ---UI VARIABLES---
     int right_menu_width_ = 300;
-    
     bool render_rightclick_popup_ = false;
     simd_float2 rightclick_popup_loc_;
     int num_right_click_buttons_ = 0;
@@ -24,6 +24,7 @@ private:
     simd_float2 rightclick_popup_size_;
     bool rightclick_popup_clicked_ = false;
     
+    // ---CONTROL MODELS---
     Arrow *z_arrow;
     Arrow *x_arrow;
     Arrow *y_arrow;
@@ -42,11 +43,14 @@ private:
     int ROTATOR_VERTEX_SIZE = 20;
     int ROTATOR_FACE_SIZE = 8;
     
+    // ---SELECTIONS---
     int selected_model = -1;
     
+    // ---ANIMATION---
     unsigned long wanted_aid = 0;
     std::pair<int, int> loopanim;
     
+    // ---TEXT INPUT VARIABLES---
     std::string angle_input_x = "0";
     std::string angle_input_y = "0";
     std::string angle_input_z = "0";
@@ -57,40 +61,42 @@ private:
     
     std::string add_model_input = "-1";
     
-    void CreateControlsModels();
     
+    // ---CLICK HANDLERS---
     std::pair<int, float> ModelClicked(simd_float2 loc);
-    
     bool ClickOnScene(simd_float2 loc);
-    
     void HandleSelection(simd_float2 loc);
-    
     void ModelEditMenu();
     
+    // ---CONTROL MODELS FUNCTIONS---
+    void CreateControlsModels();
     void SetControlsBasis();
-    
     void SetArrowProjections();
     
+    // ---UI RENDER FUNCTIONS---
     void RightClickPopup();
-    
     void RightMenu();
     void MainWindow();
 public:
-    EditModelScheme();
+    // ---GENERAL SCHEME FUNCTIONS---
+    EditModelScheme(); // constructor
+    ~EditModelScheme(); // destructor
+    void Update(); // update function called every frame
     
-    ~EditModelScheme();
-    
+    // ---DIRECT INPUT HANDLERS---
     void HandleMouseDown(simd_float2 loc, bool left);
     void HandleMouseUp(simd_float2 loc, bool left);
-    
-    void SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp, Vertex *uiv, UIFace *uif);
-    void BuildUI();
-    
-    void SaveSelectedModelToFile(std::string path);
-    
     void HandleMouseMovement(float x, float y, float dx, float dy);
     
-    virtual void Update();
+    // ---UI RENDER---
+    void BuildUI();
+    
+    // ---FILES---
+    void SaveSelectedModelToFile(std::string path);
+    
+    // ---FOR COMPUTE BUFFERS---
+    // setter for compute buffer to set buffer data
+    void SetBufferContents(CompiledBufferKeyIndices *cki, Vertex *ccv, Face *ccf, Vertex *cmv, Node *cmn);
 };
 
 #endif /* EditModelScheme_h */

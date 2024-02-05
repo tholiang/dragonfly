@@ -14,27 +14,85 @@ void ComputePipeline::init() {
     command_queue = [device newCommandQueue];
     library = [device newDefaultLibrary];
     
-    SetPipeline();
+    SetKernelPipelines();
 }
 
 void ComputePipeline::SetScheme(Scheme *sch) {
     scheme = sch;
     
-    num_scene_vertices = scheme->NumSceneVertices();
-    num_scene_faces = scheme->NumSceneFaces();
-    num_scene_dots = scheme->NumSceneDots();
-    num_scene_lines = scheme->NumSceneLines();
-    num_controls_vertices = scheme->NumControlsVertices();
-    num_controls_faces = scheme->NumControlsFaces();
-    num_ui_vertices = scheme->NumUIVertices();
-    num_ui_faces = scheme->NumUIFaces();
+    
+    if (scheme->GetType() == SchemeType::EditSlice) {
+        num_scene_models = 0;
+        num_scene_vertices = 0;
+        num_scene_faces = 0;
+        num_scene_edges = 0;
+        num_scene_nodes = 0;
+        
+        num_scene_slices = 1;
+        num_scene_dots = scheme->NumSceneDots();
+        num_scene_lines = scheme->NumSceneLines();
+        
+        num_controls_models = 0;
+        num_controls_vertices = 0;
+        num_controls_faces = 0;
+        num_controls_nodes = 0;
+        
+        num_ui_elements = 0;
+        num_ui_vertices = 0;
+        num_ui_faces = 0;
+    } else {
+        num_scene_models = scheme->GetScene()->NumModels();
+        num_scene_vertices = scheme->NumSceneVertices();
+        num_scene_faces = scheme->NumSceneFaces();
+        num_scene_edges = num_scene_faces*3;
+        num_scene_nodes = scheme->NumSceneNodes();
+        
+        num_scene_slices = scheme->GetScene()->NumSlices();
+        num_scene_dots = scheme->NumSceneDots();
+        num_scene_lines = scheme->NumSceneLines();
+        
+        num_controls_models = scheme->NumControlsModels();
+        num_controls_vertices = scheme->NumControlsVertices();
+        num_controls_faces = scheme->NumControlsFaces();
+        num_controls_nodes = scheme->NumControlsNodes();
+        
+        num_ui_elements = scheme->NumUIElements();
+        num_ui_vertices = scheme->NumUIVertices();
+        num_ui_faces = scheme->NumUIFaces();
+    }
+    
+    // set compiled buffer key indices
+    compiled_buffer_key_indices.compiled_vertex_size = compiled_vertex_size();
+    compiled_buffer_key_indices.compiled_vertex_scene_start = compiled_vertex_scene_start();
+    compiled_buffer_key_indices.compiled_vertex_scene_start = compiled_vertex_scene_start();
+    compiled_buffer_key_indices.compiled_vertex_control_start = compiled_vertex_control_start();
+    compiled_buffer_key_indices.compiled_vertex_dot_start = compiled_vertex_dot_start();
+    compiled_buffer_key_indices.compiled_vertex_node_circle_start = compiled_vertex_node_circle_start();
+    compiled_buffer_key_indices.compiled_vertex_vertex_square_start = compiled_vertex_vertex_square_start();
+    compiled_buffer_key_indices.compiled_vertex_dot_square_start = compiled_vertex_dot_square_start();
+    compiled_buffer_key_indices.compiled_vertex_slice_plate_start = compiled_vertex_slice_plate_start();
+    compiled_buffer_key_indices.compiled_vertex_ui_start = compiled_vertex_ui_start();
+    
+    compiled_buffer_key_indices.compiled_face_size = compiled_face_size();
+    compiled_buffer_key_indices.compiled_face_scene_start = compiled_face_scene_start();
+    compiled_buffer_key_indices.compiled_face_control_start = compiled_face_control_start();
+    compiled_buffer_key_indices.compiled_face_node_circle_start = compiled_face_node_circle_start();
+    compiled_buffer_key_indices.compiled_face_vertex_square_start = compiled_face_vertex_square_start();
+    compiled_buffer_key_indices.compiled_face_dot_square_start = compiled_face_dot_square_start();
+    compiled_buffer_key_indices.compiled_face_slice_plate_start = compiled_face_slice_plate_start();
+    compiled_buffer_key_indices.compiled_face_ui_start = compiled_face_ui_start();
+    
+    compiled_buffer_key_indices.compiled_edge_size = compiled_edge_size();
+    compiled_buffer_key_indices.compiled_edge_scene_start = compiled_edge_scene_start();
+    compiled_buffer_key_indices.compiled_edge_line_start = compiled_edge_line_start();
 }
 
-void ComputePipeline::SetPipeline() {
-    compute_reset_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"ResetVertices"] error:nil];
+void ComputePipeline::SetKernelPipelines() {
+    // create kernel pipelines and set them to set Metal kernels
     compute_transforms_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateModelNodeTransforms"] error:nil];
     compute_vertex_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateVertices"] error:nil];
     compute_projected_vertices_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateProjectedVertices"] error:nil];
+    compute_vertex_squares_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateVertexSquares"] error:nil];
     compute_scaled_dots_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateScaledDots"] error:nil];
     compute_projected_dots_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateProjectedDots"] error:nil];
     compute_projected_nodes_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateProjectedNodes"] error:nil];
@@ -43,399 +101,602 @@ void ComputePipeline::SetPipeline() {
     compute_ui_vertices_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateUIVertices"] error:nil];
 }
 
-void ComputePipeline::SetEmptyBuffers() {
-    num_scene_vertices = scheme->NumSceneVertices();
-    num_scene_faces = scheme->NumSceneFaces();
-    num_scene_dots = scheme->NumSceneDots();
-    num_scene_lines = scheme->NumSceneLines();
-    int num_scene_slices = scheme->GetSlices()->size();
-    num_controls_vertices = scheme->NumControlsVertices();
-    num_controls_faces = scheme->NumControlsFaces();
-    num_ui_vertices = scheme->NumUIVertices();
-    num_ui_faces = scheme->NumUIFaces();
+void ComputePipeline::CreateBuffers() {
+    SetScheme(scheme);
     
-    std::vector<Vertex> empty_scene_vertices;
-    for (int i = 0; i < num_scene_vertices; i++) {
-        empty_scene_vertices.push_back(simd_make_float3(0, 0, 0));
-    }
+    // ---COMPUTE DATA BUFFERS---
+    window_attributes_buffer = [device newBufferWithBytes:scheme->GetWindowAttributes() length:(sizeof(WindowAttributes)) options:MTLResourceStorageModeShared];
+    compiled_buffer_key_indices_buffer = [device newBufferWithBytes:&compiled_buffer_key_indices length:(sizeof(CompiledBufferKeyIndices)) options:MTLResourceStorageModeManaged];
     
-    std::vector<Vertex> empty_controls_vertices;
-    for (int i = 0; i < num_controls_vertices; i++) {
-        empty_controls_vertices.push_back(simd_make_float3(0, 0, 0));
-    }
     
-    std::vector<Face> empty_scene_faces;
-    for (int i = 0; i < num_scene_faces; i++) {
-        empty_scene_faces.push_back(Face());
-    }
+    // ---COMPILED BUFFERS---
+    // create compiled vertex buffer - all data to be set by gpu
+    std::vector<Vertex> compiled_vertices(compiled_vertex_size());
+    compiled_vertex_buffer = [device newBufferWithBytes:compiled_vertices.data() length:(compiled_vertices.size() * sizeof(Vertex)) options:MTLResourceStorageModeManaged];
     
-    std::vector<Dot> empty_scene_dots;
-    for (int i = 0; i < num_scene_dots; i++) {
-        empty_scene_dots.push_back(simd_make_float2(0, 0));
-    }
+    // create compiled face buffer
+    std::vector<Face> compiled_faces(compiled_face_size());
+    compiled_face_buffer = [device newBufferWithBytes:compiled_faces.data() length:(compiled_faces.size() * sizeof(Face)) options:MTLResourceStorageModeManaged];
     
-    std::vector<Vertex> empty_scene_slice_plates;
-    for (int i = 0; i < num_scene_slices*6; i++) {
-        empty_scene_slice_plates.push_back(simd_make_float3(0, 0, 0));
-    }
+    // create compiled edge buffer
+    std::vector<simd_int2> compiled_edges(compiled_edge_size());
+    compiled_edge_buffer = [device newBufferWithBytes:compiled_edges.data() length:(compiled_edges.size() * sizeof(simd_int2)) options:MTLResourceStorageModeManaged];
     
-    std::vector<Vertex> output_ui_vertices;
-    for (int i = 0; i < num_ui_vertices; i++) {
-        output_ui_vertices.push_back(simd_make_float3(0, 0, 0));
-    }
     
-    scene_vertex_buffer = [device newBufferWithBytes:empty_scene_vertices.data() length:(num_scene_vertices * sizeof(Vertex)) options:MTLResourceStorageModeShared];
-    scene_projected_vertex_buffer = [device newBufferWithBytes:empty_scene_vertices.data() length:(num_scene_vertices * sizeof(Vertex)) options:MTLResourceStorageModeShared];
-    
-    scene_projected_dot_buffer = [device newBufferWithBytes:empty_scene_dots.data() length:(num_scene_dots * sizeof(Vertex)) options:MTLResourceStorageModeShared];
-    
-    scene_projected_slice_plates_buffer = [device newBufferWithBytes:empty_scene_slice_plates.data() length:(num_scene_slices * 6 * sizeof(Vertex)) options:MTLResourceStorageModeShared];
-    
-    controls_vertex_buffer = [device newBufferWithBytes:empty_controls_vertices.data() length:(num_controls_vertices * sizeof(Vertex)) options:MTLResourceStorageModeShared];
-    controls_projected_vertex_buffer = [device newBufferWithBytes:empty_controls_vertices.data() length:(num_controls_vertices * sizeof(Vertex)) options:MTLResourceStorageModeShared];
-    
-    scene_lit_face_buffer = [device newBufferWithBytes:empty_scene_faces.data() length:(num_scene_faces * sizeof(Face)) options:MTLResourceStorageModeShared];
-    
-    ui_output_vertex_buffer = [device newBufferWithBytes:output_ui_vertices.data() length:(num_ui_vertices * sizeof(Vertex)) options:MTLResourceStorageModeShared];
-}
-
-void ComputePipeline::ResetStaticBuffers() {
-    std::vector<Model *> *controls_models = scheme->GetControlsModels();
-    std::vector<Model *> *models = scheme->GetModels();
-    std::vector<Slice *> *slices = scheme->GetSlices();
-    std::vector<UIElement *> *ui_elements = scheme->GetUIElements();
-    std::vector<int> dot_slice_links;
-    
-    std::vector<Face> controls_faces;
-    std::vector<NodeVertexLink> controls_nvlinks;
-    std::vector<uint32_t> controls_node_modelIDs;
-    controls_node_array.clear();
-    
-    num_controls_vertices = 0;
-    
-    for (std::size_t i = 0; i < controls_models->size(); i++) {
-        controls_models->at(i)->AddToBuffers(controls_faces, controls_node_array, controls_nvlinks, controls_node_modelIDs, num_controls_vertices);
-    }
-    num_controls_faces = controls_faces.size();
-    
-    std::vector<Face> scene_faces;
-    std::vector<NodeVertexLink> nvlinks;
-    std::vector<uint32_t> node_modelIDs;
-    scene_node_array.clear();
-    std::vector<Dot> scene_dots;
-    std::vector<Line> scene_slice_edges;
-    
-    num_scene_vertices = 0;
-    
-    for (std::size_t i = 0; i < models->size(); i++) {
-        models->at(i)->AddToBuffers(scene_faces, scene_node_array, nvlinks, node_modelIDs, num_scene_vertices);
-    }
-    
-    scene_empty_projected_nodes.clear();
-    for (int i = 0; i < scene_node_array.size(); i++) {
-        scene_empty_projected_nodes.push_back(simd_make_float3(0, 0, 0));
-    }
-    
-    for (int i = 0; i < slices->size(); i++) {
-        slices->at(i)->AddToBuffers(scene_dots, scene_slice_edges, dot_slice_links, i);
-    }
-    
-    std::vector<SliceAttributes> scene_slice_attributes;// = scheme->GetSliceAttributes();
-    scheme->AddSliceAttributesToBuffer(&scene_slice_attributes);
-    
-    std::vector<UIVertex> ui_vertices;
-    std::vector<UIFace> ui_faces;
-    for (std::size_t i = 0; i < ui_elements->size(); i++) {
-        ui_elements->at(i)->AddToBuffers(ui_faces, ui_vertices);
-    }
-    
-    std::vector<uint32_t> ui_element_ids;
-    for (std::size_t i = 0; i < ui_elements->size(); i++) {
-        int numvertices = ui_elements->at(i)->NumVertices();
-        for (int j = 0; j < numvertices; j++) {
-            ui_element_ids.push_back(i);
-        }
-    }
-    
-    num_scene_faces = scene_faces.size();
-    
-    scene_face_buffer = [device newBufferWithBytes:scene_faces.data() length:(scene_faces.size() * sizeof(Face)) options:MTLResourceStorageModeShared];
-    scene_nvlink_buffer = [device newBufferWithBytes:nvlinks.data() length:(nvlinks.size() * sizeof(NodeVertexLink)) options:MTLResourceStorageModeShared];
-    scene_node_model_id_buffer = [device newBufferWithBytes:node_modelIDs.data() length:(node_modelIDs.size() * sizeof(uint32)) options:MTLResourceStorageModeShared];
-    
-    scene_projected_node_buffer = [device newBufferWithBytes:scene_empty_projected_nodes.data() length:(scene_empty_projected_nodes.size() * sizeof(Vertex)) options:MTLResourceStorageModeShared];
-    
-    scene_dot_buffer = [device newBufferWithBytes:scene_dots.data() length:(scene_dots.size() * sizeof(Dot)) options:MTLResourceStorageModeShared];
-    scene_line_buffer = [device newBufferWithBytes:scene_slice_edges.data() length:(scene_slice_edges.size() * sizeof(Line)) options:MTLResourceStorageModeShared];
-    scene_slice_attributes_buffer = [device newBufferWithBytes:scene_slice_attributes.data() length:(scene_slice_attributes.size() * sizeof(SliceAttributes)) options:MTLResourceStorageModeShared];
-    scene_dot_slice_link_buffer = [device newBufferWithBytes:dot_slice_links.data() length:(dot_slice_links.size() * sizeof(int)) options:MTLResourceStorageModeShared];
-    
-    controls_faces_buffer = [device newBufferWithBytes:controls_faces.data() length:(controls_faces.size() * sizeof(Face)) options:MTLResourceStorageModeShared];
-    controls_nvlink_buffer = [device newBufferWithBytes:controls_nvlinks.data() length:(controls_nvlinks.size() * sizeof(NodeVertexLink)) options:MTLResourceStorageModeShared];
-    controls_node_model_id_buffer = [device newBufferWithBytes:controls_node_modelIDs.data() length:(controls_node_modelIDs.size() * sizeof(uint32)) options:MTLResourceStorageModeShared];
-    
+    // ---GENERAL BUFFERS---
+    // create camera buffer
+    camera_buffer = [device newBufferWithBytes:scheme->GetCamera() length:(sizeof(Camera)) options:MTLResourceStorageModeShared];
+    // create light buffer - NEED TO UPDATE TO ALLOW MULTIPLE LIGHTS
     simd_float3 *light = new simd_float3();
     light->x = 10;
     light->y = 0;
     light->z = 5;
-    scene_light_buffer = [device newBufferWithBytes:light length:sizeof(simd_float3) options:MTLResourceStorageModeShared];
+    scene_light_buffer = [device newBufferWithBytes:light length:sizeof(simd_float3) options:MTLResourceStorageModeManaged];
     delete light;
     
-    ui_vertex_buffer = [device newBufferWithBytes:ui_vertices.data() length:(ui_vertices.size() * sizeof(UIVertex)) options:MTLResourceStorageModeShared];
-    ui_face_buffer = [device newBufferWithBytes:ui_faces.data() length:(ui_faces.size() * sizeof(UIFace)) options:MTLResourceStorageModeShared];
-    ui_element_id_buffer = [device newBufferWithBytes:ui_element_ids.data() length:(ui_element_ids.size() * sizeof(uint32_t)) options:MTLResourceStorageModeShared];
+    
+    // ---MODEL BUFFERS---
+    // create model face buffer - separate from compiled to calculate face lighting
+    std::vector<Face> model_faces(num_scene_faces+num_controls_faces);
+    scene_model_face_buffer = [device newBufferWithBytes:model_faces.data() length:(model_faces.size() * sizeof(Face)) options:MTLResourceStorageModeManaged];
+    
+    // create model node buffer
+    std::vector<Node> model_nodes(num_scene_nodes+num_controls_nodes);
+    model_node_buffer = [device newBufferWithBytes:model_nodes.data() length:(model_nodes.size() * sizeof(Node)) options:MTLResourceStorageModeManaged];
+    
+    // create node to model id buffer
+    std::vector<uint32_t> node_modelid(num_scene_nodes+num_controls_nodes);
+    node_model_id_buffer = [device newBufferWithBytes:node_modelid.data() length:(node_modelid.size() * sizeof(uint32_t)) options:MTLResourceStorageModeManaged];
+    
+    // create node vertex link buffer
+    std::vector<NodeVertexLink> nvlinks(num_scene_vertices*2+num_controls_vertices*2);
+    model_nvlink_buffer = [device newBufferWithBytes:nvlinks.data() length:(nvlinks.size() * sizeof(NodeVertexLink)) options:MTLResourceStorageModeManaged];
+    
+    // create model vertex buffer - intermediate: data calculated by kernel
+    std::vector<Vertex> model_vertices(num_scene_vertices+num_controls_vertices);
+    model_vertex_buffer = [device newBufferWithBytes:model_vertices.data() length:(model_vertices.size() * sizeof(Vertex)) options:MTLResourceStorageModeManaged];
+    
+    // create model transform buffer
+    std::vector<ModelTransform> model_uniforms(num_scene_models+num_controls_models);
+    model_transform_buffer = [device newBufferWithBytes:model_uniforms.data() length:(model_uniforms.size() * sizeof(ModelTransform)) options:MTLResourceStorageModeManaged];
+    
+    
+    // ---SLICE BUFFERS---
+    // create dot vertex buffer
+    std::vector<Dot> slice_dots(num_scene_dots);
+    slice_dot_buffer = [device newBufferWithBytes:slice_dots.data() length:(slice_dots.size() * sizeof(Dot)) options:MTLResourceStorageModeManaged];
+    
+    // create slice attributes buffer
+    std::vector<SliceAttributes> slice_attributes(num_scene_slices);
+    slice_attributes_buffer = [device newBufferWithBytes:slice_attributes.data() length:(slice_attributes.size() * sizeof(SliceAttributes)) options:MTLResourceStorageModeManaged];
+    
+    // create slice transform buffer
+    std::vector<ModelTransform> slice_uniforms(num_scene_slices);
+    slice_transform_buffer = [device newBufferWithBytes:slice_uniforms.data() length:(slice_uniforms.size() * sizeof(ModelTransform)) options:MTLResourceStorageModeManaged];
+    
+    // create slice edit window buffer
+    simd_float4 slice_edit_window;
+    slice_edit_window_buffer = [device newBufferWithBytes: &slice_edit_window length:(sizeof(simd_float4)) options:MTLResourceStorageModeManaged];
+    
+    
+    // ---UI BUFFERS---
+    // create ui vertex buffer
+    std::vector<UIVertex> ui_vertices(num_ui_vertices);
+    ui_vertex_buffer = [device newBufferWithBytes:ui_vertices.data() length:(ui_vertices.size() * sizeof(UIVertex)) options:MTLResourceStorageModeManaged];
+    
+    // create ui transform buffer
+    std::vector<UIElementTransform> ui_element_transforms(num_ui_elements);
+    ui_element_transform_buffer = [device newBufferWithBytes:ui_element_transforms.data() length:(ui_element_transforms.size() * sizeof(UIElementTransform)) options:MTLResourceStorageModeManaged];
+    
+    // create ui element id buffer
+    std::vector<uint32_t> ui_element_ids(num_ui_vertices);
+    ui_vertex_element_id_buffer = [device newBufferWithBytes:ui_element_ids.data() length:(ui_element_ids.size() * sizeof(uint32_t)) options:MTLResourceStorageModeManaged];
+}
+
+void ComputePipeline::ResetStaticBuffers() {
+    // assume all counts are accurate
+    
+    // ---COMPILED BUFFERS---
+    // add data to compiled face buffer
+    Face *cfb_contents = (Face *) compiled_face_buffer.contents;
+    scheme->SetSceneFaceBuffer(cfb_contents + compiled_face_scene_start(), compiled_vertex_scene_start()); // scene faces
+    scheme->SetControlFaceBuffer(cfb_contents + compiled_face_control_start(), compiled_vertex_control_start()); // control faces
+    scheme->SetUIFaceBuffer(cfb_contents + compiled_face_ui_start(), compiled_vertex_ui_start()); // ui faces
+    // rest will be set by GPU
+    [compiled_face_buffer didModifyRange: NSMakeRange(0, compiled_face_size() * sizeof(Face))]; // alert gpu about what was modified
+    
+    // add data to compiled edge buffer
+    simd_int2 *ceb_contents = (simd_int2 *) compiled_edge_buffer.contents;
+    if (scheme->ShouldRenderEdges()) scheme->SetSceneEdgeBuffer(ceb_contents + compiled_edge_scene_start(), compiled_vertex_scene_start()); // scene edges
+    scheme->SetSliceLineBuffer(ceb_contents + compiled_edge_line_start(), compiled_vertex_dot_start()); // slice lines
+    [compiled_edge_buffer didModifyRange: NSMakeRange(0, compiled_edge_size() * sizeof(simd_int2))]; // alert gpu about what was modified
+    
+    
+    // ---GENERAL BUFFERS---
+    // add data to light buffer
+    // NEEDS UPDATE
+    simd_float3 *light = new simd_float3();
+    light->x = 10;
+    light->y = 0;
+    light->z = 5;
+    *((simd_float3 *)scene_light_buffer.contents) = *light;
+    delete light;
+    [scene_light_buffer didModifyRange: NSMakeRange(0, sizeof(simd_float3))]; // alert gpu about what was modified
+    
+    
+    // ---MODEL BUFFERS---
+    // add data to scene model face buffer
+    Face *smfb_contents = (Face *) scene_model_face_buffer.contents;
+    scheme->SetSceneFaceBuffer(smfb_contents, compiled_vertex_scene_start()); // scene faces
+    [scene_model_face_buffer didModifyRange: NSMakeRange(0, num_scene_faces*sizeof(Face))]; // alert gpu about what was modified
+    
+    // add data to node to model id buffer
+    uint32_t *node_model_id_contents = (uint32_t *) node_model_id_buffer.contents;
+    scheme->SetSceneNodeModelIDBuffer(node_model_id_contents, 0); // scene nodes
+    scheme->SetControlNodeModelIDBuffer(node_model_id_contents+num_scene_nodes, num_scene_models); // controls nodes
+    [node_model_id_buffer didModifyRange: NSMakeRange(0, (num_scene_nodes + num_controls_nodes)*sizeof(uint32_t))]; // alert gpu about what was modified
+    
+    // add data to node vertex link buffer
+    NodeVertexLink *nvlink_contents = (NodeVertexLink *) model_nvlink_buffer.contents;
+    scheme->SetSceneNodeVertexLinkBuffer(nvlink_contents, 0); // scene nvlinks
+    scheme->SetControlNodeVertexLinkBuffer(nvlink_contents+num_scene_vertices*2, num_scene_nodes); // controls nvlinks
+    [model_nvlink_buffer didModifyRange: NSMakeRange(0, 2*(num_scene_vertices + num_controls_vertices)*sizeof(NodeVertexLink))]; // alert gpu about what was modified
+    
+    
+    // ---SLICE BUFFERS---
+    // add data to dot buffer
+    Dot *dot_contents = (Dot *) slice_dot_buffer.contents;
+    scheme->SetSliceDotBuffer(dot_contents); // dots
+    [slice_dot_buffer didModifyRange: NSMakeRange(0, num_scene_dots*sizeof(Dot))]; // alert gpu about what was modified
+    
+    // add data to slice attributes buffer
+    SliceAttributes *sa_contents = (SliceAttributes *) slice_attributes_buffer.contents;
+    scheme->SetSliceAttributesBuffer(sa_contents); // slice attributes
+    [slice_attributes_buffer didModifyRange: NSMakeRange(0, num_scene_slices)]; // alert gpu about what was modified
+    
+    // add data to slice edit window buffer
+    *((simd_float4 *)slice_edit_window_buffer.contents) = scheme->GetEditWindow();
+    [slice_edit_window_buffer didModifyRange: NSMakeRange(0, sizeof(simd_float4))]; // alert gpu about what was modified
+    
+    
+    // ---UI BUFFERS---
+    // add data to ui vertex buffer
+    UIVertex *ui_vertex_contents = (UIVertex *) ui_vertex_buffer.contents;
+    scheme->SetUIVertexBuffer(ui_vertex_contents);
+    [ui_vertex_buffer didModifyRange: NSMakeRange(0, num_ui_vertices*sizeof(UIVertex))]; // alert gpu about what was modified
+    
+    // add data to ui element id buffer
+    uint32_t *ui_element_id_contents = (uint32_t *) ui_vertex_element_id_buffer.contents;
+    scheme->SetUIElementIDBuffer(ui_element_id_contents);
+    [ui_vertex_element_id_buffer didModifyRange: NSMakeRange(0, num_ui_vertices*sizeof(uint32_t))]; // alert gpu about what was modified
 }
 
 void ComputePipeline::ResetDynamicBuffers() {
-    std::vector<ModelUniforms> *controls_transforms = scheme->GetControlsModelUniforms();
-    std::vector<ModelUniforms> *scene_transforms = scheme->GetModelUniforms();
-    std::vector<ModelUniforms> *slice_uniforms = scheme->GetSliceUniforms();
-    std::vector<UIElementUniforms> *ui_element_uniforms = scheme->GetUIElementUniforms();
+    // assume all counts are accurate
     
-    std::vector<Model *> *models = scheme->GetModels();
-    for (std::size_t i = 0; i < models->size(); i++) {
-        models->at(i)->UpdateNodeBuffers(scene_node_array);
-    }
+    // ---COMPUTE DATA BUFFERS---
+    // add data to window attribute buffer
+    *((WindowAttributes *)window_attributes_buffer.contents) = *scheme->GetWindowAttributes();
+    [window_attributes_buffer didModifyRange: NSMakeRange(0, sizeof(WindowAttributes))]; // alert gpu about what was modified
     
-    std::vector<Model *> *controls_models = scheme->GetControlsModels();
-    for (std::size_t i = 0; i < controls_models->size(); i++) {
-        controls_models->at(i)->UpdateNodeBuffers(controls_node_array);
-    }
     
-    camera_buffer = [device newBufferWithBytes:scheme->GetCamera() length:sizeof(Camera) options:{}];
-    scene_transform_uniforms_buffer = [device newBufferWithBytes: scene_transforms->data() length:(scene_transforms->size() * sizeof(ModelUniforms)) options:{}];
-    scene_vertex_render_uniforms_buffer = [device newBufferWithBytes: scheme->GetVertexRenderUniforms() length:(sizeof(VertexRenderUniforms) - sizeof(scheme->GetVertexRenderUniforms()->selected_vertices)) options:{}];
-    scene_selected_vertices_buffer = [device newBufferWithBytes: scheme->GetVertexRenderUniforms()->selected_vertices.data() length:(scheme->GetVertexRenderUniforms()->selected_vertices.size() * sizeof(int)) options:{}];
-    scene_node_render_uniforms_buffer = [device newBufferWithBytes: scheme->GetNodeRenderUniforms() length:(sizeof(NodeRenderUniforms)) options:{}];
-    scene_node_buffer = [device newBufferWithBytes: scene_node_array.data() length:(scene_node_array.size() * sizeof(Node)) options:MTLResourceStorageModeShared];
+    // ---GENERAL BUFFERS---
+    // add data to camera buffer
+    *((Camera *)camera_buffer.contents) = *scheme->GetCamera();
+    [camera_buffer didModifyRange: NSMakeRange(0, sizeof(Camera))]; // alert gpu about what was modified
     
-    controls_transform_uniforms_buffer = [device newBufferWithBytes: controls_transforms->data() length:(controls_transforms->size() * sizeof(ModelUniforms)) options:{}];
-    controls_node_buffer = [device newBufferWithBytes:controls_node_array.data() length:(controls_node_array.size() * sizeof(Node)) options:MTLResourceStorageModeShared];
     
-    scene_slice_uniforms_buffer = [device newBufferWithBytes: slice_uniforms->data() length:(slice_uniforms->size() * sizeof(ModelUniforms)) options:{}];
+    // ---MODEL BUFFERS---
+    // add data to model node buffer
+    Node *model_node_content = (Node *) model_node_buffer.contents;
+    scheme->SetSceneNodeBuffer(model_node_content); // scene nodes
+    scheme->SetControlNodeBuffer(model_node_content+num_scene_nodes); // controls nodes
+    [model_node_buffer didModifyRange: NSMakeRange(0, (num_scene_nodes+num_controls_nodes)*sizeof(Node))]; // alert gpu about what was modified
     
-    ui_element_uniforms_buffer = [device newBufferWithBytes: ui_element_uniforms->data() length:(ui_element_uniforms->size() * sizeof(UIElementUniforms)) options:{}];
-    ui_render_uniforms_buffer = [device newBufferWithBytes: scheme->GetUIRenderUniforms() length:(sizeof(UIRenderUniforms)) options:{}];
+    // add data to model transform buffer
+    ModelTransform *model_transform_content = (ModelTransform *) model_transform_buffer.contents;
+    scheme->SetSceneModelTransformBuffer(model_transform_content); // scene transforms
+    scheme->SetControlModelTransformBuffer(model_transform_content+num_scene_models); // controls transforms
+    [model_transform_buffer didModifyRange: NSMakeRange(0, (num_scene_models+num_controls_models)*sizeof(ModelTransform))]; // alert gpu about what was modified
     
-    simd_float4 window = scheme->GetEditWindow();
-    scene_edit_window_buffer = [device newBufferWithBytes: &window length:(sizeof(window)) options:{}];
+    
+    // ---SLICE BUFFERS---
+    // add data to slice transform buffer
+    ModelTransform *slice_transform_content = (ModelTransform *) slice_transform_buffer.contents;
+    scheme->SetSliceTransformBuffer(slice_transform_content);
+    [slice_transform_buffer didModifyRange: NSMakeRange(0, (num_scene_slices)*sizeof(ModelTransform))]; // alert gpu about what was modified
+    
+    
+    // ---UI BUFFERS---
+    // add data to ui element transform buffer
+    UIElementTransform *ui_element_transform_content = (UIElementTransform *) ui_element_transform_buffer.contents;
+    scheme->SetUITransformBuffer(ui_element_transform_content);
+    [ui_element_transform_buffer didModifyRange: NSMakeRange(0, (num_ui_elements)*sizeof(UIElementTransform))]; // alert gpu about what was modified
 }
 
 void ComputePipeline::Compute() {
+    // TODO: MOVE THIS OUT?
     id<MTLCommandBuffer> compute_command_buffer = [command_queue commandBuffer];
     id<MTLComputeCommandEncoder> compute_encoder = [compute_command_buffer computeCommandEncoder];
     
-    unsigned long num_scene_vertices = scheme->NumSceneVertices();
-    unsigned long num_scene_faces = scheme->NumSceneFaces();
-    unsigned long num_scene_nodes = scheme->NumSceneNodes();
+    // thread size variables - change for each kernel
+    MTLSize gridsize;
+    NSUInteger numthreads;
+    MTLSize threadgroupsize;
     
+    // if any models to display, calculate values from kernel
     if (num_scene_vertices > 0 && num_scene_faces > 0 && num_scene_nodes > 0) {
-        // reset vertices to 0
-        [compute_encoder setComputePipelineState: compute_reset_state];
-        [compute_encoder setBuffer: scene_vertex_buffer offset:0 atIndex:0];
-        MTLSize gridSize = MTLSizeMake(num_scene_vertices, 1, 1);
-        NSUInteger threadGroupSize = compute_reset_state.maxTotalThreadsPerThreadgroup;
-        if (threadGroupSize > num_scene_vertices) threadGroupSize = num_scene_vertices;
-        MTLSize threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
-        [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
-        
-        // calculate rotated/transformed nodes
+        // calculate nodes (scene and control) in world space from model space
         [compute_encoder setComputePipelineState: compute_transforms_pipeline_state];
-        [compute_encoder setBuffer: scene_node_buffer offset:0 atIndex:0];
-        [compute_encoder setBuffer: scene_node_model_id_buffer offset:0 atIndex:1];
-        [compute_encoder setBuffer: scene_transform_uniforms_buffer offset:0 atIndex:2];
-        gridSize = MTLSizeMake(num_scene_nodes, 1, 1);
-        threadGroupSize = compute_transforms_pipeline_state.maxTotalThreadsPerThreadgroup;
-        if (threadGroupSize > num_scene_nodes) threadGroupSize = num_scene_nodes;
-        threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
-        [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+        // set buffers
+        [compute_encoder setBuffer: model_node_buffer offset:0 atIndex:0];
+        [compute_encoder setBuffer: node_model_id_buffer offset:0 atIndex:1];
+        [compute_encoder setBuffer: model_transform_buffer offset:0 atIndex:2];
+        // set thread size variables - per scene and control node
+        gridsize = MTLSizeMake(num_scene_nodes+num_controls_nodes, 1, 1);
+        numthreads = compute_transforms_pipeline_state.maxTotalThreadsPerThreadgroup;
+        if (numthreads > num_scene_nodes+num_controls_nodes) numthreads = num_scene_nodes+num_controls_nodes;
+        threadgroupsize = MTLSizeMake(numthreads, 1, 1);
+        // execute
+        [compute_encoder dispatchThreads:gridsize threadsPerThreadgroup:threadgroupsize];
         
-        // calculate vertices from nodes
+        // calculate vertices (scene and control) in world space from node-ish space
         [compute_encoder setComputePipelineState:compute_vertex_pipeline_state];
-        [compute_encoder setBuffer: scene_vertex_buffer offset:0 atIndex:0];
-        [compute_encoder setBuffer: scene_nvlink_buffer offset:0 atIndex:1];
-        [compute_encoder setBuffer: scene_node_buffer offset:0 atIndex:2];
-        gridSize = MTLSizeMake(num_scene_vertices, 1, 1);
-        threadGroupSize = compute_vertex_pipeline_state.maxTotalThreadsPerThreadgroup;
-        if (threadGroupSize > num_scene_vertices) threadGroupSize = num_scene_vertices;
-        threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
-        [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+        // set buffers
+        [compute_encoder setBuffer: model_vertex_buffer offset:0 atIndex:0];
+        [compute_encoder setBuffer: model_nvlink_buffer offset:0 atIndex:1];
+        [compute_encoder setBuffer: model_node_buffer offset:0 atIndex:2];
+        // set thread size variables - per output scene and control vertex
+        gridsize = MTLSizeMake(num_scene_vertices+num_controls_vertices, 1, 1);
+        numthreads = compute_vertex_pipeline_state.maxTotalThreadsPerThreadgroup;
+        if (numthreads > num_scene_vertices+num_controls_vertices) numthreads = num_scene_vertices+num_controls_vertices;
+        threadgroupsize = MTLSizeMake(numthreads, 1, 1);
+        // execute
+        [compute_encoder dispatchThreads:gridsize threadsPerThreadgroup:threadgroupsize];
         
-        // calculate projected vertex in kernel function
+        // calculate projected vertices from world space vertices
         [compute_encoder setComputePipelineState: compute_projected_vertices_pipeline_state];
-        [compute_encoder setBuffer: scene_projected_vertex_buffer offset:0 atIndex:0];
-        [compute_encoder setBuffer: scene_vertex_buffer offset:0 atIndex:1];
+        // set buffers
+        [compute_encoder setBuffer: compiled_vertex_buffer offset:0 atIndex:0];
+        [compute_encoder setBuffer: model_vertex_buffer offset:0 atIndex:1];
         [compute_encoder setBuffer: camera_buffer offset:0 atIndex:2];
-        gridSize = MTLSizeMake(num_scene_vertices, 1, 1);
-        threadGroupSize = compute_projected_vertices_pipeline_state.maxTotalThreadsPerThreadgroup;
-        if (threadGroupSize > num_scene_vertices) threadGroupSize = num_scene_vertices;
-        [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+        [compute_encoder setBuffer: compiled_buffer_key_indices_buffer offset:0 atIndex:3];
+        // set thread size variables - per scene and control vertex
+        gridsize = MTLSizeMake(num_scene_vertices+num_controls_vertices, 1, 1);
+        numthreads = compute_projected_vertices_pipeline_state.maxTotalThreadsPerThreadgroup;
+        if (numthreads > num_scene_vertices+num_controls_vertices) numthreads = num_scene_vertices+num_controls_vertices;
+        threadgroupsize = MTLSizeMake(numthreads, 1, 1);
+        // execute
+        [compute_encoder dispatchThreads:gridsize threadsPerThreadgroup:threadgroupsize];
         
-        // calculate projected nodes in kernel function
-        [compute_encoder setComputePipelineState: compute_projected_nodes_pipeline_state];
-        [compute_encoder setBuffer: scene_projected_node_buffer offset:0 atIndex:0];
-        [compute_encoder setBuffer: scene_node_buffer offset:0 atIndex:1];
-        [compute_encoder setBuffer: camera_buffer offset:0 atIndex:2];
-        int nodes_length = (int) num_scene_nodes;
-        gridSize = MTLSizeMake(nodes_length, 1, 1);
-        threadGroupSize = compute_projected_nodes_pipeline_state.maxTotalThreadsPerThreadgroup;
-        if (threadGroupSize > nodes_length) threadGroupSize = nodes_length;
-        [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+        // calculate vertex squares from projected vertices if needed
+        if (scheme->ShouldRenderVertices()) {
+            [compute_encoder setComputePipelineState: compute_vertex_squares_pipeline_state];
+            // set buffers
+            [compute_encoder setBuffer: compiled_vertex_buffer offset:0 atIndex:0];
+            [compute_encoder setBuffer: compiled_face_buffer offset:0 atIndex:1];
+            [compute_encoder setBuffer: compiled_buffer_key_indices_buffer offset:0 atIndex:2];
+            [compute_encoder setBuffer: window_attributes_buffer offset:0 atIndex:3];
+            // set thread size variables - per scene vertex
+            gridsize = MTLSizeMake(num_scene_vertices, 1, 1);
+            numthreads = compute_projected_vertices_pipeline_state.maxTotalThreadsPerThreadgroup;
+            if (numthreads > num_scene_vertices) numthreads = num_scene_vertices;
+            threadgroupsize = MTLSizeMake(numthreads, 1, 1);
+            // execute
+            [compute_encoder dispatchThreads:gridsize threadsPerThreadgroup:threadgroupsize];
+        }
         
+        // calculate projected scene nodes if needed
+        if (scheme->ShouldRenderNodes()) {
+            [compute_encoder setComputePipelineState: compute_projected_nodes_pipeline_state];
+            [compute_encoder setBuffer: compiled_vertex_buffer offset:0 atIndex:0];
+            [compute_encoder setBuffer: compiled_face_buffer offset:0 atIndex:1];
+            [compute_encoder setBuffer: model_node_buffer offset:0 atIndex:2];
+            [compute_encoder setBuffer: camera_buffer offset:0 atIndex:3];
+            [compute_encoder setBuffer: window_attributes_buffer offset:0 atIndex:4];
+            [compute_encoder setBuffer: compiled_buffer_key_indices_buffer offset:0 atIndex:5];
+            // set thread size variables - per scene nodes
+            gridsize = MTLSizeMake(num_scene_nodes, 1, 1);
+            numthreads = compute_projected_nodes_pipeline_state.maxTotalThreadsPerThreadgroup;
+            if (numthreads > num_scene_nodes) numthreads = num_scene_nodes;
+            threadgroupsize = MTLSizeMake(numthreads, 1, 1);
+            // execute
+            [compute_encoder dispatchThreads:gridsize threadsPerThreadgroup:threadgroupsize];
+        }
+        
+        // if lighting is enabled calculate scene face lighting
         if (scheme->LightingEnabled()) {
-            // calculate scene lighting
             [compute_encoder setComputePipelineState: compute_lighting_pipeline_state];
-            [compute_encoder setBuffer: scene_lit_face_buffer offset:0 atIndex:0];
-            [compute_encoder setBuffer: scene_face_buffer offset:0 atIndex:1];
-            [compute_encoder setBuffer: scene_vertex_buffer offset:0 atIndex:2];
+            // set buffers
+            [compute_encoder setBuffer: compiled_face_buffer offset:0 atIndex:0];
+            [compute_encoder setBuffer: scene_model_face_buffer offset:0 atIndex:1];
+            [compute_encoder setBuffer: model_vertex_buffer offset:0 atIndex:2];
             [compute_encoder setBuffer: scene_light_buffer offset:0 atIndex:3];
-            gridSize = MTLSizeMake(num_scene_faces, 1, 1);
-            threadGroupSize = compute_projected_vertices_pipeline_state.maxTotalThreadsPerThreadgroup;
-            if (threadGroupSize > num_scene_faces) threadGroupSize = num_scene_faces;
-            [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+            [compute_encoder setBuffer: compiled_buffer_key_indices_buffer offset:0 atIndex:4];
+            // set thread size variables - per scene face
+            gridsize = MTLSizeMake(num_scene_faces, 1, 1);
+            numthreads = compute_projected_vertices_pipeline_state.maxTotalThreadsPerThreadgroup;
+            if (numthreads > num_scene_faces) numthreads = num_scene_faces;
+            threadgroupsize = MTLSizeMake(numthreads, 1, 1);
+            // execute
+            [compute_encoder dispatchThreads:gridsize threadsPerThreadgroup:threadgroupsize];
         }
     }
     
-    unsigned long num_scene_dots = scheme->NumSceneDots();
+    // if any slices to display, calculate values from kernel
     if (num_scene_dots > 0) {
         if (scheme->GetType() == SchemeType::EditSlice) {
+            // scale dots if editing slice
             [compute_encoder setComputePipelineState: compute_scaled_dots_pipeline_state];
-            [compute_encoder setBuffer: scene_projected_dot_buffer offset:0 atIndex:0];
-            [compute_encoder setBuffer: scene_dot_buffer offset:0 atIndex:1];
-            [compute_encoder setBuffer: scene_slice_attributes_buffer offset:0 atIndex:2];
-            [compute_encoder setBuffer: scene_vertex_render_uniforms_buffer offset:0 atIndex:3];
-            [compute_encoder setBuffer: scene_edit_window_buffer offset:0 atIndex:4];
-            MTLSize gridSize = MTLSizeMake(num_scene_dots, 1, 1);
-            NSUInteger threadGroupSize = compute_scaled_dots_pipeline_state.maxTotalThreadsPerThreadgroup;
-            if (threadGroupSize > num_scene_dots) threadGroupSize = num_scene_dots;
-            MTLSize threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
-            [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+            // set buffers
+            [compute_encoder setBuffer: compiled_vertex_buffer offset:0 atIndex:0];
+            [compute_encoder setBuffer: compiled_face_buffer offset:0 atIndex:1];
+            [compute_encoder setBuffer: slice_dot_buffer offset:0 atIndex:2];
+            [compute_encoder setBuffer: slice_attributes_buffer offset:0 atIndex:3];
+            [compute_encoder setBuffer: window_attributes_buffer offset:0 atIndex:4];
+            [compute_encoder setBuffer: slice_edit_window_buffer offset:0 atIndex:5];
+            [compute_encoder setBuffer: compiled_buffer_key_indices_buffer offset:0 atIndex:6];
+            // set thread size variables - per dot
+            gridsize = MTLSizeMake(num_scene_dots, 1, 1);
+            numthreads = compute_scaled_dots_pipeline_state.maxTotalThreadsPerThreadgroup;
+            if (numthreads > num_scene_dots) numthreads = num_scene_dots;
+            threadgroupsize = MTLSizeMake(numthreads, 1, 1);
+            // execute
+            [compute_encoder dispatchThreads:gridsize threadsPerThreadgroup:threadgroupsize];
         } else {
+            // project dots otherwise
             [compute_encoder setComputePipelineState: compute_projected_dots_pipeline_state];
-            [compute_encoder setBuffer: scene_projected_dot_buffer offset:0 atIndex:0];
-            [compute_encoder setBuffer: scene_dot_buffer offset:0 atIndex:1];
-            [compute_encoder setBuffer: scene_slice_uniforms_buffer offset:0 atIndex:2];
-            [compute_encoder setBuffer: scene_dot_slice_link_buffer offset:0 atIndex:3];
-            [compute_encoder setBuffer: scene_vertex_render_uniforms_buffer offset:0 atIndex:4];
-            [compute_encoder setBuffer: camera_buffer offset:0 atIndex:5];
-            MTLSize gridSize = MTLSizeMake(num_scene_dots, 1, 1);
-            NSUInteger threadGroupSize = compute_projected_dots_pipeline_state.maxTotalThreadsPerThreadgroup;
-            if (threadGroupSize > num_scene_dots) threadGroupSize = num_scene_dots;
-            MTLSize threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
-            [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+            // set buffers
+            [compute_encoder setBuffer: compiled_vertex_buffer offset:0 atIndex:0];
+            [compute_encoder setBuffer: compiled_face_buffer offset:0 atIndex:1];
+            [compute_encoder setBuffer: slice_dot_buffer offset:0 atIndex:2];
+            [compute_encoder setBuffer: slice_transform_buffer offset:0 atIndex:3];
+            [compute_encoder setBuffer: camera_buffer offset:0 atIndex:4];
+            [compute_encoder setBuffer: dot_slice_id_buffer offset:0 atIndex:5];
+            [compute_encoder setBuffer: window_attributes_buffer offset:0 atIndex:6];
+            [compute_encoder setBuffer: compiled_buffer_key_indices_buffer offset:0 atIndex:7];
+            // set thread size varialbes - per dot
+            gridsize = MTLSizeMake(num_scene_dots, 1, 1);
+            numthreads = compute_projected_dots_pipeline_state.maxTotalThreadsPerThreadgroup;
+            if (numthreads > num_scene_dots) numthreads = num_scene_dots;
+            threadgroupsize = MTLSizeMake(numthreads, 1, 1);
+            // execute
+            [compute_encoder dispatchThreads:gridsize threadsPerThreadgroup:threadgroupsize];
             
-            int num_scene_slices = scheme->GetSlices()->size();
+            // make slice plates
             [compute_encoder setComputePipelineState: compute_slice_plates_state];
-            [compute_encoder setBuffer: scene_projected_slice_plates_buffer offset:0 atIndex:0];
-            [compute_encoder setBuffer: scene_slice_uniforms_buffer offset:0 atIndex:1];
-            [compute_encoder setBuffer: scene_slice_attributes_buffer offset:0 atIndex:2];
-            [compute_encoder setBuffer: camera_buffer offset:0 atIndex:3];
-            gridSize = MTLSizeMake(num_scene_slices*6, 1, 1);
-            threadGroupSize = compute_projected_dots_pipeline_state.maxTotalThreadsPerThreadgroup;
-            if (threadGroupSize > num_scene_slices*6) threadGroupSize = num_scene_slices*6;
-            threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
-            [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+            [compute_encoder setBuffer: compiled_vertex_buffer offset:0 atIndex:0];
+            [compute_encoder setBuffer: compiled_face_buffer offset:0 atIndex:1];
+            [compute_encoder setBuffer: slice_transform_buffer offset:0 atIndex:2];
+            [compute_encoder setBuffer: slice_attributes_buffer offset:0 atIndex:3];
+            [compute_encoder setBuffer: camera_buffer offset:0 atIndex:4];
+            [compute_encoder setBuffer: compiled_buffer_key_indices_buffer offset:0 atIndex:5];
+            // set thread size variables - per slice
+            gridsize = MTLSizeMake(num_scene_slices, 1, 1);
+            numthreads = compute_projected_dots_pipeline_state.maxTotalThreadsPerThreadgroup;
+            if (numthreads > num_scene_slices) numthreads = num_scene_slices;
+            threadgroupsize = MTLSizeMake(numthreads, 1, 1);
+            // execute
+            [compute_encoder dispatchThreads:gridsize threadsPerThreadgroup:threadgroupsize];
         }
-    }
-    
-    unsigned long num_controls_vertices = scheme->NumControlsVertices();
-    unsigned long num_controls_faces = scheme->NumControlsFaces();
-    unsigned long num_controls_nodes = scheme->NumControlsNodes();
-    
-    if (num_controls_vertices > 0 && num_controls_faces > 0 && num_controls_nodes > 0) {
-        // reset vertices to 0
-        [compute_encoder setComputePipelineState: compute_reset_state];
-        [compute_encoder setBuffer: controls_vertex_buffer offset:0 atIndex:0];
-        MTLSize gridSize = MTLSizeMake(num_controls_vertices, 1, 1);
-        NSUInteger threadGroupSize = compute_reset_state.maxTotalThreadsPerThreadgroup;
-        if (threadGroupSize > num_controls_vertices) threadGroupSize = num_controls_vertices;
-        MTLSize threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
-        [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
-        
-        // calculate rotated/transformed nodes
-         [compute_encoder setComputePipelineState: compute_transforms_pipeline_state];
-        [compute_encoder setBuffer: controls_node_buffer offset:0 atIndex:0];
-        [compute_encoder setBuffer: controls_node_model_id_buffer offset:0 atIndex:1];
-        [compute_encoder setBuffer: controls_transform_uniforms_buffer offset:0 atIndex:2];
-        gridSize = MTLSizeMake(num_controls_nodes, 1, 1);
-        threadGroupSize = compute_transforms_pipeline_state.maxTotalThreadsPerThreadgroup;
-        if (threadGroupSize > num_controls_nodes) threadGroupSize = num_controls_nodes;
-        threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
-        [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
-        
-        // calculate vertices from nodes
-        [compute_encoder setComputePipelineState: compute_vertex_pipeline_state];
-        [compute_encoder setBuffer: controls_vertex_buffer offset:0 atIndex:0];
-        [compute_encoder setBuffer: controls_nvlink_buffer offset:0 atIndex:1];
-        [compute_encoder setBuffer: controls_node_buffer offset:0 atIndex:2];
-        gridSize = MTLSizeMake(num_controls_vertices, 1, 1);
-        threadGroupSize = compute_vertex_pipeline_state.maxTotalThreadsPerThreadgroup;
-        if (threadGroupSize > num_controls_vertices) threadGroupSize = num_controls_vertices;
-        threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
-        [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
-        
-        // calculate projected vertex in kernel function
-        [compute_encoder setComputePipelineState: compute_projected_vertices_pipeline_state];
-        [compute_encoder setBuffer: controls_projected_vertex_buffer offset:0 atIndex:0];
-        [compute_encoder setBuffer: controls_vertex_buffer offset:0 atIndex:1];
-        [compute_encoder setBuffer: camera_buffer offset:0 atIndex:2];
-        gridSize = MTLSizeMake(num_controls_vertices, 1, 1);
-        threadGroupSize = compute_projected_vertices_pipeline_state.maxTotalThreadsPerThreadgroup;
-        if (threadGroupSize > num_controls_vertices) threadGroupSize = num_controls_vertices;
-        [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
-    }
-    
-    unsigned long num_ui_element_vertices = scheme->NumUIVertices();
-    unsigned long num_ui_element_faces = scheme->NumUIFaces();
-    
-    if (num_ui_element_vertices > 0 && num_ui_element_faces > 0) {
-        [compute_encoder setComputePipelineState: compute_reset_state];
-        [compute_encoder setBuffer: ui_output_vertex_buffer offset:0 atIndex:0];
-        MTLSize gridSize = MTLSizeMake(num_ui_element_vertices, 1, 1);
-        NSUInteger threadGroupSize = compute_reset_state.maxTotalThreadsPerThreadgroup;
-        if (threadGroupSize > num_ui_element_vertices) threadGroupSize = num_ui_element_vertices;
-        MTLSize threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
-        [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
-        
-        [compute_encoder setComputePipelineState: compute_ui_vertices_pipeline_state];
-        [compute_encoder setBuffer: ui_output_vertex_buffer offset:0 atIndex:0];
-        [compute_encoder setBuffer: ui_vertex_buffer offset:0 atIndex:1];
-        [compute_encoder setBuffer: ui_element_id_buffer offset:0 atIndex:2];
-        [compute_encoder setBuffer: ui_element_uniforms_buffer offset:0 atIndex:3];
-        [compute_encoder setBuffer: ui_render_uniforms_buffer offset:0 atIndex:4];
-        gridSize = MTLSizeMake(num_ui_element_vertices, 1, 1);
-        threadGroupSize = compute_vertex_pipeline_state.maxTotalThreadsPerThreadgroup;
-        if (threadGroupSize > num_ui_element_vertices) threadGroupSize = num_ui_element_vertices;
-        threadgroupSize = MTLSizeMake(threadGroupSize, 1, 1);
-        [compute_encoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
     }
     
     [compute_encoder endEncoding];
+    
+    // Synchronize the managed buffers for scheme
+    id <MTLBlitCommandEncoder> blit_command_encoder = [compute_command_buffer blitCommandEncoder];
+    [blit_command_encoder synchronizeResource: compiled_vertex_buffer];
+    [blit_command_encoder synchronizeResource: compiled_face_buffer];
+    [blit_command_encoder synchronizeResource: model_vertex_buffer];
+    [blit_command_encoder synchronizeResource: model_node_buffer];
+    [blit_command_encoder endEncoding];
+    
     [compute_command_buffer commit];
     [compute_command_buffer waitUntilCompleted];
+    
+    // TODO: DOESNT WORK FOR SOME REASON - CANT CHANGE BUFFERS AFTER GPU CHANGES BUFFERS
+    // Paint selections
+    /*
+    // paint selected vertex face squares orange in CPU
+    if (scheme->GetType() != SchemeType::EditSlice) {
+        std::vector<uint32_t> selected_vertices = scheme->GetSelectedVertices();
+        for (int i = 0; i < selected_vertices.size(); i++) {
+            int compiled_face_square_idx_start = compiled_buffer_key_indices.compiled_face_vertex_square_start+selected_vertices[i]*2;
+            compiled_faces[compiled_face_square_idx_start+0].color = simd_make_float4(1, 0.5, 0, 1);
+            compiled_faces[compiled_face_square_idx_start+1].color = simd_make_float4(1, 0.5, 0, 1);
+            [compiled_face_buffer didModifyRange:NSMakeRange(compiled_face_square_idx_start, 2)];
+        }
+    }
+    
+    // paint selected node orange in CPU
+    int selected_node = scheme->GetSelectedNode();
+    if (selected_node >= 0) {
+        int compiled_face_node_start = compiled_buffer_key_indices.compiled_face_node_circle_start+selected_node*8;
+        for (int i = 0; i < 8; i++) {
+            compiled_faces[compiled_face_node_start+i].color = simd_make_float4(1, 0.5, 0, 1);
+        }
+        [compiled_face_buffer didModifyRange:NSMakeRange(compiled_face_node_start, 8)];
+    }
+    
+    // paint selected dots orange in CPU
+    if (scheme->GetType() == SchemeType::EditSlice) {
+        std::vector<uint32_t> selected_dots = scheme->GetSelectedVertices();
+        for (int i = 0; i < selected_dots.size(); i++) {
+            int compiled_dot_square_idx_start = compiled_buffer_key_indices.compiled_face_dot_square_start+selected_dots[i]*2;
+            compiled_faces[compiled_dot_square_idx_start+0].color = simd_make_float4(1, 0.5, 0, 1);
+            compiled_faces[compiled_dot_square_idx_start+1].color = simd_make_float4(1, 0.5, 0, 1);
+            [compiled_face_buffer didModifyRange:NSMakeRange(compiled_dot_square_idx_start, 2)];
+        }
+    }
+     */
 }
 
 
 void ComputePipeline::SendDataToRenderer(RenderPipeline *renderer) {
-    if (scheme->LightingEnabled()) {
-        renderer->SetBuffers(scene_projected_vertex_buffer, scene_lit_face_buffer, scene_projected_node_buffer, scene_projected_dot_buffer, scene_line_buffer, scene_projected_slice_plates_buffer, scene_vertex_render_uniforms_buffer, scene_selected_vertices_buffer, scene_node_render_uniforms_buffer, controls_projected_vertex_buffer, controls_faces_buffer, ui_output_vertex_buffer, ui_face_buffer);
-    } else {
-        renderer->SetBuffers(scene_projected_vertex_buffer, scene_face_buffer, scene_projected_node_buffer, scene_projected_dot_buffer, scene_line_buffer, scene_projected_slice_plates_buffer, scene_vertex_render_uniforms_buffer, scene_selected_vertices_buffer, scene_node_render_uniforms_buffer, controls_projected_vertex_buffer, controls_faces_buffer, ui_output_vertex_buffer, ui_face_buffer);
-    }
+    renderer->SetBuffers(compiled_vertex_buffer, compiled_face_buffer, compiled_edge_buffer, compiled_face_size(), compiled_edge_size());
 }
 
 void ComputePipeline::SendDataToScheme() {
-    Vertex *svb = (Vertex *) scene_vertex_buffer.contents;
-    Vertex *spvb = (Vertex *) scene_projected_vertex_buffer.contents;
-    Face *sfb = (Face *) scene_face_buffer.contents;
-    Node *snb = (Node *) scene_node_buffer.contents;
-    Vertex *spnb = (Vertex *) scene_projected_node_buffer.contents;
-    Vertex *cvb = (Vertex *) controls_vertex_buffer.contents;
-    Vertex *cpvb = (Vertex *) controls_projected_vertex_buffer.contents;
-    Face *cfb = (Face *) controls_faces_buffer.contents;
-    Vertex *ssp = (Vertex *) scene_projected_slice_plates_buffer.contents;
-    Vertex *uvb = (Vertex *) ui_output_vertex_buffer.contents;
-    UIFace *ufb = (UIFace *) ui_face_buffer.contents;
+    Vertex *ccv = (Vertex *) compiled_vertex_buffer.contents;
+    Face *ccf = (Face *) compiled_face_buffer.contents;
+    Vertex *cmv = (Vertex *) model_vertex_buffer.contents;
+    Node *cmn = (Node *) model_node_buffer.contents;
     
-    scheme->SetBufferContents(svb, spvb, sfb, snb, spnb, cvb, cpvb, cfb, ssp, uvb, ufb);
+    scheme->SetBufferContents(&compiled_buffer_key_indices, ccv, ccf, cmv, cmn);
+}
+
+
+uint32_t ComputePipeline::compiled_vertex_size() {
+    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_dots + num_scene_dots*4;
+    
+    uint32_t size = 0;
+    size += num_scene_vertices;
+    size += num_controls_vertices;
+    size += num_scene_dots;
+    if (scheme->ShouldRenderNodes()) size += num_scene_nodes * 9; // 8 triangles per node
+    if (scheme->ShouldRenderVertices()) size += num_scene_vertices * 4;
+    size += num_scene_dots * 4; // always render dot squares
+    if (scheme->GetType() != SchemeType::EditSlice) size += num_scene_slices * 4;
+    size += num_ui_vertices;
+    return size;
+}
+
+uint32_t ComputePipeline::compiled_vertex_scene_start() {
+    if (scheme->GetType() == SchemeType::EditSlice) return 0;
+    
+    uint32_t size = 0;
+    return size;
+}
+uint32_t ComputePipeline::compiled_vertex_control_start() {
+    if (scheme->GetType() == SchemeType::EditSlice) return 0;
+    
+    uint32_t size = compiled_vertex_scene_start();
+    size += num_scene_vertices;
+    return size;
+}
+uint32_t ComputePipeline::compiled_vertex_dot_start() {
+    if (scheme->GetType() == SchemeType::EditSlice) return 0;
+    
+    uint32_t size = compiled_vertex_control_start();
+    size += num_controls_vertices;
+    return size;
+}
+uint32_t ComputePipeline::compiled_vertex_node_circle_start() {
+    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_dots;
+    
+    uint32_t size = compiled_vertex_dot_start();
+    size += num_scene_dots;
+    return size;
+}
+uint32_t ComputePipeline::compiled_vertex_vertex_square_start() {
+    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_dots;
+    
+    uint32_t size = compiled_vertex_node_circle_start();
+    if (scheme->ShouldRenderNodes()) size += num_scene_nodes * 9;
+    return size;
+}
+uint32_t ComputePipeline::compiled_vertex_dot_square_start() {
+    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_dots;
+    
+    uint32_t size = compiled_vertex_vertex_square_start();
+    if (scheme->ShouldRenderVertices()) size += num_scene_vertices * 4;
+    return size;
+}
+uint32_t ComputePipeline::compiled_vertex_slice_plate_start() {
+    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_dots + num_scene_dots*4;
+    
+    uint32_t size = compiled_vertex_dot_square_start();
+    size += num_scene_dots * 4;
+    return size;
+}
+uint32_t ComputePipeline::compiled_vertex_ui_start() {
+    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_dots + num_scene_dots*4;
+    
+    uint32_t size = compiled_vertex_slice_plate_start();
+    if (scheme->GetType() != SchemeType::EditSlice) size += num_scene_slices * 4;
+    return size;
+}
+
+uint32_t ComputePipeline::compiled_face_size() {
+    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_dots*2;
+    
+    uint32_t size = 0;
+    if (scheme->ShouldRenderFaces()) size += num_scene_faces;
+    size += num_controls_faces;
+    if (scheme->ShouldRenderNodes()) size += num_scene_nodes * 8;
+    if (scheme->ShouldRenderVertices()) size += num_scene_vertices*2;
+    size += num_scene_dots*2;
+    size += num_scene_slices*2;
+    size += num_ui_faces;
+    return size;
+}
+uint32_t ComputePipeline::compiled_face_scene_start() {
+    if (scheme->GetType() == SchemeType::EditSlice) return 0;
+    
+    uint32_t size = 0;
+    return size;
+}
+uint32_t ComputePipeline::compiled_face_control_start() {
+    if (scheme->GetType() == SchemeType::EditSlice) return 0;
+    
+    uint32_t size = compiled_face_scene_start();
+    if (scheme->ShouldRenderFaces()) size += num_scene_faces;
+    return size;
+}
+uint32_t ComputePipeline::compiled_face_node_circle_start() {
+    if (scheme->GetType() == SchemeType::EditSlice) return 0;
+    
+    uint32_t size = compiled_face_control_start();
+    size += num_controls_faces;
+    return size;
+}
+uint32_t ComputePipeline::compiled_face_vertex_square_start() {
+    if (scheme->GetType() == SchemeType::EditSlice) return 0;
+    
+    uint32_t size = compiled_face_node_circle_start();
+    if (scheme->ShouldRenderNodes()) size += num_scene_nodes * 8;
+    return size;
+}
+uint32_t ComputePipeline::compiled_face_dot_square_start() {
+    if (scheme->GetType() == SchemeType::EditSlice) return 0;
+    
+    uint32_t size = compiled_face_vertex_square_start();
+    if (scheme->ShouldRenderVertices()) size += num_scene_vertices*2;
+    return size;
+}
+uint32_t ComputePipeline::compiled_face_slice_plate_start() {
+    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_dots*2;
+    
+    uint32_t size = compiled_face_dot_square_start();
+    size += num_scene_dots*2;
+    return size;
+}
+uint32_t ComputePipeline::compiled_face_ui_start() {
+    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_dots*2;
+    
+    uint32_t size = compiled_face_slice_plate_start();
+    size += num_scene_slices*2;
+    return size;
+}
+
+uint32_t ComputePipeline::compiled_edge_size() {
+    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_lines;
+    
+    uint32_t size = 0;
+    if (scheme->ShouldRenderEdges()) size += num_scene_edges;
+    size += num_scene_lines;
+    return size;
+}
+uint32_t ComputePipeline::compiled_edge_scene_start() {
+    if (scheme->GetType() == SchemeType::EditSlice) return 0;
+    
+    uint32_t size = 0;
+    return size;
+}
+uint32_t ComputePipeline::compiled_edge_line_start() {
+    if (scheme->GetType() == SchemeType::EditSlice) return 0;
+    
+    uint32_t size = 0;
+    if (scheme->ShouldRenderEdges()) size += num_scene_edges;
+    return size;
 }

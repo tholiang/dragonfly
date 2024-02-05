@@ -185,7 +185,7 @@ std::vector<int> DragonflyUtils::Hungarian(std::vector<simd_float3> &A, std::vec
     return assignments;
 }
 
-void DragonflyUtils::JoinModels(Model *A, Model *B, ModelUniforms *muA, ModelUniforms *muB, std::vector<int> &A_pts, std::vector<int> &B_pts) {
+void DragonflyUtils::JoinModels(Model *A, Model *B, ModelTransform *muA, ModelTransform *muB, std::vector<int> &A_pts, std::vector<int> &B_pts) {
     std::vector<simd_float3> A_vals;
     std::vector<simd_float3> B_vals;
     
@@ -370,13 +370,13 @@ int DragonflyUtils::GetNextVertexIdx(Model *m, std::vector<int> &vertices, int c
     return -1;
 }
 
-float DragonflyUtils::VertexDist(Model *a, ModelUniforms *au, Model *b, ModelUniforms *bu, int avid, int bvid) {
+float DragonflyUtils::VertexDist(Model *a, ModelTransform *au, Model *b, ModelTransform *bu, int avid, int bvid) {
     Vertex av = TranslatePointToStandard(&au->b, a->GetVertex(avid));
     Vertex bv = TranslatePointToStandard(&bu->b, b->GetVertex(bvid));
     return dist3to3(av, bv);
 }
 
-std::pair<std::vector<int>, float> DragonflyUtils::MatchModelsFrom(Model *a, ModelUniforms *au, std::vector<int> &avertices, Model *b, ModelUniforms *bu, std::vector<int> &bvertices, int a1, int a2, int b1, int b2) {
+std::pair<std::vector<int>, float> DragonflyUtils::MatchModelsFrom(Model *a, ModelTransform *au, std::vector<int> &avertices, Model *b, ModelTransform *bu, std::vector<int> &bvertices, int a1, int a2, int b1, int b2) {
     std::vector<int> matching;
     for (int i = 0; i < avertices.size(); i++) {
         matching.push_back(-1);
@@ -420,7 +420,7 @@ std::pair<std::vector<int>, float> DragonflyUtils::MatchModelsFrom(Model *a, Mod
     return std::make_pair(matching, score);
 }
 
-std::vector<int> DragonflyUtils::MatchEqualModels(Model *a, ModelUniforms *au, std::vector<int> &avertices, Model *b, ModelUniforms *bu, std::vector<int> &bvertices) {
+std::vector<int> DragonflyUtils::MatchEqualModels(Model *a, ModelTransform *au, std::vector<int> &avertices, Model *b, ModelTransform *bu, std::vector<int> &bvertices) {
     std::vector<int> bestmatching;
     float bestmatchingscore = -1;
     
@@ -444,7 +444,7 @@ std::vector<int> DragonflyUtils::MatchEqualModels(Model *a, ModelUniforms *au, s
     return bestmatching;
 }
 
-void DragonflyUtils::AddModels(Model *a, ModelUniforms *au, Model *b, ModelUniforms *bu) {
+void DragonflyUtils::AddModels(Model *a, ModelTransform *au, Model *b, ModelTransform *bu) {
     int bnodestart = a->NumNodes();
     for (int i = 0; i < b->NumNodes(); i++) {
         Node *n = b->GetNode(i);
@@ -481,7 +481,7 @@ void DragonflyUtils::AddModels(Model *a, ModelUniforms *au, Model *b, ModelUnifo
     }
 }
 
-void DragonflyUtils::BridgeEqualModels(Model *a, ModelUniforms *au, std::vector<int> &avertices, Model *b, ModelUniforms *bu, std::vector<int> &bvertices) {
+void DragonflyUtils::BridgeEqualModels(Model *a, ModelTransform *au, std::vector<int> &avertices, Model *b, ModelTransform *bu, std::vector<int> &bvertices) {
     // if any face contains 3 vertices in arrays: error
     if (a->HasFaceWith(avertices) || b->HasFaceWith(bvertices)) {
         std::cout<<"cant have face between vertices"<<std::endl;

@@ -39,7 +39,7 @@ void SchemeController::MenuBar() {
                 scheme_->CreateNewModel();
             }
             if (ImGui::MenuItem("New Slice", "")) {
-                Slice *s = new Slice(scheme_->GetScene()->NumSlices());
+                Slice *s = new Slice();
                 scheme_->GetScene()->AddSlice(s);
                 
                 Scene *scene = scheme_->GetScene();

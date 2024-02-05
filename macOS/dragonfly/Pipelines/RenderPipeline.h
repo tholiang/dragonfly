@@ -27,6 +27,7 @@
 
 class RenderPipeline {
 private:
+    // rendering specifics
     MTLRenderPassDescriptor* render_pass_descriptor;
     CAMetalLayer *layer;
     
@@ -40,40 +41,22 @@ private:
     id <MTLCommandQueue> command_queue;
     id<MTLLibrary> library;
     
-    id <MTLRenderPipelineState> triangle_render_pipeline_state;
-    id <MTLRenderPipelineState> face_render_pipeline_state;
-    id <MTLRenderPipelineState> scene_edge_render_pipeline_state;
-    id <MTLRenderPipelineState> scene_line_render_pipeline_state;
-    id <MTLRenderPipelineState> scene_point_render_pipeline_state;
-    id <MTLRenderPipelineState> scene_dot_render_pipeline_state;
+    // ---PIPELINE STATES FOR GPU RENDERER---
+    id <MTLRenderPipelineState> default_face_render_pipeline_state;
+    id <MTLRenderPipelineState> default_edge_render_pipeline_state;
 
-    id <MTLRenderPipelineState> scene_node_render_pipeline_state;
-    
-    id <MTLRenderPipelineState> ui_vertex_render_pipeline_state;
-
+    // depth variables for renderer
     id <MTLDepthStencilState> depth_state;
     id <MTLTexture> depth_texture;
     
-    // buffers for scene render
-    id <MTLBuffer> scene_projected_vertex_buffer;
-    id <MTLBuffer> scene_face_buffer;
+    // ---BUFFERS FOR SCENE RENDER---
+    id <MTLBuffer> vertex_buffer;
+    id <MTLBuffer> face_buffer;
+    id <MTLBuffer> edge_buffer;
     
-    id <MTLBuffer> scene_projected_node_buffer;
-    
-    id <MTLBuffer> scene_projected_dot_buffer;
-    id <MTLBuffer> scene_line_buffer;
-    id <MTLBuffer> scene_slice_plates_buffer;
-    
-    id <MTLBuffer> scene_vertex_render_uniforms_buffer;
-    id <MTLBuffer> scene_selected_vertices_buffer;
-    id <MTLBuffer> scene_node_render_uniforms_buffer;
-    
-    // buffers for controls models compute
-    id <MTLBuffer> controls_projected_vertex_buffer;
-    id <MTLBuffer> controls_faces_buffer;
-    
-    id <MTLBuffer> ui_vertex_buffer;
-    id <MTLBuffer> ui_face_buffer;
+    // render variables
+    unsigned long num_faces = 0;
+    unsigned long num_edges = 0;
     
     Scheme *scheme;
     SchemeController *scheme_controller;
@@ -83,7 +66,7 @@ public:
     int init();
     void SetScheme(Scheme *sch);
     void SetSchemeController(SchemeController *sctr);
-    void SetBuffers(id<MTLBuffer> spv, id<MTLBuffer> sf, id<MTLBuffer> spn, id<MTLBuffer> spd, id<MTLBuffer> ssl, id<MTLBuffer> ssp, id<MTLBuffer> svru, id<MTLBuffer> ssv, id<MTLBuffer> snru, id<MTLBuffer> cpv, id<MTLBuffer> cf, id<MTLBuffer> uvb, id<MTLBuffer> ufb);
+    void SetBuffers(id<MTLBuffer> vb, id<MTLBuffer> fb, id<MTLBuffer> eb, unsigned long nf, unsigned long ne);
     
     void SetPipeline();
     

@@ -38,7 +38,6 @@ private:
     int ROTATOR_VERTEX_SIZE = 20;
     int ROTATOR_FACE_SIZE = 8;
     
-    int selected_node_ = -1;
     int selected_model_ = -1;
     
     int selected_ui_elem = -1;
@@ -87,7 +86,7 @@ private:
     void MainWindow();
 public:
     void BuildUI();
-    void SetBufferContents(Vertex *smv, Vertex *smpv, Face *smf, Node *smn, Vertex *smpn, Vertex *cmv, Vertex *cmpv, Face *cmf, Vertex *ssp, Vertex *uiv, UIFace *uif);
+    void SetBufferContents(CompiledBufferKeyIndices *cki, Vertex *ccv, Face *ccf, Vertex *cmv, Node *cmn);
     
     void HandleMouseMovement(float x, float y, float dx, float dy);
     

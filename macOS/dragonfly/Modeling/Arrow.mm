@@ -8,13 +8,13 @@
 #import <Foundation/Foundation.h>
 #include "Arrow.h"
 
-Arrow::Arrow(uint32 mid) : Model(mid) {
-    name_ = "arrow"+std::to_string(mid);
+Arrow::Arrow() {
+    name_ = "arrow";
     color = simd_make_float4(1, 0, 0, 0); // default red
     MakeArrow();
 }
 
-Arrow::Arrow(uint32 mid, simd_float4 c) : Model(mid), color(c) {
+Arrow::Arrow(simd_float4 c) : color(c) {
     MakeArrow();
 }
 

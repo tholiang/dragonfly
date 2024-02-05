@@ -93,21 +93,14 @@ private:
     // two links per vertex - index = vertex index * 2 (+ 1)
     std::vector<NodeVertexLink *> nvlinks;
     
-    uint32_t modelID;
-    
-    unsigned long face_start = 0;
-    unsigned long vertex_start = 0;
-    
     unsigned long num_vertices = 0;
-    
-    unsigned long node_start = 0;
     
     long curr_aid = -1;
     float curr_anim_time = 0;
 protected:
     std::string name_;
 public:
-    Model(uint32_t mid);
+    Model();
     // to default node
     unsigned MakeVertex(float x, float y, float z);
     // to specified node
@@ -160,6 +153,7 @@ public:
     float CurrAnimationTime();
     unsigned NumAnimations();
     
+    NodeVertexLink *GetNodeVertexLink(unsigned long nvlid);
     Vertex GetVertex(unsigned long vid);
     Face *GetFace(unsigned long fid);
     std::vector<unsigned long> GetEdgeFaces(unsigned long vid1, unsigned long vid2);
@@ -170,19 +164,8 @@ public:
     
     Node *GetNode(unsigned long nid);
     
-    //std::vector<Vertex> &GetVertices();
     std::vector<Face*> &GetFaces();
-    
     std::vector<Node*> &GetNodes();
-    
-    void AddToBuffers(std::vector<Face> &faceBuffer, std::vector<Node> &nodeBuffer, std::vector<NodeVertexLink> &nvlinkBuffer, std::vector<uint32_t> &node_modelIDs, unsigned &total_vertices);
-    void UpdateNodeBuffers(std::vector<Node> &nodeBuffer);
-    uint32_t ModelID();
-    
-    unsigned long FaceStart();
-    unsigned long VertexStart();
-    
-    unsigned long NodeStart();
     
     unsigned long NumFaces();
     unsigned long NumVertices();

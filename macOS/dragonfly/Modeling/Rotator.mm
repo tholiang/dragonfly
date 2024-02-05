@@ -8,13 +8,13 @@
 #import <Foundation/Foundation.h>
 #include "Rotator.h"
 
-Rotator::Rotator(uint32 mid) : Model(mid) {
-    name_ = "rotator"+std::to_string(mid);
+Rotator::Rotator() {
+    name_ = "rotator";
     color = simd_make_float4(1, 0, 0, 0); // default red
     MakeRotator();
 }
 
-Rotator::Rotator(uint32 mid, simd_float4 c) : Model(mid), color(c) {
+Rotator::Rotator(simd_float4 c): color(c) {
     MakeRotator();
 }
 

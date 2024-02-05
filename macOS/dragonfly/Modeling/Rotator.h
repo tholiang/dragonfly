@@ -16,8 +16,8 @@
 
 class Rotator : public Model {
 public:
-    Rotator(uint32_t mid);
-    Rotator(uint32_t mid, simd_float4 c);
+    Rotator();
+    Rotator(simd_float4 c);
 private:
     void MakeRotator();
     

@@ -33,7 +33,7 @@ private:
     simd_float2 rightclick_popup_size_;
     bool rightclick_popup_clicked_ = false;
     
-    std::vector<Slice *> slice_vector;
+    Slice *slice_;
     
     simd_float2 drag_size;
     
@@ -73,6 +73,9 @@ private:
     void CalculateNumSceneLines();
     
 public:
+    EditSliceScheme();
+    ~EditSliceScheme();
+    
     void SetDrawing();
     void SetEditing();
     
@@ -86,17 +89,17 @@ public:
     void SetSliceID(int sid);
     int GetSliceID();
     
-    std::vector<Slice *> *GetSlices();
-//    std::vector<SliceAttributes> GetSliceAttributes();
-    void AddSliceAttributesToBuffer(std::vector<SliceAttributes> *buf);
+    Slice *GetSlice();
     
     simd_float4 GetEditWindow();
     
+    unsigned long NumSceneSlices();
     unsigned long NumSceneDots();
     unsigned long NumSceneLines();
     
-    EditSliceScheme();
-    ~EditSliceScheme();
+    void SetSliceDotBuffer(Dot *buf);
+    void SetSliceLineBuffer(simd_int2 *buf, unsigned long dot_start); // start of dots in cvb
+    void SetSliceAttributesBuffer(SliceAttributes *buf);
 };
 
 #endif /* PlaneDrawScheme_h */

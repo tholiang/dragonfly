@@ -24,7 +24,7 @@
 
 using namespace DragonflyUtils;
 
-struct ModelUniforms {
+struct ModelTransform {
     simd_float3 rotate_origin;
     Basis b;
 };
@@ -32,10 +32,10 @@ struct ModelUniforms {
 class Scene {
 private:
     std::vector<Model *> models;
-    std::vector<ModelUniforms> model_uniforms;
+    std::vector<ModelTransform> model_uniforms;
     
     std::vector<Slice *> slices;
-    std::vector<ModelUniforms> slice_uniforms;
+    std::vector<ModelTransform> slice_uniforms;
     
     std::string name_;
 public:
@@ -45,10 +45,10 @@ public:
     void GetFromFolder(std::string path);
     
     Model *GetModel(unsigned long mid);
-    ModelUniforms *GetModelUniforms(unsigned long mid);
+    ModelTransform *GetModelUniforms(unsigned long mid);
     
     Slice *GetSlice(unsigned long sid);
-    ModelUniforms *GetSliceUniforms(unsigned long sid);
+    ModelTransform *GetSliceUniforms(unsigned long sid);
     
     simd_float3 GetModelPosition(unsigned long mid);
     Basis *GetModelBasis(unsigned long mid);
@@ -72,7 +72,7 @@ public:
     void CreateNewModel();
     void NewModelFromFile(std::string path);
     void NewModelFromPointData(std::string path);
-    void AddModel(Model *m, ModelUniforms mu);
+    void AddModel(Model *m, ModelTransform mu);
     
     void AddSlice(Slice *s);
     
@@ -84,11 +84,11 @@ public:
     unsigned long NumSlices();
     
     std::vector<Model *> *GetModels();
-    std::vector<ModelUniforms> *GetAllModelUniforms();
+    std::vector<ModelTransform> *GetAllModelUniforms();
     
     std::vector<Slice *> *GetSlices();
     //std::vector<SliceAttributes> GetAllSliceAttributes();
-    std::vector<ModelUniforms> *GetAllSliceUniforms();
+    std::vector<ModelTransform> *GetAllSliceUniforms();
     
     std::string GetName();
     void SetName(std::string name);

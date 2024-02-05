@@ -6,6 +6,7 @@
 //
 
 #include "EditSliceScheme.h"
+#include "../Pipelines/ComputePipeline.h"
 
 using namespace DragonflyUtils;
 
@@ -46,9 +47,7 @@ simd_float2 EditSliceScheme::screen_to_eloc(simd_float2 loc) {
 }
 
 void EditSliceScheme::CreateDotAtClick(simd_float2 click_loc) {
-    Slice *s = scene_->GetSlice(slice_id);
-    
-    SliceAttributes attr = slice_vector[0]->GetAttributes();
+    SliceAttributes attr = slice_->GetAttributes();
     float scale = attr.height / 2;
     if (attr.height < attr.width) {
         scale = attr.width / 2;
@@ -74,16 +73,16 @@ void EditSliceScheme::CreateDotAtClick(simd_float2 click_loc) {
     }
     
     
-    s->MakeDot(x, y);
+    slice_->MakeDot(x, y);
     
     if (first_dot == -1) {
-        first_dot = s->NumDots()-1;
+        first_dot = slice_->NumDots()-1;
     }
     
     if (last_dot != -1) {
-        s->MakeLine(last_dot, s->NumDots()-1);
+        slice_->MakeLine(last_dot, slice_->NumDots()-1);
     }
-    last_dot = s->NumDots()-1;
+    last_dot = slice_->NumDots()-1;
     
     
     CalculateNumSceneDots();
@@ -104,7 +103,7 @@ int EditSliceScheme::DotClicked(simd_float2 loc) {
         
         float x,y;
         
-        SliceAttributes attr = slice_vector[0]->GetAttributes();
+        SliceAttributes attr = slice_->GetAttributes();
         float scale = attr.height / 2;
         if (attr.height < attr.width) {
             scale = attr.width / 2;
@@ -151,7 +150,7 @@ int EditSliceScheme::LineClicked(simd_float2 loc) {
         
         float x1,y1,x2,y2;
         
-        SliceAttributes attr = slice_vector[0]->GetAttributes();
+        SliceAttributes attr = slice_->GetAttributes();
         float scale = attr.height / 2;
         if (attr.height < attr.width) {
             scale = attr.width / 2;
@@ -229,20 +228,18 @@ void EditSliceScheme::HandleSelection(simd_float2 loc) {
         int line_selection = LineClicked(loc);
         
         if (dot_selection >= 0) {
-            vertex_render_uniforms.selected_vertices.clear();
-            vertex_render_uniforms.selected_vertices.push_back(dot_selection + s->DotStart());
+            selected_vertices.clear();
+            selected_vertices.push_back(dot_selection);
             held_dot = dot_selection;
         } else if (line_selection >= 0) {
             selected_line = line_selection;
-            vertex_render_uniforms.selected_vertices.clear();
-            vertex_render_uniforms.selected_vertices.push_back(s->GetLine(selected_line-s->LineStart())->d1 + s->DotStart());
-            vertex_render_uniforms.selected_vertices.push_back(s->GetLine(selected_line-s->LineStart())->d2 + s->DotStart());
+            selected_vertices.clear();
+            selected_vertices.push_back(s->GetLine(selected_line)->d1);
+            selected_vertices.push_back(s->GetLine(selected_line)->d2);
         } else {
             selected_line = -1;
-            vertex_render_uniforms.selected_vertices.clear();
+            selected_vertices.clear();
         }
-        
-        vertex_render_uniforms.num_selected_vertices = vertex_render_uniforms.selected_vertices.size();
     }
 }
 
@@ -284,7 +281,7 @@ void EditSliceScheme::RightMenu() {
             mode = Editing;
         }
     } else if (mode == Editing) {
-        if (vertex_render_uniforms.num_selected_vertices == 1) {
+        if (selected_vertices.size() == 1) {
             DotEditMenu();
         } else if (selected_line != -1) {
             LineEditMenu();
@@ -302,19 +299,18 @@ void EditSliceScheme::RightMenu() {
 
 void EditSliceScheme::DotEditMenu() {
     Slice *s = scene_->GetSlice(slice_id);
-    ImGui::Text("Selected Dot: ", vertex_render_uniforms.selected_vertices[0]);
+    ImGui::Text("Selected Dot: ", selected_vertices[0]);
     
     ImGui::SetCursorPos(ImVec2(20, 30));
     
     if (ImGui::Button("Delete")) {
-        s->RemoveDotAndMergeLines(vertex_render_uniforms.selected_vertices[0] - s->DotStart());
+        s->RemoveDotAndMergeLines(selected_vertices[0]);
         
         CalculateNumSceneDots();
         CalculateNumSceneLines();
         should_reset_static_buffers = true;
         
-        vertex_render_uniforms.selected_vertices.clear();
-        vertex_render_uniforms.num_selected_vertices = 0;
+        selected_vertices.clear();
     }
 }
 
@@ -329,10 +325,9 @@ void EditSliceScheme::LineEditMenu() {
         
         Line *e = s->GetLine(selected_line);
         
-        vertex_render_uniforms.selected_vertices.clear();
-        vertex_render_uniforms.selected_vertices.push_back(e->d1 + s->DotStart());
-        vertex_render_uniforms.selected_vertices.push_back(e->d2 + s->DotStart());
-        vertex_render_uniforms.num_selected_vertices = vertex_render_uniforms.selected_vertices.size();
+        selected_vertices.clear();
+        selected_vertices.push_back(e->d1);
+        selected_vertices.push_back(e->d2);
         
         CalculateNumSceneDots();
         CalculateNumSceneLines();
@@ -372,7 +367,7 @@ void EditSliceScheme::HandleMouseMovement(float x, float y, float dx, float dy) 
         
         simd_float2 eloc = screen_to_eloc(simd_make_float2(x, y));
         
-        SliceAttributes attr = slice_vector[0]->GetAttributes();
+        SliceAttributes attr = slice_->GetAttributes();
         float scale = attr.height / 2;
         if (attr.height < attr.width) {
             scale = attr.width / 2;
@@ -406,7 +401,7 @@ void EditSliceScheme::HandleMouseDown(simd_float2 loc, bool left) {
     drag_size.y = 0;
     
     if (!left) {
-        if (vertex_render_uniforms.selected_vertices.size() > 0) {
+        if (selected_vertices.size() > 0) {
             rightclick_popup_loc_ = loc;
             render_rightclick_popup_ = true;
         } else {
@@ -447,8 +442,7 @@ void EditSliceScheme::SetSliceID(int sid) {
     Slice *s = scene_->GetSlice(sid);
     num_edit_slice_dots = s->NumDots();
     num_edit_slice_lines = s->NumLines();
-    slice_vector.clear();
-    slice_vector.push_back(s);
+    slice_ = s;
     
     should_reset_static_buffers = true;
     should_reset_empty_buffers = true;
@@ -458,16 +452,8 @@ int EditSliceScheme::GetSliceID() {
     return slice_id;
 }
 
-std::vector<Slice *> *EditSliceScheme::GetSlices() {
-    return &slice_vector;
-}
-
-/*std::vector<SliceAttributes> EditSliceScheme::GetSliceAttributes() {
-    return slice_attr_vector;
-}*/
-
-void EditSliceScheme::AddSliceAttributesToBuffer(std::vector<SliceAttributes> *buf) {
-    buf->push_back(scene_->GetSlice(slice_id)->GetAttributes());
+Slice *EditSliceScheme::GetSlice() {
+    return slice_;
 }
 
 simd_float4 EditSliceScheme::GetEditWindow() {
@@ -481,11 +467,15 @@ simd_float4 EditSliceScheme::GetEditWindow() {
 }
 
 void EditSliceScheme::CalculateNumSceneDots() {
-    num_edit_slice_dots = scene_->GetSlice(slice_id)->NumDots();
+    num_edit_slice_dots = slice_->NumDots();
 }
 
 void EditSliceScheme::CalculateNumSceneLines() {
-    num_edit_slice_lines = scene_->GetSlice(slice_id)->NumLines();
+    num_edit_slice_lines = slice_->NumLines();
+}
+
+unsigned long EditSliceScheme::NumSceneSlices() {
+    return 1;
 }
 
 unsigned long EditSliceScheme::NumSceneDots() {
@@ -494,4 +484,28 @@ unsigned long EditSliceScheme::NumSceneDots() {
 
 unsigned long EditSliceScheme::NumSceneLines() {
     return num_edit_slice_lines;
+}
+
+void EditSliceScheme::SetSliceDotBuffer(Dot *buf) {
+    for (int j = 0; j < slice_->NumDots(); j++) { // iterate through dots
+        // add dot to buffer
+        buf[j] = *slice_->GetDot(j);
+    }
+}
+
+void EditSliceScheme::SetSliceLineBuffer(simd_int2 *buf, unsigned long dot_start) {
+    for (int j = 0; j < slice_->NumLines(); j++) { // iterate through current models faces
+        // copy line
+        Line l = *slice_->GetLine(j);
+        // add dot start to original line dids
+        l.d1 += dot_start;
+        l.d2 += dot_start;
+        
+        // TODO: MAYBE CHANGE EDGE/LINE FORMAT
+        buf[j] = simd_make_int2(l.d1, l.d2);
+    }
+}
+
+void EditSliceScheme::SetSliceAttributesBuffer(SliceAttributes *buf) {
+    buf[0] = slice_->GetAttributes();
 }

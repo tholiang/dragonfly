@@ -7,7 +7,7 @@
 
 #include "UIElement.h"
 
-UIElement::UIElement(uint32_t eid) : elementID(eid) {
+UIElement::UIElement() {
     
 }
 

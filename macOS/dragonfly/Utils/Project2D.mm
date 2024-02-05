@@ -82,7 +82,7 @@ std::vector<simd_int3> DragonflyUtils::FindPointDataTriangles(PointData* pd) {
 Model * DragonflyUtils::ModelFromPointData(PointData *pd) {
     std::vector<simd_int3> triangles = FindPointDataTriangles(pd);
     
-    Model *m = new Model(0);
+    Model *m = new Model();
     for (int i = 0; i < pd->points.size(); i++) {
         simd_float2 p = pd->points[i];
         m->MakeVertex(p.x, 0, p.y);

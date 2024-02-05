@@ -47,8 +47,8 @@ int Engine::init() {
     render_pipeline->SetScheme(scheme);
     render_pipeline->SetSchemeController(scheme_controller);
     
+    compute_pipeline->CreateBuffers();
     compute_pipeline->ResetStaticBuffers();
-    compute_pipeline->SetEmptyBuffers();
     
     return 0;
 }
@@ -73,13 +73,13 @@ void Engine::run() {
                 HandleMouseEvents(event);
             }
             
+            if (scheme->ShouldResetEmptyBuffers()) {
+                compute_pipeline->CreateBuffers();
+                scheme->SetResetEmptyBuffers(false);
+            }
             if (scheme->ShouldResetStaticBuffers()) {
                 compute_pipeline->ResetStaticBuffers();
                 scheme->SetResetStaticBuffers(false);
-            }
-            if (scheme->ShouldResetEmptyBuffers()) {
-                compute_pipeline->SetEmptyBuffers();
-                scheme->SetResetEmptyBuffers(false);
             }
             compute_pipeline->ResetDynamicBuffers();
 

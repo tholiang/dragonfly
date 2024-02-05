@@ -43,7 +43,7 @@ void Scene::GetFromFolder(std::string path) {
             
             std::vector<float> vals = splitStringToFloats(line);
             
-            ModelUniforms mu;
+            ModelTransform mu;
 //            mu.position.x = vals[0];
 //            mu.position.y = vals[1];
 //            mu.position.z = vals[2];
@@ -58,7 +58,7 @@ void Scene::GetFromFolder(std::string path) {
             
             model_uniforms.push_back(mu);
             
-            Model *m = new Model(mid);
+            Model *m = new Model();
             m->FromFile(path+"/Models/"+model_file);
             models.push_back(m);
             
@@ -77,7 +77,7 @@ Model * Scene::GetModel(unsigned long mid) {
     return models[mid];
 }
 
-ModelUniforms * Scene::GetModelUniforms(unsigned long mid) {
+ModelTransform * Scene::GetModelUniforms(unsigned long mid) {
     if (mid >= model_uniforms.size()) {
         return NULL;
     }
@@ -93,7 +93,7 @@ Slice * Scene::GetSlice(unsigned long sid) {
     return slices[sid];
 }
 
-ModelUniforms * Scene::GetSliceUniforms(unsigned long sid) {
+ModelTransform * Scene::GetSliceUniforms(unsigned long sid) {
     if (sid >= slice_uniforms.size()) {
         return NULL;
     }
@@ -143,7 +143,7 @@ simd_float3 Scene::GetSlicePosition(unsigned long sid) {
 
 void Scene::MoveModelBy(unsigned int mid, float dx, float dy, float dz) {
     if (mid < model_uniforms.size()) {
-        ModelUniforms * mu = GetModelUniforms(mid);
+        ModelTransform * mu = GetModelUniforms(mid);
         
         if (mu == NULL) {
             return;
@@ -161,7 +161,7 @@ void Scene::MoveModelBy(unsigned int mid, float dx, float dy, float dz) {
 
 void Scene::RotateModelBy(unsigned int mid, float dx, float dy, float dz) {
     if (mid < model_uniforms.size()) {
-        ModelUniforms * mu = GetModelUniforms(mid);
+        ModelTransform * mu = GetModelUniforms(mid);
 
         if (mu == NULL) {
             return;
@@ -179,7 +179,7 @@ void Scene::RotateModelBy(unsigned int mid, float dx, float dy, float dz) {
 
 void Scene::MoveModelTo(unsigned int mid, float x, float y, float z) {
     if (mid < model_uniforms.size()) {
-        ModelUniforms * mu = GetModelUniforms(mid);
+        ModelTransform * mu = GetModelUniforms(mid);
         
         if (mu == NULL) {
             return;
@@ -211,7 +211,7 @@ void Scene::MoveModelTo(unsigned int mid, float x, float y, float z) {
 
 void Scene::MoveSliceBy(unsigned int sid, float dx, float dy, float dz) {
     if (sid < slice_uniforms.size()) {
-        ModelUniforms * mu = GetSliceUniforms(sid);
+        ModelTransform * mu = GetSliceUniforms(sid);
         
         if (mu == NULL) {
             return;
@@ -229,7 +229,7 @@ void Scene::MoveSliceBy(unsigned int sid, float dx, float dy, float dz) {
 
 void Scene::RotateSliceBy(unsigned int sid, float dx, float dy, float dz) {
     if (sid < slice_uniforms.size()) {
-        ModelUniforms * mu = GetSliceUniforms(sid);
+        ModelTransform * mu = GetSliceUniforms(sid);
         
         if (mu == NULL) {
             return;
@@ -243,7 +243,7 @@ void Scene::RotateSliceBy(unsigned int sid, float dx, float dy, float dz) {
 
 void Scene::MoveSliceTo(unsigned int sid, float x, float y, float z) {
     if (sid < slice_uniforms.size()) {
-        ModelUniforms * mu = GetSliceUniforms(sid);
+        ModelTransform * mu = GetSliceUniforms(sid);
         
         if (mu == NULL) {
             return;
@@ -274,10 +274,10 @@ void Scene::MoveSliceTo(unsigned int sid, float x, float y, float z) {
 //}
 
 void Scene::CreateNewModel() {
-    Model *m = new Model(models.size());
+    Model *m = new Model();
     m->MakeCube();
     models.push_back(m);
-    ModelUniforms new_uniform;
+    ModelTransform new_uniform;
     new_uniform.b = Basis();
     new_uniform.rotate_origin = simd_make_float3(0, 0, 0);
     
@@ -285,10 +285,10 @@ void Scene::CreateNewModel() {
 }
 
 void Scene::NewModelFromFile(std::string path) {
-    Model *m = new Model(models.size());
+    Model *m = new Model();
     m->FromFile(path);
     models.push_back(m);
-    ModelUniforms new_uniform;
+    ModelTransform new_uniform;
     new_uniform.b = Basis();
     new_uniform.rotate_origin = simd_make_float3(0, 0, 0);
     
@@ -299,17 +299,15 @@ void Scene::NewModelFromPointData(std::string path) {
     PointData *pd = PointDataFromFile(path);
     Model *m = ModelFromPointData(pd);
     delete pd;
-    m->SetId(models.size());
     models.push_back(m);
-    ModelUniforms new_uniform;
+    ModelTransform new_uniform;
     new_uniform.b = Basis();
     new_uniform.rotate_origin = simd_make_float3(0, 0, 0);
     
     model_uniforms.push_back(new_uniform);
 }
 
-void Scene::AddModel(Model *m, ModelUniforms mu) {
-    m->SetId(models.size());
+void Scene::AddModel(Model *m, ModelTransform mu) {
     models.push_back(m);
     model_uniforms.push_back(mu);
 }
@@ -317,7 +315,7 @@ void Scene::AddModel(Model *m, ModelUniforms mu) {
 void Scene::AddSlice(Slice *s) {
     slices.push_back(s);
     
-    ModelUniforms new_uniform;
+    ModelTransform new_uniform;
     new_uniform.b = Basis();
     new_uniform.rotate_origin = simd_make_float3(0, 0, 0);
     
@@ -351,14 +349,14 @@ unsigned long Scene::NumSlices() {
 std::vector<Model *> * Scene::GetModels() {
     return &models;
 }
-std::vector<ModelUniforms> * Scene::GetAllModelUniforms() {
+std::vector<ModelTransform> * Scene::GetAllModelUniforms() {
     return &model_uniforms;
 }
 
 std::vector<Slice *> * Scene::GetSlices() {
     return &slices;
 }
-std::vector<ModelUniforms> * Scene::GetAllSliceUniforms() {
+std::vector<ModelTransform> * Scene::GetAllSliceUniforms() {
     return &slice_uniforms;
 }
 /*std::vector<SliceAttributes> Scene::GetAllSliceAttributes() {
@@ -394,7 +392,7 @@ void Scene::SaveToFolder(std::string path) {
     for (int i = 3; i < model_uniforms.size(); i++) {
         models.at(i)->SaveToFile(path+"/Models/");
         
-        ModelUniforms mu = model_uniforms.at(i);
+        ModelTransform mu = model_uniforms.at(i);
         myfile << models.at(i)->GetName() << ".drgn ";
 //        myfile << mu.position.x << " " << mu.position.y << " " << mu.position.z << " ";
 //        myfile << mu.rotate_origin.x << " " << mu.rotate_origin.y << " " << mu.rotate_origin.z << " ";

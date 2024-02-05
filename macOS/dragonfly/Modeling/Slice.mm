@@ -7,10 +7,7 @@
 
 #include "Slice.h"
 
-Slice::Slice(uint32_t mid) : sliceID(mid) {
-    line_start = 0;
-    dot_start = 0;
-    
+Slice::Slice() {
     attr.width = 2;
     attr.height = 2;
 }
@@ -162,37 +159,6 @@ std::vector<Dot*> & Slice::GetDots() {
 
 std::vector<Line*> & Slice::GetLines() {
     return lines;
-}
-
-void Slice::AddToBuffers(std::vector<Dot> &dotBuffer, std::vector<Line> &lineBuffer, std::vector<int> &dotSliceLinkBuffer, int sid) {
-    dot_start = dotBuffer.size();
-    line_start = lineBuffer.size();
-    
-    for (int i = 0; i < dots.size(); i++) {
-        Dot *d = dots[i];
-        dotBuffer.push_back(simd_make_float2(d->x, d->y));
-        dotSliceLinkBuffer.push_back(sid);
-    }
-    
-    for (int i = 0; i < lines.size(); i++) {
-        Line *l = lines[i];
-        Line newl;
-        newl.d1 = l->d1 + dot_start;
-        newl.d2 = l->d2 + dot_start;
-        lineBuffer.push_back(newl);
-    }
-}
-
-uint32_t Slice::SliceID() {
-    return sliceID;
-}
-
-unsigned long Slice::DotStart() {
-    return dot_start;
-}
-
-unsigned long Slice::LineStart() {
-    return line_start;
 }
 
 unsigned long Slice::NumDots() {
