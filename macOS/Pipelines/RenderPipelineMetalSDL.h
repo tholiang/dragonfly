@@ -5,8 +5,8 @@
 //  Created by Thomas Liang on 7/5/22.
 //
 
-#ifndef RenderPipeline_h
-#define RenderPipeline_h
+#ifndef RenderPipelineMetalSDL_h
+#define RenderPipelineMetalSDL_h
 
 #include <stdio.h>
 #include <vector>
@@ -22,10 +22,11 @@
 #include "imgui_impl_metal.h"
 #include <SDL.h>
 
+#include "RenderPipeline.h"
 #include "../Schemes/Scheme.h"
 #include "../Schemes/SchemeController.h"
 
-class RenderPipeline {
+class RenderPipelineMetalSDL : public RenderPipeline {
 private:
     // rendering specifics
     MTLRenderPassDescriptor* render_pass_descriptor;
@@ -34,12 +35,9 @@ private:
     SDL_Window* window;
     SDL_Renderer* renderer;
     
-    int window_width;
-    int window_height;
-    
     id <MTLDevice> device;
     id <MTLCommandQueue> command_queue;
-    id<MTLLibrary> library;
+    id <MTLLibrary> library;
     
     // ---PIPELINE STATES FOR GPU RENDERER---
     id <MTLRenderPipelineState> default_face_render_pipeline_state;
@@ -53,19 +51,10 @@ private:
     id <MTLBuffer> vertex_buffer;
     id <MTLBuffer> face_buffer;
     id <MTLBuffer> edge_buffer;
-    
-    // render variables
-    unsigned long num_faces = 0;
-    unsigned long num_edges = 0;
-    
-    Scheme *scheme;
-    SchemeController *scheme_controller;
 public:
-    ~RenderPipeline();
+    ~RenderPipelineMetalSDL();
     
     int init();
-    void SetScheme(Scheme *sch);
-    void SetSchemeController(SchemeController *sctr);
     void SetBuffers(id<MTLBuffer> vb, id<MTLBuffer> fb, id<MTLBuffer> eb, unsigned long nf, unsigned long ne);
     
     void SetPipeline();

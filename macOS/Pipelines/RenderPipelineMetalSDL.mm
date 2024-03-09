@@ -6,9 +6,9 @@
 //
 
 #import <Foundation/Foundation.h>
-#include "RenderPipeline.h"
+#include "RenderPipelineMetalSDL.h"
 
-RenderPipeline::~RenderPipeline() {
+RenderPipelineMetalSDL::~RenderPipelineMetalSDL() {
     // Cleanup
     ImGui_ImplMetal_Shutdown();
     ImGui_ImplSDL2_Shutdown();
@@ -19,7 +19,7 @@ RenderPipeline::~RenderPipeline() {
     SDL_Quit();
 }
 
-int RenderPipeline::init () {
+int RenderPipelineMetalSDL::init () {
     // Setup ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -82,15 +82,7 @@ int RenderPipeline::init () {
     return SDL_GetWindowID(window);
 }
 
-void RenderPipeline::SetScheme(Scheme *sch) {
-    scheme = sch;
-}
-
-void RenderPipeline::SetSchemeController(SchemeController *sctr) {
-    scheme_controller = sctr;
-}
-
-void RenderPipeline::SetBuffers(id<MTLBuffer> vb, id<MTLBuffer> fb, id<MTLBuffer> eb, unsigned long nf, unsigned long ne) {
+void RenderPipelineMetalSDL::SetBuffers(id<MTLBuffer> vb, id<MTLBuffer> fb, id<MTLBuffer> eb, unsigned long nf, unsigned long ne) {
     vertex_buffer = vb;
     face_buffer = fb;
     edge_buffer = eb;
@@ -99,7 +91,7 @@ void RenderPipeline::SetBuffers(id<MTLBuffer> vb, id<MTLBuffer> fb, id<MTLBuffer
     num_edges = ne;
 }
 
-void RenderPipeline::SetPipeline () {
+void RenderPipelineMetalSDL::SetPipeline () {
     // drawable and depth texture
     CGSize drawableSize = layer.drawableSize;
     MTLTextureDescriptor *descriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth32Float width:drawableSize.width height:drawableSize.height mipmapped:NO];
@@ -131,7 +123,7 @@ void RenderPipeline::SetPipeline () {
     depth_state = [device newDepthStencilStateWithDescriptor: depth_descriptor];
 }
 
-void RenderPipeline::Render() {
+void RenderPipelineMetalSDL::Render() {
     // get/set render variables
     SDL_GetRendererOutputSize(renderer, &window_width, &window_height);
     

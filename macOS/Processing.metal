@@ -558,8 +558,6 @@ kernel void CalculateProjectedNodes(
         f.vertices[1] = cvb_node_circle_idx+1+i; // just added vertex
         f.vertices[2] = cvb_node_circle_idx+(1+(1+i)%8); // next vertex (or first added if at the end)
         compiled_faces[cfb_node_circle_idx+i] = f;
-        
-        // TODO: COLOR SELECTED NODE IN CPU
     }
 }
 

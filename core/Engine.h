@@ -2,7 +2,7 @@
 //  Engine.h
 //  dragonfly
 //
-//  Created by Thomas Liang on 8/1/22.
+//  Created by Thomas Liang on 3/9/24.
 //
 
 #ifndef Engine_h
@@ -18,14 +18,8 @@
 #include <math.h>
 
 #include "imgui.h"
-#include "imgui_impl_sdl.h"
-#include "imgui_impl_metal.h"
-#include <SDL.h>
 #include <simd/SIMD.h>
 #include "imfilebrowser.h"
-
-#import <Metal/Metal.h>
-#import <QuartzCore/QuartzCore.h>
 
 #include "Schemes/SchemeController.h"
 
@@ -38,7 +32,7 @@
 #include "Pipelines/RenderPipeline.h"
 
 class Engine {
-private:
+protected:
     std::string project_path = "/";
 
     // ui variables
@@ -53,29 +47,30 @@ private:
     int window_height = 700;
 
     bool show_main_window = true;
-
-    // metal
-    CAMetalLayer *layer;
-    id <MTLCommandQueue> command_queue;
-
+    
+    // rendering
     ComputePipeline *compute_pipeline;
     RenderPipeline *render_pipeline;
 
     float fps = 0;
-
+    
     // scheme and scene
     Camera *camera;
     SchemeController *scheme_controller;
     Scheme *scheme;
     Scene *scene;
+    
+    virtual int SetPipelines() = 0; // varies for graphics implementations
+    virtual int HandleInputEvents() = 0; // varies for input implementations
 
-    void HandleKeyboardEvents(SDL_Event event);
-
-    void HandleMouseEvents(SDL_Event event);
+    // send to scheme
+    void HandleKeyboardEvents(int key, bool down);
+    void HandleMouseClick(simd_float2 loc, int button, bool down);
+    void HandleMouseMovement(float x, float y, float dx, float dy);
 public:
     Engine();
-    ~Engine();
-    int init();
+    virtual ~Engine();
+    virtual int init();
     void run();
 };
 
