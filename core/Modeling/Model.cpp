@@ -1,11 +1,10 @@
 //
-//  Model.m
+//  Model.cpp
 //  dragonfly
 //
 //  Created by Thomas Liang on 1/15/22.
 //
 
-#import <Foundation/Foundation.h>
 #include "Model.h"
 #include <cstddef>
 #include <iostream>

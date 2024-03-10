@@ -1,11 +1,10 @@
 //
-//  Arrow.m
+//  Arrow.cpp
 //  dragonfly
 //
 //  Created by Thomas Liang on 3/5/22.
 //
 
-#import <Foundation/Foundation.h>
 #include "Arrow.h"
 
 Arrow::Arrow() {

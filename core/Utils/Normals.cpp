@@ -1,5 +1,5 @@
 //
-//  GenerateLighting.mm
+//  GenerateLighting.cpp
 //  dragonfly
 //
 //  Created by Thomas Liang on 1/17/23.

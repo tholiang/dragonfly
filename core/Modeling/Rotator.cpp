@@ -1,11 +1,10 @@
 //
-//  Rotator.mm
+//  Rotator.cpp
 //  dragonfly
 //
 //  Created by Thomas Liang on 4/19/23.
 //
 
-#import <Foundation/Foundation.h>
 #include "Rotator.h"
 
 Rotator::Rotator() {

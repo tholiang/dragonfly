@@ -1,11 +1,11 @@
 //
-//  Scene.mm
+//  Scene.cpp
 //  dragonfly
 //
 //  Created by Thomas Liang on 7/5/22.
 //
 
-#import <Foundation/Foundation.h>
+#include <unistd.h>
 #include "Scene.h"
 
 Scene::Scene() {

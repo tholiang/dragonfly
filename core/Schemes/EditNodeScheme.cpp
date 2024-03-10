@@ -1,11 +1,10 @@
 //
-//  EditNodeScheme.m
+//  EditNodeScheme.cpp
 //  dragonfly
 //
 //  Created by Thomas Liang on 7/5/22.
 //
 
-#import <Foundation/Foundation.h>
 #include "EditNodeScheme.h"
 #include "../Pipelines/ComputePipeline.h"
 

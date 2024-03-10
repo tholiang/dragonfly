@@ -1,11 +1,10 @@
 //
-//  SchemeController.m
+//  SchemeController.cpp
 //  dragonfly
 //
 //  Created by Thomas Liang on 8/1/22.
 //
 
-#import <Foundation/Foundation.h>
 #include "SchemeController.h"
 
 SchemeController::SchemeController(Scheme *scheme) {

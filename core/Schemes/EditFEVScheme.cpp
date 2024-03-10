@@ -1,11 +1,10 @@
 //
-//  EditFEVScheme.mm
+//  EditFEVScheme.cpp
 //  dragonfly
 //
 //  Created by Thomas Liang on 7/5/22.
 //
 
-#import <Foundation/Foundation.h>
 #include "EditFEVScheme.h"
 #include "SchemeController.h"
 #include "../Pipelines/ComputePipeline.h"

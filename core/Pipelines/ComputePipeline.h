@@ -14,8 +14,8 @@
 
 #include <simd/SIMD.h>
 
-#import "../Schemes/Scheme.h"
-#import "RenderPipeline.h"
+#include "../Schemes/Scheme.h"
+#include "RenderPipeline.h"
 
 struct CompiledBufferKeyIndices {
     uint32_t compiled_vertex_size = 0;
