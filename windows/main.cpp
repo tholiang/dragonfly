@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "glad/glad.h"
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include "ShaderProcessor.h"
@@ -47,7 +47,7 @@ int main()
 
     // build and compile our shader program
     // ------------------------------------
-    Shader ourShader("Shaders/test.vert", "Shaders/test.frag"); // you can name your shader files however you like
+    Shader ourShader("shaders/test.vert", "shaders/test.frag"); // you can name your shader files however you like
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
