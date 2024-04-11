@@ -35,10 +35,14 @@ core = $(ROOT)/core
 core_inc = -I$(core) -I$(core)/Modeling -I$(core)/Pipelines -I$(core)/Schemes -I$(core)/UI -I$(core)/UserActions -I$(core)/Utils
 core_src = $(core)/Engine.cpp $(wildcard $(core)/*/*.cpp)
 
-INCLUDES := $(glfw_inc) $(glad_inc) $(imgui_inc) $(core_inc)
+windows = $(ROOT)/windows
+windows_inc = -I$(windows) -I$(windows)/Pipelines
+windows_src = $(filter-out $(windows)/main.cpp, $(wildcard $(windows)/*.cpp))
+
+INCLUDES := $(glfw_inc) $(glad_inc) $(imgui_inc) $(core_inc) $(windows_inc)
 LIBRARIES := $(glfw_lib)
 CXXFLAGS += $(INCLUDES)
-CXXFLAGS += $(LIBRARIES)
+CXXFLAGS += $(LIBRARIES) -w
 CFLAGS = $(CXXFLAGS)
 
 SRC := main.cpp
@@ -48,7 +52,7 @@ EXE := $(TARGET).exe
 CFILES := $(glad_src)
 COBJS := $(addprefix $(CODIR)/, $(subst $(ROOT)/,$(empty), $(CFILES:.c=.o)))
 
-CXXFILES := $(imgui_src) $(core_src)
+CXXFILES := $(imgui_src) $(core_src) $(windows_src)
 CXXOBJS := $(addprefix $(CXXODIR)/, $(subst $(ROOT)/,$(empty), $(CXXFILES:.cpp=.o)))
 
 OBJS := $(COBJS) $(CXXOBJS)
