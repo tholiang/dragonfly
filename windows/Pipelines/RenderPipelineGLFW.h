@@ -8,22 +8,35 @@
 #include "Utils/Vec.h"
 
 #include "imgui.h"
-#include <SDL.h>
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+#include "ShaderProcessor.h"
 
 #include "RenderPipeline.h"
-#include "../Schemes/Scheme.h"
-#include "../Schemes/SchemeController.h"
 
 class RenderPipelineGLFW : public RenderPipeline {
 private:
+    // settings
+    const unsigned int width = 1080;
+    const unsigned int height = 720;
+
     // rendering specifics
+    GLFWwindow* window;
     
-    // ---PIPELINE STATES FOR GPU RENDERER---
+    // ---SHADER OBJECTS FOR GPU RENDERER---
+    Shader *test_shader;
 
     // depth variables for renderer
     
     // ---BUFFERS FOR SCENE RENDER---
+    unsigned int VBO, VAO;
+
 public:
+    RenderPipelineGLFW();
     ~RenderPipelineGLFW();
     
     int init();

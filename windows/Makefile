@@ -37,7 +37,7 @@ core_src = $(core)/Engine.cpp $(wildcard $(core)/*/*.cpp)
 
 windows = $(ROOT)/windows
 windows_inc = -I$(windows) -I$(windows)/Pipelines
-windows_src = $(filter-out $(windows)/main.cpp, $(wildcard $(windows)/*.cpp))
+windows_src = $(filter-out $(windows)/main.cpp, $(wildcard $(windows)/*.cpp)) $(wildcard $(windows)/Pipelines/*.cpp)
 
 INCLUDES := $(glfw_inc) $(glad_inc) $(imgui_inc) $(core_inc) $(windows_inc)
 LIBRARIES := $(glfw_lib)

@@ -8,8 +8,8 @@
 #include "Utils/Vec.h"
 using namespace Vec;
 
-#import "ComputePipeline.h"
-#import "RenderPipelineMetalSDL.h"
+#include "ComputePipeline.h"
+#include "RenderPipelineGLFW.h"
 
 class ComputePipelineGLFW : public ComputePipeline {
 private:
@@ -30,6 +30,7 @@ private:
     
     // ---COMPILED BUFFERS TO SEND TO RENDERER---
 public:
+    ComputePipelineGLFW();
     ~ComputePipelineGLFW();
     void init();
     
