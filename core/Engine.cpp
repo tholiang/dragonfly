@@ -83,7 +83,7 @@ void Engine::HandleKeyboardEvents(int key, bool down) {
     scheme->HandleKeyPresses(key, down);
 }
 
-void Engine::HandleMouseClick(simd_float2 loc, int button, bool down) {
+void Engine::HandleMouseClick(vector_float2 loc, int button, bool down) {
     if (button == 0) { // left
         if (down) {
             scheme->HandleMouseDown(loc, true);

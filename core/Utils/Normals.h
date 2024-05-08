@@ -15,7 +15,8 @@
 #include <utility>
 #include <string>
 #include <sstream>
-#include <simd/SIMD.h>
+#include "Utils/Vec.h"
+using namespace Vec;
 #include <iostream>
 
 #include "../Modeling/Model.h"
@@ -23,7 +24,7 @@
 #include "Utils.h"
 
 namespace DragonflyUtils {
-int FaceIntercept(Model *m, simd_float3 start, simd_float3 vector, int avoid);
+int FaceIntercept(Model *m, vector_float3 start, vector_float3 vector, int avoid);
 void FindNormals(Model *m);
 void ReverseNormals(Model *m);
 }

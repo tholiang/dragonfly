@@ -1,0 +1,38 @@
+// util inserted here
+
+// #version 430 core
+layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 1) buffer bufferA
+{
+    vector_float3 compiled_vertices[];
+};
+
+layout(std430, binding = 2) buffer bufferB
+{
+    int num_vertices;
+    vector_float3 vertices[];
+};
+
+layout(std430, binding = 3) buffer bufferC
+{
+    Camera camera;
+};
+
+layout(std430, binding = 4) buffer bufferD
+{
+    CompiledBufferKeyIndices key_indices;
+};
+
+void main() {
+    uint vid = gl_GlobalInvocationID.x; // 1 Dimensional (right?)
+
+    if (vid > num_vertices) {
+        return;
+    }
+
+    // calculate projected vertices and place into compiled buffer
+    compiled_vertices[vid+key_indices.compiled_vertex_scene_start] = PointToPixel(vertices[vid], camera);
+
+    return;
+}

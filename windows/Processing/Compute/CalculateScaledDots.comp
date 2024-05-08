@@ -1,0 +1,99 @@
+// util inserted here
+
+// #version 430 core
+layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 1) buffer bufferA
+{
+    vector_float3 compiled_vertices[];
+};
+
+layout(std430, binding = 2) buffer bufferB
+{
+    Face compiled_faces[];
+};
+
+layout(std430, binding = 3) buffer bufferC
+{
+    int num_dots;
+    vector_float2 dots[];
+};
+
+layout(std430, binding = 4) buffer bufferD
+{
+    SliceAttributes attr;
+};
+
+layout(std430, binding = 5) buffer bufferE
+{
+    WindowAttributes window_attr;
+};
+
+layout(std430, binding = 6) buffer bufferF
+{
+    vector_float4 edit_window;
+};
+
+layout(std430, binding = 7) buffer bufferG
+{
+    CompiledBufferKeyIndices key_indices;
+};
+
+void main() {
+    uint did = gl_GlobalInvocationID.x; // 1 Dimensional (right?)
+
+    if (did > num_dots) {
+        return;
+    }
+
+    float scale = attr.height / 2;
+    if (attr.height < attr.width) {
+        scale = attr.width / 2;
+    }
+    
+    // set dot in cvb
+    float screen_ratio = float(window_attr.height) / window_attr.width;
+    float eratio = edit_window.z / edit_window.w * screen_ratio;
+    unsigned int cvb_dot_idx = key_indices.compiled_vertex_dot_start + did;
+    vector_float3 scaled_dot;
+    if (eratio < 1) {
+        scaled_dot.x = dots[did].x / scale;
+        scaled_dot.y = eratio * dots[did].y / scale;
+    } else {
+        scaled_dot.x = (dots[did].x / scale) / eratio;
+        scaled_dot.y =  dots[did].y / scale;
+    }
+    scaled_dot.z = 0.5;
+    
+    scaled_dot.x *= edit_window.z;
+    scaled_dot.y *= edit_window.w;
+    scaled_dot.x += edit_window.x;
+    scaled_dot.y += edit_window.y;
+    compiled_vertices[cvb_dot_idx] = scaled_dot;
+    
+    
+    // set (4) dot square corners in cvb
+    unsigned int cvb_dot_corner_idx = key_indices.compiled_vertex_dot_square_start + did*4;
+    compiled_vertices[cvb_dot_corner_idx+0] = vector_make_float3(scaled_dot.x-0.007, scaled_dot.y-0.007 * screen_ratio, scaled_dot.z-0.01);
+    compiled_vertices[cvb_dot_corner_idx+1] = vector_make_float3(scaled_dot.x-0.007, scaled_dot.y+0.007 * screen_ratio, scaled_dot.z-0.01);
+    compiled_vertices[cvb_dot_corner_idx+2] = vector_make_float3(scaled_dot.x+0.007, scaled_dot.y-0.007 * screen_ratio, scaled_dot.z-0.01);
+    compiled_vertices[cvb_dot_corner_idx+3] = vector_make_float3(scaled_dot.x+0.007, scaled_dot.y+0.007 * screen_ratio, scaled_dot.z-0.01);
+    
+    // set (2) dot square faces in cfb
+    unsigned int cfb_dot_square_idx = key_indices.compiled_face_dot_square_start + did*2;
+    Face f1;
+    f1.color = vector_make_float4(0, 1, 0, 1);
+    f1.vertices[0] = cvb_dot_corner_idx+0;
+    f1.vertices[1] = cvb_dot_corner_idx+1;
+    f1.vertices[2] = cvb_dot_corner_idx+2;
+    compiled_faces[cfb_dot_square_idx+0] = f1;
+    
+    Face f2;
+    f2.color = vector_make_float4(0, 1, 0, 1);
+    f2.vertices[0] = cvb_dot_corner_idx+1;
+    f2.vertices[1] = cvb_dot_corner_idx+2;
+    f2.vertices[2] = cvb_dot_corner_idx+3;
+    compiled_faces[cfb_dot_square_idx+1] = f2;
+    
+    // TODO: SET SPECIAL COLOR FOR SELECTED DOTS
+}

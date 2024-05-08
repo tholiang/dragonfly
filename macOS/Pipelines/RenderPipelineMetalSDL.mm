@@ -173,7 +173,7 @@ void RenderPipelineMetalSDL::Render() {
     
     ImGui::Render();
     ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), render_command_buffer, render_encoder); // ImGui changes the encoders pipeline here to use its shaders and buffers
-     
+    
     // End rendering and display
     [render_encoder popDebugGroup];
     [render_encoder endEncoding];

@@ -1,0 +1,71 @@
+// util inserted here
+
+// #version 430 core
+layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 1) buffer bufferA
+{
+    vector_float3 compiled_vertices[];
+};
+
+layout(std430, binding = 2) buffer bufferB
+{
+    int num_vertices;
+    vector_float3 vertices[];
+};
+
+layout(std430, binding = 3) buffer bufferC
+{
+    Face compiled_faces[];
+};
+
+layout(std430, binding = 4) buffer bufferD
+{
+    CompiledBufferKeyIndices key_indices;
+};
+
+layout(std430, binding = 5) buffer bufferE
+{
+    WindowAttributes window_attributes;
+};
+
+void main() {
+    uint vid = gl_GlobalInvocationID.x; // 1 Dimensional (right?)
+
+    if (vid > num_vertices) {
+        return;
+    }
+
+    // get current projected vertex
+    vector_float3 currentVertex = compiled_vertices[key_indices.compiled_vertex_scene_start+vid];
+    
+    // find index of the start of the 4 corner indices
+    unsigned int square_vertex_start_index = key_indices.compiled_vertex_vertex_square_start+(vid*4);
+    float h = float(window_attributes.height);
+    float screen_ratio = h / window_attributes.width;
+    
+    // add to compiled vertices
+    compiled_vertices[square_vertex_start_index+0] = vector_make_float3(currentVertex.x-0.007, currentVertex.y - 0.007/screen_ratio, currentVertex.z-0.01);
+    compiled_vertices[square_vertex_start_index+1] = vector_make_float3(currentVertex.x-0.007, currentVertex.y + 0.007/screen_ratio, currentVertex.z-0.01);
+    compiled_vertices[square_vertex_start_index+2] = vector_make_float3(currentVertex.x+0.007, currentVertex.y - 0.007/screen_ratio, currentVertex.z-0.01);
+    compiled_vertices[square_vertex_start_index+3] = vector_make_float3(currentVertex.x+0.007, currentVertex.y + 0.007/screen_ratio, currentVertex.z-0.01);
+    
+    // add to compiled faces
+    unsigned int square_face_start_index = key_indices.compiled_face_vertex_square_start+(vid*2);
+    
+    Face f1;
+    f1.color = vector_make_float4(0,1,0,1);
+    f1.vertices[0] = square_vertex_start_index+0;
+    f1.vertices[1] = square_vertex_start_index+1;
+    f1.vertices[2] = square_vertex_start_index+2;
+    compiled_faces[square_face_start_index+0] = f1;
+
+    Face f2;
+    f2.color = vector_make_float4(0,1,0,1);
+    f2.vertices[0] = square_vertex_start_index+1;
+    f2.vertices[1] = square_vertex_start_index+2;
+    f2.vertices[2] = square_vertex_start_index+3;
+    compiled_faces[square_face_start_index+1] = f2;
+
+    return;
+}

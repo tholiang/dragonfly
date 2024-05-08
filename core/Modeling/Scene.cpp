@@ -101,9 +101,9 @@ ModelTransform * Scene::GetSliceUniforms(unsigned long sid) {
     return &slice_uniforms[sid];
 }
 
-simd_float3 Scene::GetModelPosition(unsigned long mid) {
+vector_float3 Scene::GetModelPosition(unsigned long mid) {
     if (mid >= model_uniforms.size()) {
-        return NULL;
+        return vector_make_float3(0,0,0);
     }
     
     return model_uniforms[mid].b.pos;
@@ -117,7 +117,7 @@ Basis *Scene::GetModelBasis(unsigned long mid) {
     return &model_uniforms[mid].b;
 }
 
-//simd_float3 Scene::GetModelAngle(unsigned long mid) {
+//vector_float3 Scene::GetModelAngle(unsigned long mid) {
 //    if (mid >= model_uniforms.size()) {
 //        return NULL;
 //    }
@@ -125,15 +125,15 @@ Basis *Scene::GetModelBasis(unsigned long mid) {
 //    return model_uniforms[mid].angle;
 //}
 
-simd_float3 Scene::GetSlicePosition(unsigned long sid) {
+vector_float3 Scene::GetSlicePosition(unsigned long sid) {
     if (sid >= slice_uniforms.size()) {
-        return NULL;
+        return vector_make_float3(0,0,0);
     }
     
     return slice_uniforms[sid].b.pos;
 }
 
-//simd_float3 Scene::GetSliceAngle(unsigned long sid) {
+//vector_float3 Scene::GetSliceAngle(unsigned long sid) {
 //    if (sid >= slice_uniforms.size()) {
 //        return NULL;
 //    }
@@ -279,7 +279,7 @@ void Scene::CreateNewModel() {
     models.push_back(m);
     ModelTransform new_uniform;
     new_uniform.b = Basis();
-    new_uniform.rotate_origin = simd_make_float3(0, 0, 0);
+    new_uniform.rotate_origin = vector_make_float3(0, 0, 0);
     
     model_uniforms.push_back(new_uniform);
 }
@@ -290,7 +290,7 @@ void Scene::NewModelFromFile(std::string path) {
     models.push_back(m);
     ModelTransform new_uniform;
     new_uniform.b = Basis();
-    new_uniform.rotate_origin = simd_make_float3(0, 0, 0);
+    new_uniform.rotate_origin = vector_make_float3(0, 0, 0);
     
     model_uniforms.push_back(new_uniform);
 }
@@ -302,7 +302,7 @@ void Scene::NewModelFromPointData(std::string path) {
     models.push_back(m);
     ModelTransform new_uniform;
     new_uniform.b = Basis();
-    new_uniform.rotate_origin = simd_make_float3(0, 0, 0);
+    new_uniform.rotate_origin = vector_make_float3(0, 0, 0);
     
     model_uniforms.push_back(new_uniform);
 }
@@ -317,7 +317,7 @@ void Scene::AddSlice(Slice *s) {
     
     ModelTransform new_uniform;
     new_uniform.b = Basis();
-    new_uniform.rotate_origin = simd_make_float3(0, 0, 0);
+    new_uniform.rotate_origin = vector_make_float3(0, 0, 0);
     
     slice_uniforms.push_back(new_uniform);
 }
@@ -376,6 +376,18 @@ void Scene::SetName(std::string name) {
 }
 
 void Scene::SaveToFolder(std::string path) {
+    #ifdef _WIN64 || _WIN32
+    if(mkdir(path.c_str()) == -1) {
+        rmdir(path.c_str());
+        mkdir(path.c_str());
+    }
+    
+    if(mkdir((path+"/Models").c_str()) == -1) {
+        rmdir((path+"/Models").c_str());
+        mkdir((path+"/Models").c_str());
+    }
+
+    #else
     if(mkdir(path.c_str(), 0777) == -1) {
         rmdir(path.c_str());
         mkdir(path.c_str(), 0777);
@@ -385,6 +397,7 @@ void Scene::SaveToFolder(std::string path) {
         rmdir((path+"/Models").c_str());
         mkdir((path+"/Models").c_str(), 0777);
     }
+    #endif
     
     std::ofstream myfile;
     myfile.open ((path+"/uniforms.lair").c_str());

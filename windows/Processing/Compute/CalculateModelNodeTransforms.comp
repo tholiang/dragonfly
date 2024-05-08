@@ -1,0 +1,34 @@
+// util inserted here
+
+// #version 430 core
+layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 1) buffer bufferA
+{
+    int num_nodes;
+    Node nodes[];
+};
+
+layout(std430, binding = 2) buffer bufferB
+{
+    unsigned int modelIDs[];
+};
+
+layout(std430, binding = 3) buffer bufferC
+{
+    ModelTransform uniforms[];
+};
+
+void main() {
+    uint nid = gl_GlobalInvocationID.x; // 1 Dimensional (right?)
+
+    if (nid > num_nodes) {
+        return;
+    }
+
+    ModelTransform uni = uniforms[modelIDs[nid]];
+    nodes[nid].b.pos = TranslatePointToStandard(uni.b, nodes[nid].b.pos);
+    nodes[nid].b.x = RotatePointToStandard(uni.b, nodes[nid].b.x);
+    nodes[nid].b.y = RotatePointToStandard(uni.b, nodes[nid].b.y);
+    nodes[nid].b.z = RotatePointToStandard(uni.b, nodes[nid].b.z);
+}

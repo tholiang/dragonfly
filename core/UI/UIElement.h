@@ -11,17 +11,19 @@
 #include <stdio.h>
 #include <vector>
 #include <string>
+#include <stdint.h>
 
-#include <simd/SIMD.h>
+#include "Utils/Vec.h"
+using namespace Vec;
 #include <fstream>
 
 #include "../Utils/Utils.h"
 
-typedef simd_int3 UIVertex;
+typedef vector_int3 UIVertex;
 
 struct UIFace {
     uint32_t vertices[3];
-    simd_float4 color;
+    vector_float4 color;
 };
 
 class UIElement {
@@ -39,7 +41,7 @@ public:
     ~UIElement();
     
     int MakeVertex(int x, int y, int z);
-    int MakeFace(int v0, int v1, int v2, simd_float4 color);
+    int MakeFace(int v0, int v1, int v2, vector_float4 color);
     
     UIVertex *GetVertex(int vid);
     UIFace *GetFace(int fid);

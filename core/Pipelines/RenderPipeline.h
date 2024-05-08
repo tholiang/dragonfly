@@ -12,7 +12,8 @@
 #include <vector>
 #include <string>
 
-#include <simd/SIMD.h>
+#include "Utils/Vec.h"
+using namespace Vec;
 
 #include "imgui.h"
 

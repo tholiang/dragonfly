@@ -1,0 +1,92 @@
+// util inserted here
+
+// #version 430 core
+layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 1) buffer bufferA
+{
+    vector_float3 compiled_vertices[];
+};
+
+layout(std430, binding = 2) buffer bufferB
+{
+    Face compiled_faces[];
+};
+
+layout(std430, binding = 3) buffer bufferC
+{
+    ModelTransform slice_transforms[];
+};
+
+layout(std430, binding = 4) buffer bufferD
+{
+    int num_slice_attributes;
+    SliceAttributes slice_attributes[];
+};
+
+layout(std430, binding = 5) buffer bufferE
+{
+    Camera camera;
+};
+
+layout(std430, binding = 6) buffer bufferF
+{
+    CompiledBufferKeyIndices key_indices;
+};
+
+void main() {
+    uint sid = gl_GlobalInvocationID.x; // 1 Dimensional (right?)
+
+    if (sid > num_slice_attributes) {
+        return;
+    }
+    
+    // get slice attributes and transform
+    SliceAttributes sa = slice_attributes[sid];
+    ModelTransform st = slice_transforms[sid];
+    
+    // calculate vertices in slice space
+    vector_float3 v1 = vector_make_float3(sa.width/2, sa.height/2, 0);
+    vector_float3 v2 = vector_make_float3(sa.width/2, -sa.height/2, 0);
+    vector_float3 v3 = vector_make_float3(-sa.width/2, sa.height/2, 0);
+    vector_float3 v4 = vector_make_float3(-sa.width/2, -sa.height/2, 0);
+    
+    // translate to world space from slice transform
+    v1 = TranslatePointToStandard(st.b, v1);
+    v2 = TranslatePointToStandard(st.b, v2);
+    v3 = TranslatePointToStandard(st.b, v3);
+    v4 = TranslatePointToStandard(st.b, v4);
+    
+    // project vertices
+    v1 = PointToPixel(v1, camera);
+    v1.z += 0.1;
+    v2 = PointToPixel(v2, camera);
+    v2.z += 0.1;
+    v3 = PointToPixel(v3, camera);
+    v3.z += 0.1;
+    v4 = PointToPixel(v4, camera);
+    v4.z += 0.1;
+    
+    // add vertices to cvb
+    unsigned int cvb_slice_plate_idx = key_indices.compiled_vertex_slice_plate_start+sid*4;
+    compiled_vertices[cvb_slice_plate_idx+0] = v1;
+    compiled_vertices[cvb_slice_plate_idx+1] = v2;
+    compiled_vertices[cvb_slice_plate_idx+2] = v3;
+    compiled_vertices[cvb_slice_plate_idx+3] = v4;
+    
+    // add faces to cfb
+    unsigned int cfb_slice_plate_idx = key_indices.compiled_face_slice_plate_start+sid*2;
+    Face f1;
+    f1.color = vector_float4(0.7, 0.7, 0.7, 1);
+    f1.vertices[0] = cvb_slice_plate_idx+0;
+    f1.vertices[1] = cvb_slice_plate_idx+1;
+    f1.vertices[2] = cvb_slice_plate_idx+2;
+    compiled_faces[cfb_slice_plate_idx+0] = f1;
+    
+    Face f2;
+    f2.color = vector_float4(0.7, 0.7, 0.7, 1);
+    f2.vertices[0] = cvb_slice_plate_idx+1;
+    f2.vertices[1] = cvb_slice_plate_idx+2;
+    f2.vertices[2] = cvb_slice_plate_idx+3;
+    compiled_faces[cfb_slice_plate_idx+1] = f2;
+}

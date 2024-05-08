@@ -18,7 +18,8 @@
 #include <math.h>
 
 #include "imgui.h"
-#include <simd/SIMD.h>
+#include "Utils/Vec.h"
+using namespace Vec;
 #include "imfilebrowser.h"
 
 #include "Schemes/SchemeController.h"
@@ -65,7 +66,7 @@ protected:
 
     // send to scheme
     void HandleKeyboardEvents(int key, bool down);
-    void HandleMouseClick(simd_float2 loc, int button, bool down);
+    void HandleMouseClick(vector_float2 loc, int button, bool down);
     void HandleMouseMovement(float x, float y, float dx, float dy);
 public:
     Engine();

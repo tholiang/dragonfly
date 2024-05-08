@@ -11,8 +11,10 @@
 #include <stdio.h>
 #include <vector>
 #include <string>
+#include <stdint.h>
 
-#include <simd/SIMD.h>
+#include "Utils/Vec.h"
+using namespace Vec;
 
 #include "../Schemes/Scheme.h"
 #include "RenderPipeline.h"

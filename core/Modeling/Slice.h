@@ -11,13 +11,15 @@
 #include <stdio.h>
 #include <vector>
 #include <string>
+#include <stdint.h>
 
-#include <simd/SIMD.h>
+#include "Utils/Vec.h"
+using namespace Vec;
 #include <fstream>
 
 #include "../Utils/Utils.h"
 
-typedef simd_float2 Dot;
+typedef vector_float2 Dot;
 
 struct SliceAttributes {
     float width;

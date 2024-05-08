@@ -1,0 +1,61 @@
+// util inserted here
+
+// #version 430 core
+layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 1) buffer bufferA
+{
+    Face compiled_faces[];
+};
+
+layout(std430, binding = 2) buffer bufferB
+{
+    int num_faces;
+    Face faces[];
+};
+
+layout(std430, binding = 3) buffer bufferC
+{
+    int num_vertices;
+    vector_float3 vertices[];
+};
+
+layout(std430, binding = 4) buffer bufferD
+{
+    vector_float3 light;
+};
+
+layout(std430, binding = 5) buffer bufferE
+{
+    CompiledBufferKeyIndices key_indices;
+};
+
+void main() {
+    uint fid = gl_GlobalInvocationID.x; // 1 Dimensional (right?)
+
+    if (fid > num_faces) {
+        return;
+    }
+
+    // get scene face and calculate normal
+    Face f = faces[fid];
+    vector_float3 f_norm = cross_product(vertices[f.vertices[0]], vertices[f.vertices[1]], vertices[f.vertices[2]]);
+    if (f.normal_reversed) {
+        f_norm.x *= -1;
+        f_norm.y *= -1;
+        f_norm.z *= -1;
+    }
+    
+    // get angle between normal and light
+    vector_float3 center = TriAvg(vertices[f.vertices[0]], vertices[f.vertices[1]], vertices[f.vertices[2]]);
+    vector_float3 vec_to = vector_make_float3(light.x - center.x, light.y - center.y, light.z - center.z);
+    float ang = abs(acos2(f_norm, vec_to));
+    // make darker the larger the angle - considering the shading multiplier
+    f.color.x /= ang * f.shading_multiplier;
+    f.color.y /= ang * f.shading_multiplier;
+    f.color.z /= ang * f.shading_multiplier;
+    
+    // set face in compiled face buffer
+    unsigned int cfb_scene_face_idx = key_indices.compiled_face_scene_start+fid;
+    compiled_faces[cfb_scene_face_idx] = f;
+}

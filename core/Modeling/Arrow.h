@@ -12,15 +12,16 @@
 
 #include <stdio.h>
 #include <vector>
-#include <simd/SIMD.h>
+#include "Utils/Vec.h"
+using namespace Vec;
 
 class Arrow : public Model {
 public:
     Arrow();
-    Arrow(simd_float4 c);
+    Arrow(vector_float4 c);
 private:
     void MakeArrow();
     
-    simd_float4 color;
+    vector_float4 color;
 };
 #endif /* Arrow_h */

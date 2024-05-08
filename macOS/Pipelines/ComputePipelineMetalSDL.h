@@ -12,7 +12,8 @@
 #include <vector>
 #include <string>
 
-#include <simd/SIMD.h>
+#include "Utils/Vec.h"
+using namespace Vec;
 
 #import <Metal/Metal.h>
 #import <QuartzCore/QuartzCore.h>
