@@ -13,8 +13,10 @@
 #include <string>
 #include <sstream>
 #include <deque>
+#include <stdint.h>
 
-#include <simd/SIMD.h>
+#include "Utils/Vec.h"
+using namespace Vec;
 
 #include <iostream>
 
@@ -45,9 +47,9 @@ enum SchemeType {
 };
 
 struct UIElementTransform {
-    simd_int3 position;
-    simd_float3 up;
-    simd_float3 right;
+    vector_int3 position;
+    vector_float3 up;
+    vector_float3 right;
 };
 
 struct WindowAttributes {
@@ -76,10 +78,10 @@ struct ShouldRender {
 };
 
 struct Camera {
-    simd_float3 pos;
-    simd_float3 vector;
-    simd_float3 up_vector;
-    simd_float2 FOV;
+    vector_float3 pos;
+    vector_float3 vector;
+    vector_float3 up_vector;
+    vector_float2 FOV;
 };
 
 class Scheme {
@@ -119,13 +121,13 @@ protected:
     bool show_UI = true;
     std::vector<UIElement *> ui_elements_;
     std::vector<UIElementTransform> ui_element_uniforms_;
-    simd_int2 UI_start_; // beginning of the scheme UI - after menu bar
+    vector_int2 UI_start_; // beginning of the scheme UI - after menu bar
     
     
     // ---INPUT DATA---
     bool input_enabled = true;
-    simd_float2 click_loc_; // last click location
-    simd_float2 mouse_loc_; // current mouse location
+    vector_float2 click_loc_; // last click location
+    vector_float2 mouse_loc_; // current mouse location
     float x_sens_ = 0.1;
     float y_sens_ = 0.1;
     bool left_mouse_down_ = false;
@@ -170,13 +172,13 @@ protected:
     
     // ---CLICK HANDLERS---
     // check if a click is on a valid scene selection area
-    virtual bool ClickOnScene(simd_float2 loc);
+    virtual bool ClickOnScene(vector_float2 loc);
     // handle clicks - pure virtual, completely handled by child classes
-    virtual void HandleSelection(simd_float2 loc) = 0;
+    virtual void HandleSelection(vector_float2 loc) = 0;
     // check if click collides with control model
-    virtual std::pair<int,float> ControlModelClicked(simd_float2 loc);
+    virtual std::pair<int,float> ControlModelClicked(vector_float2 loc);
     // check if click collides with ui element
-    virtual std::pair<int, float> UIElementClicked(simd_float2 loc);
+    virtual std::pair<int, float> UIElementClicked(vector_float2 loc);
     
     // ---CONTROL MODELS TRANSFORM FUNCTIONS---
     virtual void SetControlsBasis();
@@ -186,8 +188,8 @@ protected:
     void UpdateUIVars();
     virtual void MainWindow(); // for imgui
     
-    void MakeRect(int x, int y, int w, int h, int z, simd_float4 color);
-    void MakeIsoTriangle(int x, int y, int w, int h, int z, simd_float4 color);
+    void MakeRect(int x, int y, int w, int h, int z, vector_float4 color);
+    void MakeIsoTriangle(int x, int y, int w, int h, int z, vector_float4 color);
     
     void ChangeElementLocation(int eid, int x, int y);
     void ChangeRectDim(int eid, int w, int h);
@@ -233,8 +235,8 @@ public:
     // ---DIRECT INPUT HANDLERS---
     virtual void HandleMouseMovement(float x, float y, float dx, float dy);
     virtual void HandleKeyPresses(int key, bool keydown);
-    virtual void HandleMouseDown(simd_float2 loc, bool left);
-    virtual void HandleMouseUp(simd_float2 loc, bool left);
+    virtual void HandleMouseDown(vector_float2 loc, bool left);
+    virtual void HandleMouseUp(vector_float2 loc, bool left);
     
     // ---SCENE EDITORS---
     void CreateNewModel();
@@ -260,7 +262,7 @@ public:
     std::vector<uint32_t> GetSelectedVertices();
     int GetSelectedNode();
     // for EditSliceScheme only
-    virtual simd_float4 GetEditWindow();
+    virtual vector_float4 GetEditWindow();
     
     // functions to get counts for entire scheme - need to call CalculateCounts first for accurate data
     unsigned long NumSceneModels();
@@ -290,7 +292,7 @@ public:
     
     // functions to set data in gpu buffers for compute pipeline
     void SetSceneFaceBuffer(Face *buf, unsigned long vertex_start); // start of scene vertices in compiled vertex buffer
-    void SetSceneEdgeBuffer(simd_int2 *buf, unsigned long vertex_start); // start of scene vertices in cvb
+    void SetSceneEdgeBuffer(vector_int2 *buf, unsigned long vertex_start); // start of scene vertices in cvb
     void SetSceneNodeBuffer(Node *buf);
     void SetSceneNodeModelIDBuffer(uint32_t *buf, unsigned long model_start); // start of scene models in node model id buffer
     void SetSceneNodeVertexLinkBuffer(NodeVertexLink *buf, unsigned long node_start); // start of scene nodes in node buffer
@@ -303,7 +305,7 @@ public:
     void SetControlModelTransformBuffer(ModelTransform *buf);
     
     virtual void SetSliceDotBuffer(Dot *buf);
-    virtual void SetSliceLineBuffer(simd_int2 *buf, unsigned long dot_start); // start of dots in cvb
+    virtual void SetSliceLineBuffer(vector_int2 *buf, unsigned long dot_start); // start of dots in cvb
     virtual void SetSliceAttributesBuffer(SliceAttributes *buf);
     void SetSliceTransformBuffer(ModelTransform *buf);
     

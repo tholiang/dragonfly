@@ -49,19 +49,19 @@ void ComputePipelineMetalSDL::CreateBuffers() {
     compiled_face_buffer = [device newBufferWithBytes:compiled_faces.data() length:(compiled_faces.size() * sizeof(Face)) options:MTLResourceStorageModeManaged];
     
     // create compiled edge buffer
-    std::vector<simd_int2> compiled_edges(compiled_edge_size());
-    compiled_edge_buffer = [device newBufferWithBytes:compiled_edges.data() length:(compiled_edges.size() * sizeof(simd_int2)) options:MTLResourceStorageModeManaged];
+    std::vector<vector_int2> compiled_edges(compiled_edge_size());
+    compiled_edge_buffer = [device newBufferWithBytes:compiled_edges.data() length:(compiled_edges.size() * sizeof(vector_int2)) options:MTLResourceStorageModeManaged];
     
     
     // ---GENERAL BUFFERS---
     // create camera buffer
     camera_buffer = [device newBufferWithBytes:scheme->GetCamera() length:(sizeof(Camera)) options:MTLResourceStorageModeShared];
     // create light buffer - NEED TO UPDATE TO ALLOW MULTIPLE LIGHTS
-    simd_float3 *light = new simd_float3();
+    vector_float3 *light = new vector_float3();
     light->x = 10;
     light->y = 0;
     light->z = 5;
-    scene_light_buffer = [device newBufferWithBytes:light length:sizeof(simd_float3) options:MTLResourceStorageModeManaged];
+    scene_light_buffer = [device newBufferWithBytes:light length:sizeof(vector_float3) options:MTLResourceStorageModeManaged];
     delete light;
     
     
@@ -105,8 +105,8 @@ void ComputePipelineMetalSDL::CreateBuffers() {
     slice_transform_buffer = [device newBufferWithBytes:slice_uniforms.data() length:(slice_uniforms.size() * sizeof(ModelTransform)) options:MTLResourceStorageModeManaged];
     
     // create slice edit window buffer
-    simd_float4 slice_edit_window;
-    slice_edit_window_buffer = [device newBufferWithBytes: &slice_edit_window length:(sizeof(simd_float4)) options:MTLResourceStorageModeManaged];
+    vector_float4 slice_edit_window;
+    slice_edit_window_buffer = [device newBufferWithBytes: &slice_edit_window length:(sizeof(vector_float4)) options:MTLResourceStorageModeManaged];
     
     
     // ---UI BUFFERS---
@@ -136,22 +136,22 @@ void ComputePipelineMetalSDL::ResetStaticBuffers() {
     [compiled_face_buffer didModifyRange: NSMakeRange(0, compiled_face_size() * sizeof(Face))]; // alert gpu about what was modified
     
     // add data to compiled edge buffer
-    simd_int2 *ceb_contents = (simd_int2 *) compiled_edge_buffer.contents;
+    vector_int2 *ceb_contents = (vector_int2 *) compiled_edge_buffer.contents;
     if (scheme->ShouldRenderEdges()) scheme->SetSceneEdgeBuffer(ceb_contents + compiled_edge_scene_start(), compiled_vertex_scene_start()); // scene edges
     scheme->SetSliceLineBuffer(ceb_contents + compiled_edge_line_start(), compiled_vertex_dot_start()); // slice lines
-    [compiled_edge_buffer didModifyRange: NSMakeRange(0, compiled_edge_size() * sizeof(simd_int2))]; // alert gpu about what was modified
+    [compiled_edge_buffer didModifyRange: NSMakeRange(0, compiled_edge_size() * sizeof(vector_int2))]; // alert gpu about what was modified
     
     
     // ---GENERAL BUFFERS---
     // add data to light buffer
     // NEEDS UPDATE
-    simd_float3 *light = new simd_float3();
+    vector_float3 *light = new vector_float3();
     light->x = 10;
     light->y = 0;
     light->z = 5;
-    *((simd_float3 *)scene_light_buffer.contents) = *light;
+    *((vector_float3 *)scene_light_buffer.contents) = *light;
     delete light;
-    [scene_light_buffer didModifyRange: NSMakeRange(0, sizeof(simd_float3))]; // alert gpu about what was modified
+    [scene_light_buffer didModifyRange: NSMakeRange(0, sizeof(vector_float3))]; // alert gpu about what was modified
     
     
     // ---MODEL BUFFERS---
@@ -182,11 +182,11 @@ void ComputePipelineMetalSDL::ResetStaticBuffers() {
     // add data to slice attributes buffer
     SliceAttributes *sa_contents = (SliceAttributes *) slice_attributes_buffer.contents;
     scheme->SetSliceAttributesBuffer(sa_contents); // slice attributes
-    [slice_attributes_buffer didModifyRange: NSMakeRange(0, num_scene_slices)]; // alert gpu about what was modified
-    
+    [slice_attributes_buffer didModifyRange: NSMakeRange(0, num_scene_slices*sizeof(SliceAttributes))]; // alert gpu about what was modified
+
     // add data to slice edit window buffer
-    *((simd_float4 *)slice_edit_window_buffer.contents) = scheme->GetEditWindow();
-    [slice_edit_window_buffer didModifyRange: NSMakeRange(0, sizeof(simd_float4))]; // alert gpu about what was modified
+    *((vector_float4 *)slice_edit_window_buffer.contents) = scheme->GetEditWindow();
+    [slice_edit_window_buffer didModifyRange: NSMakeRange(0, sizeof(vector_float4))]; // alert gpu about what was modified
     
     
     // ---UI BUFFERS---
@@ -432,8 +432,8 @@ void ComputePipelineMetalSDL::Compute() {
         std::vector<uint32_t> selected_vertices = scheme->GetSelectedVertices();
         for (int i = 0; i < selected_vertices.size(); i++) {
             int compiled_face_square_idx_start = compiled_buffer_key_indices.compiled_face_vertex_square_start+selected_vertices[i]*2;
-            compiled_faces[compiled_face_square_idx_start+0].color = simd_make_float4(1, 0.5, 0, 1);
-            compiled_faces[compiled_face_square_idx_start+1].color = simd_make_float4(1, 0.5, 0, 1);
+            compiled_faces[compiled_face_square_idx_start+0].color = vector_make_float4(1, 0.5, 0, 1);
+            compiled_faces[compiled_face_square_idx_start+1].color = vector_make_float4(1, 0.5, 0, 1);
             [compiled_face_buffer didModifyRange:NSMakeRange(compiled_face_square_idx_start, 2)];
         }
     }
@@ -443,7 +443,7 @@ void ComputePipelineMetalSDL::Compute() {
     if (selected_node >= 0) {
         int compiled_face_node_start = compiled_buffer_key_indices.compiled_face_node_circle_start+selected_node*8;
         for (int i = 0; i < 8; i++) {
-            compiled_faces[compiled_face_node_start+i].color = simd_make_float4(1, 0.5, 0, 1);
+            compiled_faces[compiled_face_node_start+i].color = vector_make_float4(1, 0.5, 0, 1);
         }
         [compiled_face_buffer didModifyRange:NSMakeRange(compiled_face_node_start, 8)];
     }
@@ -453,8 +453,8 @@ void ComputePipelineMetalSDL::Compute() {
         std::vector<uint32_t> selected_dots = scheme->GetSelectedVertices();
         for (int i = 0; i < selected_dots.size(); i++) {
             int compiled_dot_square_idx_start = compiled_buffer_key_indices.compiled_face_dot_square_start+selected_dots[i]*2;
-            compiled_faces[compiled_dot_square_idx_start+0].color = simd_make_float4(1, 0.5, 0, 1);
-            compiled_faces[compiled_dot_square_idx_start+1].color = simd_make_float4(1, 0.5, 0, 1);
+            compiled_faces[compiled_dot_square_idx_start+0].color = vector_make_float4(1, 0.5, 0, 1);
+            compiled_faces[compiled_dot_square_idx_start+1].color = vector_make_float4(1, 0.5, 0, 1);
             [compiled_face_buffer didModifyRange:NSMakeRange(compiled_dot_square_idx_start, 2)];
         }
     }

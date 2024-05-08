@@ -9,11 +9,11 @@
 
 Rotator::Rotator() {
     name_ = "rotator";
-    color = simd_make_float4(1, 0, 0, 0); // default red
+    color = vector_make_float4(1, 0, 0, 0); // default red
     MakeRotator();
 }
 
-Rotator::Rotator(simd_float4 c): color(c) {
+Rotator::Rotator(vector_float4 c): color(c) {
     MakeRotator();
 }
 

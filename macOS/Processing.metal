@@ -1,3 +1,6 @@
+// TODO: CHANGE vector_ TYPES
+
+
 //
 //  Processing.metal
 //  dragonfly
@@ -11,9 +14,9 @@ using namespace metal;
 constant float pi = 3.14159265358979;
 constant float render_dist = 50;
 
-typedef simd_float3 Vertex;
-typedef simd_int3 UIVertex;
-typedef simd_float2 Dot;
+typedef vector_float3 Vertex;
+typedef vector_int3 UIVertex;
+typedef vector_float2 Dot;
 
 struct WindowAttributes {
     unsigned int width = 1280;
@@ -46,11 +49,11 @@ struct CompiledBufferKeyIndices {
 };
 
 struct Basis {
-    simd_float3 pos;
+    vector_float3 pos;
     // angles
-    simd_float3 x;
-    simd_float3 y;
-    simd_float3 z;
+    vector_float3 x;
+    vector_float3 y;
+    vector_float3 z;
 };
 
 struct Camera {
@@ -65,14 +68,14 @@ struct Face {
     vector_float4 color;
     
     bool normal_reversed;
-    simd_float3 lighting_offset; // if there were a light source directly in front of the face, this is the rotation to get to its brightest orientation
+    vector_float3 lighting_offset; // if there were a light source directly in front of the face, this is the rotation to get to its brightest orientation
     float shading_multiplier;
 };
 
 struct UIElementTransform {
-    simd_int3 position;
-    simd_float3 up;
-    simd_float3 right;
+    vector_int3 position;
+    vector_float3 up;
+    vector_float3 right;
 };
 
 struct Node {
@@ -103,8 +106,8 @@ struct SliceAttributes {
 
 // ---HELPER FUNCTIONS---
 // add two 3D vectors
-simd_float3 AddVectors(simd_float3 v1, simd_float3 v2) {
-    simd_float3 ret;
+vector_float3 AddVectors(vector_float3 v1, vector_float3 v2) {
+    vector_float3 ret;
     ret.x = v1.x + v2.x;
     ret.y = v1.y + v2.y;
     ret.z = v1.z + v2.z;
@@ -140,7 +143,7 @@ vector_float3 TriAvg (vector_float3 p1, vector_float3 p2, vector_float3 p3) {
 // idk what this is tbh
 float acos2(vector_float3 v1, vector_float3 v2) {
     float dot = v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
-    simd_float3 cross = cross_vectors(v1, v2);
+    vector_float3 cross = cross_vectors(v1, v2);
     float det = sqrt(pow(cross.x, 2) + pow(cross.y, 2) + pow(cross.z, 2));
     return atan2(det, dot);
 }
@@ -254,8 +257,8 @@ vector_float3 RotateAround (vector_float3 point, vector_float3 origin, vector_fl
 }
 
 // translate point from given basis to standard basis
-simd_float3 TranslatePointToStandard(Basis b, simd_float3 point) {
-    simd_float3 ret;
+vector_float3 TranslatePointToStandard(Basis b, vector_float3 point) {
+    vector_float3 ret;
     // x component
     ret.x = point.x * b.x.x;
     ret.y = point.x * b.x.y;
@@ -277,8 +280,8 @@ simd_float3 TranslatePointToStandard(Basis b, simd_float3 point) {
 }
 
 // rotate point from given basis to standard basis (ignore basis translation offset)
-simd_float3 RotatePointToStandard(Basis b, simd_float3 point) {
-    simd_float3 ret;
+vector_float3 RotatePointToStandard(Basis b, vector_float3 point) {
+    vector_float3 ret;
     // x component
     ret.x = point.x * b.x.x;
     ret.y = point.x * b.x.y;
@@ -406,7 +409,7 @@ kernel void CalculateScaledDots(
     const constant Dot *dots[[buffer(2)]],
     const constant SliceAttributes *attr[[buffer(3)]],
     const constant WindowAttributes *window_attr[[buffer(4)]],
-    const constant simd_float4 *edit_window [[buffer(5)]],
+    const constant vector_float4 *edit_window [[buffer(5)]],
     const constant CompiledBufferKeyIndices *key_indices[[buffer(6)]],
     unsigned int did [[thread_position_in_grid]]
 ) {
@@ -732,7 +735,7 @@ vertex VertexOut SuperDefaultEdgeShader (
      unsigned int vid [[vertex_id]]
  ) {
      // get current edge - 2 vertices to each edge
-     simd_int2 current_edge = edge_array[vid/2];
+     vector_int2 current_edge = edge_array[vid/2];
      
      // get vertex and output
      Vertex currentVertex;

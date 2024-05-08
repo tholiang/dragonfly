@@ -40,7 +40,7 @@ void Scheme::SetController(SchemeController *sc) {
 void Scheme::SetCamera(Camera *camera) {
     camera_ = camera;
     
-    simd_float3 behind_camera;
+    vector_float3 behind_camera;
     behind_camera.x = camera_->pos.x - camera_->vector.x*10;
     behind_camera.y = camera_->pos.y - camera_->vector.y*10;
     behind_camera.z = camera_->pos.z - camera_->vector.z*10;
@@ -98,7 +98,7 @@ void Scheme::Undo() {
     }
 }
 
-bool Scheme::ClickOnScene(simd_float2 loc) {
+bool Scheme::ClickOnScene(vector_float2 loc) {
     int pixelX = window_width_ * (loc.x+1)/2;
     int pixelY = window_height_ * (loc.y+1)/2;
     
@@ -113,7 +113,7 @@ bool Scheme::ClickOnScene(simd_float2 loc) {
     return true;
 }
 
-std::pair<int,float> Scheme::ControlModelClicked(simd_float2 loc) {
+std::pair<int,float> Scheme::ControlModelClicked(vector_float2 loc) {
     if (computed_compiled_faces_ == NULL || computed_compiled_vertices_ == NULL || computed_key_indices_ == NULL) {
         return std::make_pair(-1, -1);
     }
@@ -155,7 +155,7 @@ std::pair<int,float> Scheme::ControlModelClicked(simd_float2 loc) {
     return std::make_pair(clickedIdx, minZ);
 }
 
-std::pair<int, float> Scheme::UIElementClicked(simd_float2 loc) {
+std::pair<int, float> Scheme::UIElementClicked(vector_float2 loc) {
     if (computed_compiled_faces_ == NULL || computed_compiled_vertices_ == NULL || computed_key_indices_ == NULL) {
         return std::make_pair(-1, -1);
     }
@@ -200,7 +200,7 @@ void Scheme::SetBufferContents(CompiledBufferKeyIndices *cki, Vertex *ccv, Face 
     computed_model_nodes_ = cmn;
 }
 
-void Scheme::MakeRect(int x, int y, int w, int h, int z, simd_float4 color) {
+void Scheme::MakeRect(int x, int y, int w, int h, int z, vector_float4 color) {
     UIElement *elem = new UIElement();
     elem->MakeVertex(0, 0, 0);
     elem->MakeVertex(w, 0, 0);
@@ -211,13 +211,13 @@ void Scheme::MakeRect(int x, int y, int w, int h, int z, simd_float4 color) {
     ui_elements_.push_back(elem);
     
     UIElementTransform uni;
-    uni.position = simd_make_int3(x, y, z);
-    uni.right = simd_make_float3(1, 0, 0);
-    uni.up = simd_make_float3(0, 1, 0);
+    uni.position = vector_make_int3(x, y, z);
+    uni.right = vector_make_float3(1, 0, 0);
+    uni.up = vector_make_float3(0, 1, 0);
     ui_element_uniforms_.push_back(uni);
 }
 
-void Scheme::MakeIsoTriangle(int x, int y, int w, int h, int z, simd_float4 color) {
+void Scheme::MakeIsoTriangle(int x, int y, int w, int h, int z, vector_float4 color) {
     UIElement *elem = new UIElement();
     elem->MakeVertex(0, 0, 0);
     elem->MakeVertex(w, 0, 0);
@@ -226,9 +226,9 @@ void Scheme::MakeIsoTriangle(int x, int y, int w, int h, int z, simd_float4 colo
     ui_elements_.push_back(elem);
     
     UIElementTransform uni;
-    uni.position = simd_make_int3(x, y, z);
-    uni.right = simd_make_float3(1, 0, 0);
-    uni.up = simd_make_float3(0, 1, 0);
+    uni.position = vector_make_int3(x, y, z);
+    uni.right = vector_make_float3(1, 0, 0);
+    uni.up = vector_make_float3(0, 1, 0);
     ui_element_uniforms_.push_back(uni);
 }
 
@@ -325,7 +325,7 @@ void Scheme::HandleKeyPresses(int key, bool keydown) {
     }
 }
 
-void Scheme::HandleMouseDown(simd_float2 loc, bool left) {
+void Scheme::HandleMouseDown(vector_float2 loc, bool left) {
     loc.x = ((float) loc.x / (float) window_width_)*2 - 1;
     loc.y = -(((float) loc.y / (float) window_height_)*2 - 1);
     if (input_enabled && ClickOnScene(loc)) {
@@ -340,7 +340,7 @@ void Scheme::HandleMouseDown(simd_float2 loc, bool left) {
     }
 }
 
-void Scheme::HandleMouseUp(simd_float2 loc, bool left) {
+void Scheme::HandleMouseUp(vector_float2 loc, bool left) {
     if (left) {
         left_mouse_down_ = false;
     } else {
@@ -456,8 +456,8 @@ int Scheme::GetSelectedNode() {
     return selected_node_;
 }
 
-simd_float4 Scheme::GetEditWindow() {
-    simd_float4 window;
+vector_float4 Scheme::GetEditWindow() {
+    vector_float4 window;
     window.x = 0;
     window.y = float(-2*UI_start_.y) / window_height_;
     window.z = 1;
@@ -751,7 +751,7 @@ void Scheme::SetSceneFaceBuffer(Face *buf, unsigned long vertex_start) {
     }
 }
 
-void Scheme::SetSceneEdgeBuffer(simd_int2 *buf, unsigned long vertex_start) {
+void Scheme::SetSceneEdgeBuffer(vector_int2 *buf, unsigned long vertex_start) {
     // track the current edge index in the buffer
     unsigned long cur_eid = 0;
     
@@ -766,9 +766,9 @@ void Scheme::SetSceneEdgeBuffer(simd_int2 *buf, unsigned long vertex_start) {
             Face face = *m->GetFace(j);
             // create edges
             // add current vertex starts to original face vids (which are local to the model)
-            buf[cur_eid++] = simd_make_int2(face.vertices[0]+cur_vertex_start, face.vertices[1]+cur_vertex_start);
-            buf[cur_eid++] = simd_make_int2(face.vertices[1]+cur_vertex_start, face.vertices[2]+cur_vertex_start);
-            buf[cur_eid++] = simd_make_int2(face.vertices[2]+cur_vertex_start, face.vertices[0]+cur_vertex_start);
+            buf[cur_eid++] = vector_make_int2(face.vertices[0]+cur_vertex_start, face.vertices[1]+cur_vertex_start);
+            buf[cur_eid++] = vector_make_int2(face.vertices[1]+cur_vertex_start, face.vertices[2]+cur_vertex_start);
+            buf[cur_eid++] = vector_make_int2(face.vertices[2]+cur_vertex_start, face.vertices[0]+cur_vertex_start);
         }
         
         // increment the current vertex start to the next model
@@ -930,7 +930,7 @@ void Scheme::SetSliceDotBuffer(Dot *buf) {
     }
 }
 
-void Scheme::SetSliceLineBuffer(simd_int2 *buf, unsigned long dot_start) {
+void Scheme::SetSliceLineBuffer(vector_int2 *buf, unsigned long dot_start) {
     // track the current line index in the buffer
     unsigned long cur_lid = 0;
     
@@ -948,7 +948,7 @@ void Scheme::SetSliceLineBuffer(simd_int2 *buf, unsigned long dot_start) {
             l.d2 += dot_start;
             
             // TODO: MAYBE CHANGE EDGE/LINE FORMAT
-            buf[cur_lid++] = simd_make_int2(l.d1, l.d2);
+            buf[cur_lid++] = vector_make_int2(l.d1, l.d2);
         }
         
         // increment the current dot start to the next model

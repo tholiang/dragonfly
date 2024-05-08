@@ -1,0 +1,54 @@
+// util inserted here
+
+// #version 430 core
+layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 1) buffer bufferA
+{
+    int num_vertices;
+    vector_float3 vertices[];
+};
+
+layout(std430, binding = 2) buffer bufferB
+{
+    NodeVertexLink nvlinks[];
+};
+
+layout(std430, binding = 3) buffer bufferC
+{
+    int num_nodes;
+    Node nodes[];
+};
+
+void main() {
+    uint vid = gl_GlobalInvocationID.x; // 1 Dimensional (right?)
+
+    if (vid > num_vertices) {
+        return;
+    }
+
+    vector_float3 v = vector_float3(0,0,0);
+    
+    NodeVertexLink link1 = nvlinks[vid*2];
+    NodeVertexLink link2 = nvlinks[vid*2 + 1];
+    
+    if (link1.nid != -1) {
+        Node n = nodes[link1.nid];
+        vector_float3 desired1 = TranslatePointToStandard(n.b, link1.vector);
+        
+        v.x += link1.weight*desired1.x;
+        v.y += link1.weight*desired1.y;
+        v.z += link1.weight*desired1.z;
+    }
+    
+    if (link2.nid != -1) {
+        Node n = nodes[link2.nid];
+        vector_float3 desired2 = TranslatePointToStandard(n.b, link2.vector);
+        
+        v.x += link2.weight*desired2.x;
+        v.y += link2.weight*desired2.y;
+        v.z += link2.weight*desired2.z;
+    }
+    
+    vertices[vid] = v;
+}

@@ -20,7 +20,7 @@ DragonflyUtils::PointData *DragonflyUtils::PointDataFromFile(std::string path) {
             getline(myfile, line);
             float x, y;
             sscanf(line.c_str(), "(%f, %f)", &x, &y);
-            pd->points.push_back(simd_make_float2(x, y));
+            pd->points.push_back(vector_make_float2(x, y));
             pd->edges.push_back(std::vector<int>());
         }
         
@@ -43,8 +43,8 @@ DragonflyUtils::PointData *DragonflyUtils::PointDataFromFile(std::string path) {
     return NULL;
 }
 
-std::vector<simd_int3> DragonflyUtils::FindPointDataTriangles(PointData* pd) {
-    std::vector<simd_int3> triangles;
+std::vector<vector_int3> DragonflyUtils::FindPointDataTriangles(PointData* pd) {
+    std::vector<vector_int3> triangles;
     
     // for each point, find 3 length cycles to itself (a triangle)
     for (int i = 0; i < pd->points.size(); i++) {
@@ -68,7 +68,7 @@ std::vector<simd_int3> DragonflyUtils::FindPointDataTriangles(PointData* pd) {
                         }
                         
                         if (valid) {
-                            triangles.push_back(simd_make_int3(p1, p2, p3));
+                            triangles.push_back(vector_make_int3(p1, p2, p3));
                         }
                     }
                 }
@@ -80,16 +80,16 @@ std::vector<simd_int3> DragonflyUtils::FindPointDataTriangles(PointData* pd) {
 }
 
 Model * DragonflyUtils::ModelFromPointData(PointData *pd) {
-    std::vector<simd_int3> triangles = FindPointDataTriangles(pd);
+    std::vector<vector_int3> triangles = FindPointDataTriangles(pd);
     
     Model *m = new Model();
     for (int i = 0; i < pd->points.size(); i++) {
-        simd_float2 p = pd->points[i];
+        vector_float2 p = pd->points[i];
         m->MakeVertex(p.x, 0, p.y);
     }
     
     for (int i = 0; i < triangles.size(); i++) {
-        simd_int3 triangle = triangles[i];
+        vector_int3 triangle = triangles[i];
         m->MakeFace(triangle.x, triangle.y, triangle.z, {1, 1, 1, 1});
     }
     

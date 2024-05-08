@@ -9,6 +9,8 @@ RenderPipelineGLFW::~RenderPipelineGLFW() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glfwTerminate();
+    
+    delete test_shader;
 }
 
 int RenderPipelineGLFW::init () {
@@ -26,8 +28,8 @@ int RenderPipelineGLFW::init () {
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // glfw window creation
@@ -61,56 +63,68 @@ void RenderPipelineGLFW::SetPipeline() {
 
     // build and compile our shader program
     // ------------------------------------
-    test_shader = new Shader("Processing/test.vert", "Processing/test.frag");
-
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+    face_shader = new Shader("Processing/Render/DefaultFaceShader.vert", "Processing/Render/FragmentShader.frag", "Processing/util.glsl");
+    edge_shader = new Shader("Processing/Render/SuperDefaultEdgeShader.vert", "Processing/Render/FragmentShader.frag", "Processing/util.glsl");
 }
 
-void RenderPipelineGLFW::SetBuffers() {
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
-    float vertices[] = {
-        // positions         // colors
-         0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  // bottom right
-        -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  // bottom left
-         0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f   // top 
-    };
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-    // glBindVertexArray(0);
+void RenderPipelineGLFW::SetBuffers(GLuint vb, GLuint fb, GLuint eb, unsigned long nf, unsigned long ne) {
+    num_faces = nf;
+    num_edges = ne;
+    
+    vertex_buffer = vb;
+    face_buffer = fb;
+    edge_buffer = eb;
 }
 
 void RenderPipelineGLFW::Render() {
-    // input
-    // -----
-    // processInput(window);
-
     // render
-    // ------
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS); 
 
-    // render the triangle
-    test_shader->use();
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    // if there are faces to render, render
+    if (num_faces > 0) {
+        face_shader->use();
+        glBindVertexArray(VAO);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, face_buffer);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vertex_buffer);
+        glDrawArrays(GL_TRIANGLES, 0, num_faces*3);
+    }
+    
+    // if there are edges to render, render
+    if (num_edges > 0) {
+        edge_shader->use();
+        glBindVertexArray(VAO);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, edge_buffer);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vertex_buffer);
+        glDrawArrays(GL_LINES, 0, num_edges*2);
+    }
+
+    // Start the Dear ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    
+    scheme_controller->BuildUI();
+    
+    scheme = scheme_controller->GetScheme();
+    scheme->BuildUI();
+
+    ImGui::Render();
+    int display_w, display_h;
+    glfwGetFramebufferSize(window, &display_w, &display_h);
+    glViewport(0, 0, display_w, display_h);
+
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
     // -------------------------------------------------------------------------------
     glfwSwapBuffers(window);
+}
+
+GLFWwindow *RenderPipelineGLFW::get_window() {
+    return window;
 }

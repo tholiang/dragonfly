@@ -29,22 +29,30 @@ private:
     
     // ---SHADER OBJECTS FOR GPU RENDERER---
     Shader *test_shader;
+    Shader *face_shader;
+    Shader *edge_shader;
 
     // depth variables for renderer
     
     // ---BUFFERS FOR SCENE RENDER---
     unsigned int VBO, VAO;
+    GLuint vertex_buffer;
+    GLuint face_buffer;
+    GLuint edge_buffer;
 
+    int num_render_vertices;
 public:
     RenderPipelineGLFW();
     ~RenderPipelineGLFW();
     
     int init();
-    void SetBuffers();
+    void SetBuffers(GLuint vb, GLuint fb, GLuint eb, unsigned long nf, unsigned long ne);
     
     void SetPipeline();
     
     void Render();
+
+    GLFWwindow *get_window();
 };
 
 #endif /* RenderPipelineGLFW_h */

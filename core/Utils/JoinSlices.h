@@ -13,7 +13,8 @@
 #include <utility>
 #include <string>
 #include <sstream>
-#include <simd/SIMD.h>
+#include "Utils/Vec.h"
+using namespace Vec;
 #include <iostream>
 
 #include "../Modeling/Model.h"
@@ -26,7 +27,7 @@ Vertex GetStandardVertexFromDot(Slice *s, ModelTransform *mu, int i);
 void BuildSliceOnModel(Model *m, ModelTransform *mu, Slice *s, ModelTransform *su, int lastslicestart);
 std::vector<int> LinesAcross(Slice *a, ModelTransform *au, ModelTransform *bu);
 std::vector<int> LowerDotsOnLinesAcross(Slice *a, ModelTransform *au, ModelTransform *bu);
-std::vector<simd_float3> CrossedPointsOnLinesAcross(Slice *a, ModelTransform *au, ModelTransform *bu);
+std::vector<vector_float3> CrossedPointsOnLinesAcross(Slice *a, ModelTransform *au, ModelTransform *bu);
 std::pair<int,int> GetNextMergeDots(std::pair<int, int> curr, bool up, Slice *a, Slice *b, ModelTransform *au, ModelTransform *bu);
 void MoveToMerge(Slice *a, ModelTransform *au, Slice *b, ModelTransform *bu, std::pair<int, int> bdots);
 void JoinSlices(Model *m, ModelTransform *mu, Slice *a, Slice *b, ModelTransform *au, ModelTransform *bu, float merge_threshold);

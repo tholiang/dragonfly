@@ -10,8 +10,11 @@
 #include <stdio.h>
 #include <vector>
 #include <string>
+#include <stdint.h>
+#include <cmath>
 
-#include <simd/SIMD.h>
+#include "Utils/Vec.h"
+using namespace Vec;
 #include <fstream>
 
 #include "../Utils/Utils.h"
@@ -19,7 +22,7 @@
 
 using namespace DragonflyUtils;
 
-typedef simd_float3 Vertex;
+typedef Vec::vector_float3 Vertex;
 
 class Animation;
 class Model;
@@ -30,10 +33,10 @@ class Model;
 
 struct Face {
     uint32_t vertices[3];
-    simd_float4 color;
+    vector_float4 color;
     
     bool normal_reversed = false;
-    simd_float3 lighting_offset; // if there were a light source directly in front of the face, this is the rotation to get to its brightest orientation
+    vector_float3 lighting_offset; // if there were a light source directly in front of the face, this is the rotation to get to its brightest orientation
     float shading_multiplier = 0.6;
 };
 
@@ -44,7 +47,7 @@ struct Node {
 
 struct NodeVertexLink {
     int nid = -1;
-    simd_float3 vector;
+    vector_float3 vector;
     float weight;
 };
 
@@ -105,8 +108,8 @@ public:
     unsigned MakeVertex(float x, float y, float z);
     // to specified node
     unsigned MakeVertex(float x, float y, float z, unsigned nid);
-    unsigned MakeFace(unsigned v0, unsigned v1, unsigned v2, simd_float4 color);
-    unsigned MakeFaceWithLighting(unsigned v0, unsigned v1, unsigned v2, simd_float4 color, bool normal_reversed, simd_float3 lighting_offset, float shading_multiplier);
+    unsigned MakeFace(unsigned v0, unsigned v1, unsigned v2, vector_float4 color);
+    unsigned MakeFaceWithLighting(unsigned v0, unsigned v1, unsigned v2, vector_float4 color, bool normal_reversed, vector_float3 lighting_offset, float shading_multiplier);
     
     unsigned MakeNode(float x, float y, float z);
     void LinkNodeAndVertex(unsigned long vid, unsigned long nid);

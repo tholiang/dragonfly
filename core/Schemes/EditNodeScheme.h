@@ -16,8 +16,8 @@ private:
     int bottom_menu_height_ = 200;
     
     bool render_rightclick_popup_ = false;
-    simd_float2 rightclick_popup_loc_;
-    simd_float2 rightclick_popup_size_;
+    vector_float2 rightclick_popup_loc_;
+    vector_float2 rightclick_popup_size_;
     bool rightclick_popup_clicked_ = false;
     
     Arrow *z_arrow;
@@ -28,8 +28,8 @@ private:
     Rotator *x_rotator;
     Rotator *y_rotator;
     // z base, z tip, x base, x tip, y base, y tip
-    simd_float2 arrow_projections [6];
-    simd_float2 rotator_projections [6];
+    vector_float2 arrow_projections [6];
+    vector_float2 rotator_projections [6];
     // z, x, y
     int selected_arrow = -1;
     int selected_rotator = -1;
@@ -64,13 +64,13 @@ private:
     
     void CreateControlsModels();
     
-    std::pair<std::pair<int, int>, float> NodeClicked(simd_float2 loc);
+    std::pair<std::pair<int, int>, float> NodeClicked(vector_float2 loc);
     
-    float GetTimeFromLocation(simd_float2 loc);
+    float GetTimeFromLocation(vector_float2 loc);
     
-    bool ClickOnScene(simd_float2 loc);
+    bool ClickOnScene(vector_float2 loc);
     
-    void HandleSelection(simd_float2 loc);
+    void HandleSelection(vector_float2 loc);
     
     void SetControlsBasis();
     
@@ -90,8 +90,8 @@ public:
     
     void HandleMouseMovement(float x, float y, float dx, float dy);
     
-    void HandleMouseDown(simd_float2 loc, bool left);
-    void HandleMouseUp(simd_float2 loc, bool left);
+    void HandleMouseDown(vector_float2 loc, bool left);
+    void HandleMouseUp(vector_float2 loc, bool left);
     
     EditNodeScheme();
     ~EditNodeScheme();

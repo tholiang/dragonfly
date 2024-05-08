@@ -12,16 +12,17 @@
 
 #include <stdio.h>
 #include <vector>
-#include <simd/SIMD.h>
+#include "Utils/Vec.h"
+using namespace Vec;
 
 class Rotator : public Model {
 public:
     Rotator();
-    Rotator(simd_float4 c);
+    Rotator(vector_float4 c);
 private:
     void MakeRotator();
     
-    simd_float4 color;
+    vector_float4 color;
 };
 
 #endif /* Rotator_h */

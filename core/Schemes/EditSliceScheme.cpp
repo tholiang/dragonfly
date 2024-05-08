@@ -34,9 +34,9 @@ void EditSliceScheme::SetEditing() {
     mode = Editing;
 }
 
-simd_float2 EditSliceScheme::screen_to_eloc(simd_float2 loc) {
-    simd_float4 edit_window = GetEditWindow();
-    simd_float2 eloc = loc;
+vector_float2 EditSliceScheme::screen_to_eloc(vector_float2 loc) {
+    vector_float4 edit_window = GetEditWindow();
+    vector_float2 eloc = loc;
     
     eloc.x -= edit_window.x;
     eloc.y -= edit_window.y;
@@ -46,7 +46,7 @@ simd_float2 EditSliceScheme::screen_to_eloc(simd_float2 loc) {
     return eloc;
 }
 
-void EditSliceScheme::CreateDotAtClick(simd_float2 click_loc) {
+void EditSliceScheme::CreateDotAtClick(vector_float2 click_loc) {
     SliceAttributes attr = slice_->GetAttributes();
     float scale = attr.height / 2;
     if (attr.height < attr.width) {
@@ -57,7 +57,7 @@ void EditSliceScheme::CreateDotAtClick(simd_float2 click_loc) {
     float eheight = window_height_ - UI_start_.y;
     float eratio = ewidth/eheight;
     
-    simd_float2 eloc = screen_to_eloc(click_loc);
+    vector_float2 eloc = screen_to_eloc(click_loc);
     float x,y;
     
     if (eratio < 1) {
@@ -91,9 +91,9 @@ void EditSliceScheme::CreateDotAtClick(simd_float2 click_loc) {
     should_reset_static_buffers = true;
 }
 
-int EditSliceScheme::DotClicked(simd_float2 loc) {
+int EditSliceScheme::DotClicked(vector_float2 loc) {
     Slice *s = scene_->GetSlice(slice_id);
-    simd_float4 edit_window = GetEditWindow();
+    vector_float4 edit_window = GetEditWindow();
     float ewidth = window_width_ - right_menu_width_;
     float eheight = window_height_ - UI_start_.y;
     float eratio = ewidth/eheight;
@@ -135,9 +135,9 @@ int EditSliceScheme::DotClicked(simd_float2 loc) {
     return -1;
 }
 
-int EditSliceScheme::LineClicked(simd_float2 loc) {
+int EditSliceScheme::LineClicked(vector_float2 loc) {
     Slice *s = scene_->GetSlice(slice_id);
-    simd_float4 edit_window = GetEditWindow();
+    vector_float4 edit_window = GetEditWindow();
     float ewidth = window_width_ - right_menu_width_;
     float eheight = window_height_ - UI_start_.y;
     float eratio = ewidth/eheight;
@@ -178,7 +178,7 @@ int EditSliceScheme::LineClicked(simd_float2 loc) {
         x2 += edit_window.x;
         y2 += edit_window.y;
         
-        simd_float2 edgeVec = simd_make_float2(x1-x2, y1-y2);
+        vector_float2 edgeVec = vector_make_float2(x1-x2, y1-y2);
         float mag = sqrt(pow(edgeVec.x, 2) + pow(edgeVec.y, 2));
         if (mag == 0) {
             continue;
@@ -189,10 +189,10 @@ int EditSliceScheme::LineClicked(simd_float2 loc) {
         edgeVec.x *= 0.01;
         edgeVec.y *= 0.01;
         
-        Dot d1plus = simd_make_float2(x1+edgeVec.y, y1-edgeVec.x);
-        Dot d1sub = simd_make_float2(x1-edgeVec.y, y1+edgeVec.x);
-        Dot d2plus = simd_make_float2(x2+edgeVec.y, y1-edgeVec.x);
-        Dot d2sub = simd_make_float2(x2-edgeVec.y, y2+edgeVec.x);
+        Dot d1plus = vector_make_float2(x1+edgeVec.y, y1-edgeVec.x);
+        Dot d1sub = vector_make_float2(x1-edgeVec.y, y1+edgeVec.x);
+        Dot d2plus = vector_make_float2(x2+edgeVec.y, y1-edgeVec.x);
+        Dot d2sub = vector_make_float2(x2-edgeVec.y, y2+edgeVec.x);
         
         if (InTriangle2D(loc, d1plus, d1sub, d2plus) || InTriangle2D(loc, d1sub, d2sub, d2plus)) {
             return i;
@@ -202,7 +202,7 @@ int EditSliceScheme::LineClicked(simd_float2 loc) {
     return -1;
 }
 
-bool EditSliceScheme::ClickOnScene(simd_float2 loc) {
+bool EditSliceScheme::ClickOnScene(vector_float2 loc) {
     if (render_rightclick_popup_ && InRectangle(rightclick_popup_loc_, rightclick_popup_size_, loc)) {
         return false;
     }
@@ -221,7 +221,7 @@ bool EditSliceScheme::ClickOnScene(simd_float2 loc) {
     return true;
 }
 
-void EditSliceScheme::HandleSelection(simd_float2 loc) {
+void EditSliceScheme::HandleSelection(vector_float2 loc) {
     if (mode == Editing) {
         Slice *s = scene_->GetSlice(slice_id);
         int dot_selection = DotClicked(loc);
@@ -254,7 +254,7 @@ void EditSliceScheme::RightClickPopup() {
     num_right_click_buttons_ = 0;
     
     
-    rightclick_popup_size_ = simd_make_float2((button_size_.x)/(float)(window_width_/2), (button_size_.y * num_right_click_buttons_)/(float)(window_height_/2));
+    rightclick_popup_size_ = vector_make_float2((button_size_.x)/(float)(window_width_/2), (button_size_.y * num_right_click_buttons_)/(float)(window_height_/2));
 }
 
 void EditSliceScheme::RightMenu() {
@@ -365,7 +365,7 @@ void EditSliceScheme::HandleMouseMovement(float x, float y, float dx, float dy) 
         float eheight = window_height_ - UI_start_.y;
         float eratio = ewidth/eheight;
         
-        simd_float2 eloc = screen_to_eloc(simd_make_float2(x, y));
+        vector_float2 eloc = screen_to_eloc(vector_make_float2(x, y));
         
         SliceAttributes attr = slice_->GetAttributes();
         float scale = attr.height / 2;
@@ -391,7 +391,7 @@ void EditSliceScheme::BuildUI() {
     RightMenu();
 }
 
-void EditSliceScheme::HandleMouseDown(simd_float2 loc, bool left) {
+void EditSliceScheme::HandleMouseDown(vector_float2 loc, bool left) {
     Scheme::HandleMouseDown(loc, left);
     
     loc.x = ((float) loc.x / (float) window_width_)*2 - 1;
@@ -414,7 +414,7 @@ void EditSliceScheme::HandleMouseDown(simd_float2 loc, bool left) {
     }
 }
 
-void EditSliceScheme::HandleMouseUp(simd_float2 loc, bool left) {
+void EditSliceScheme::HandleMouseUp(vector_float2 loc, bool left) {
     Scheme::HandleMouseUp(loc, left);
     
     loc.x = ((float) loc.x / (float) window_width_)*2 - 1;
@@ -425,7 +425,7 @@ void EditSliceScheme::HandleMouseUp(simd_float2 loc, bool left) {
             render_rightclick_popup_ = false;
         }
         
-        if (dist2to3(drag_size, simd_make_float3(0, 0, 0)) > 0.05) {
+        if (dist2to3(drag_size, vector_make_float3(0, 0, 0)) > 0.05) {
             SelectDotsInDrag();
         }
         
@@ -456,8 +456,8 @@ Slice *EditSliceScheme::GetSlice() {
     return slice_;
 }
 
-simd_float4 EditSliceScheme::GetEditWindow() {
-    simd_float4 window;
+vector_float4 EditSliceScheme::GetEditWindow() {
+    vector_float4 window;
     window.x = float(-right_menu_width_)/ window_width_;
     window.y = float(UI_start_.y) / window_height_;
     window.z = float(window_width_ - right_menu_width_)/(window_width_);
@@ -493,7 +493,7 @@ void EditSliceScheme::SetSliceDotBuffer(Dot *buf) {
     }
 }
 
-void EditSliceScheme::SetSliceLineBuffer(simd_int2 *buf, unsigned long dot_start) {
+void EditSliceScheme::SetSliceLineBuffer(vector_int2 *buf, unsigned long dot_start) {
     for (int j = 0; j < slice_->NumLines(); j++) { // iterate through current models faces
         // copy line
         Line l = *slice_->GetLine(j);
@@ -502,7 +502,7 @@ void EditSliceScheme::SetSliceLineBuffer(simd_int2 *buf, unsigned long dot_start
         l.d2 += dot_start;
         
         // TODO: MAYBE CHANGE EDGE/LINE FORMAT
-        buf[j] = simd_make_int2(l.d1, l.d2);
+        buf[j] = vector_make_int2(l.d1, l.d2);
     }
 }
 

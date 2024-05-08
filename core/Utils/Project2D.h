@@ -12,7 +12,8 @@
 #include <utility>
 #include <string>
 #include <sstream>
-#include <simd/SIMD.h>
+#include "Utils/Vec.h"
+using namespace Vec;
 #include <iostream>
 
 #include "Utils.h"
@@ -20,12 +21,12 @@
 
 namespace DragonflyUtils {
 struct PointData {
-    std::vector<simd_float2> points;
+    std::vector<vector_float2> points;
     std::vector<std::vector<int>> edges; // index i contains the indices of vertices the vertex at index i is connected to
     int dim = 0;
 };
 PointData *PointDataFromFile(std::string path);
-std::vector<simd_int3> FindPointDataTriangles(PointData* pd);
+std::vector<vector_int3> FindPointDataTriangles(PointData* pd);
 Model *ModelFromPointData(PointData *pd);
 }
 

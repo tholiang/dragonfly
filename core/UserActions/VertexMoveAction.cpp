@@ -18,7 +18,7 @@ void VertexMoveAction::BeginRecording() {
 }
 
 void VertexMoveAction::EndRecording() {
-    simd_float3 v = model_->GetVertex(vids_[0]);
+    vector_float3 v = model_->GetVertex(vids_[0]);
     movement_vector_.x = v.x - initial_location_.x;
     movement_vector_.y = v.y - initial_location_.y;
     movement_vector_.z = v.z - initial_location_.z;

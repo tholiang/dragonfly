@@ -74,7 +74,7 @@ void EngineMetalSDL::HandleSDLMouseEvents(SDL_Event event) {
         int y;
         SDL_GetMouseState(&x, &y);
         
-        simd_float2 loc;
+        vector_float2 loc;
         
         loc.x = (float) x;
         loc.y = (float) y;

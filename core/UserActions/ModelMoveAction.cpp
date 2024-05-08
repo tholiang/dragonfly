@@ -19,7 +19,7 @@ void ModelMoveAction::BeginRecording() {
 }
 
 void ModelMoveAction::EndRecording() {
-    simd_float3 new_loc = scene_->GetModelPosition(mid_);
+    vector_float3 new_loc = scene_->GetModelPosition(mid_);
     movement_vector_.x = new_loc.x - initial_location_.x;
     movement_vector_.y = new_loc.y - initial_location_.y;
     movement_vector_.z = new_loc.z - initial_location_.z;

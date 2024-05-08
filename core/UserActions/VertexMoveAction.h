@@ -22,8 +22,8 @@ public:
 private:
     Model *model_;
     std::vector<int> vids_;
-    simd_float3 initial_location_;
-    simd_float3 movement_vector_;
+    vector_float3 initial_location_;
+    vector_float3 movement_vector_;
 };
 
 #endif /* VertexMoveAction_h */

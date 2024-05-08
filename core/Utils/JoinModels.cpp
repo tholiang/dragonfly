@@ -90,7 +90,7 @@ void DragonflyUtils::koenig(std::vector<std::vector<float>> &graph, std::vector<
     }
 }
 
-std::vector<int> DragonflyUtils::Hungarian(std::vector<simd_float3> &A, std::vector<simd_float3> &B) {
+std::vector<int> DragonflyUtils::Hungarian(std::vector<vector_float3> &A, std::vector<vector_float3> &B) {
     std::vector<int> assignments(A.size());
     
     std::vector<std::vector<float>> cost;
@@ -186,8 +186,8 @@ std::vector<int> DragonflyUtils::Hungarian(std::vector<simd_float3> &A, std::vec
 }
 
 void DragonflyUtils::JoinModels(Model *A, Model *B, ModelTransform *muA, ModelTransform *muB, std::vector<int> &A_pts, std::vector<int> &B_pts) {
-    std::vector<simd_float3> A_vals;
-    std::vector<simd_float3> B_vals;
+    std::vector<vector_float3> A_vals;
+    std::vector<vector_float3> B_vals;
     
     for (int i = 0; i < A_pts.size(); i++) {
         A_vals.push_back(A->GetVertex(A_pts[i]));
@@ -199,7 +199,7 @@ void DragonflyUtils::JoinModels(Model *A, Model *B, ModelTransform *muA, ModelTr
     
     int prevAvertices = A->NumVertices();
     
-    simd_float3 modeldiff = simd_make_float3(muB->b.pos.x - muA->b.pos.x, muB->b.pos.y - muA->b.pos.y, muB->b.pos.z - muA->b.pos.z);
+    vector_float3 modeldiff = vector_make_float3(muB->b.pos.x - muA->b.pos.x, muB->b.pos.y - muA->b.pos.y, muB->b.pos.z - muA->b.pos.z);
     
     std::vector<int> assignments = Hungarian(A_vals, B_vals);
     for (int j = 0; j < B->NumVertices(); j++) {
@@ -270,7 +270,7 @@ std::vector<int> DragonflyUtils::GetNeighborsIn(Model *m, std::vector<int> verti
 }
 
 void DragonflyUtils::CapModel(Model *m, std::vector<int> vertices) {
-    Vertex avg = simd_make_float3(0, 0, 0);
+    Vertex avg = vector_make_float3(0, 0, 0);
     for (int i = 0; i < vertices.size(); i++) {
         Vertex v = m->GetVertex(vertices[i]);
         avg.x += v.x;
@@ -304,7 +304,7 @@ void DragonflyUtils::CapModel(Model *m, std::vector<int> vertices) {
             }
             
             if (!prevlinked) {
-                m->MakeFace(vid, neighbor, newid, simd_make_float4(1, 1, 1, 1));
+                m->MakeFace(vid, neighbor, newid, vector_make_float4(1, 1, 1, 1));
                 alreadylinked.push_back(std::make_pair(vid, neighbor));
             }
         }
@@ -517,8 +517,8 @@ void DragonflyUtils::BridgeEqualModels(Model *a, ModelTransform *au, std::vector
         int bvid1 = bvertices[b1];
         int bvid2 = bvertices[b2];
         
-        a->MakeFace(avid1, avid2, bvid1+bvertexstart, simd_make_float4(1, 1, 1, 1));
-        a->MakeFace(avid2, bvid1+bvertexstart, bvid2+bvertexstart, simd_make_float4(1, 1, 1, 1));
+        a->MakeFace(avid1, avid2, bvid1+bvertexstart, vector_make_float4(1, 1, 1, 1));
+        a->MakeFace(avid2, bvid1+bvertexstart, bvid2+bvertexstart, vector_make_float4(1, 1, 1, 1));
         
         int temp = a2;
         a2 = GetNextVertexIdx(a, avertices, a2, a1);
