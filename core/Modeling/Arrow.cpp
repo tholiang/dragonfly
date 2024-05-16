@@ -9,11 +9,11 @@
 
 Arrow::Arrow() {
     name_ = "arrow";
-    color = vector_make_float4(1, 0, 0, 0); // default red
+    color = vec_make_float4(1, 0, 0, 0); // default red
     MakeArrow();
 }
 
-Arrow::Arrow(vector_float4 c) : color(c) {
+Arrow::Arrow(vec_float4 c) : color(c) {
     MakeArrow();
 }
 

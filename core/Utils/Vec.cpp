@@ -1,22 +1,22 @@
 #include "Vec.h"
 
-Vec::vector_float2 Vec::vector_make_float2(float x, float y) {
-	Vec::vector_float2 ret;
+Vec::vec_float2 Vec::vec_make_float2(float x, float y) {
+	Vec::vec_float2 ret;
 	ret.x = x;
 	ret.y = y;
 	return ret;
 }
 
-Vec::vector_float3 Vec::vector_make_float3(float x, float y, float z) {
-	Vec::vector_float3 ret;
+Vec::vec_float3 Vec::vec_make_float3(float x, float y, float z) {
+	Vec::vec_float3 ret;
 	ret.x = x;
 	ret.y = y;
 	ret.z = z;
 	return ret;
 }
 
-Vec::vector_float4 Vec::vector_make_float4(float x, float y, float z, int w) {
-	Vec::vector_float4 ret;
+Vec::vec_float4 Vec::vec_make_float4(float x, float y, float z, int w) {
+	Vec::vec_float4 ret;
 	ret.x = x;
 	ret.y = y;
 	ret.z = z;
@@ -24,23 +24,23 @@ Vec::vector_float4 Vec::vector_make_float4(float x, float y, float z, int w) {
 	return ret;
 }
 
-Vec::vector_int2 Vec::vector_make_int2(int x, int y) {
-	Vec::vector_int2 ret;
+Vec::vec_int2 Vec::vec_make_int2(int x, int y) {
+	Vec::vec_int2 ret;
 	ret.x = x;
 	ret.y = y;
 	return ret;
 }
 
-Vec::vector_int3 Vec::vector_make_int3(int x, int y, int z) {
-	Vec::vector_int3 ret;
+Vec::vec_int3 Vec::vec_make_int3(int x, int y, int z) {
+	Vec::vec_int3 ret;
 	ret.x = x;
 	ret.y = y;
 	ret.z = z;
 	return ret;
 }
 
-Vec::vector_int4 Vec::vector_make_int4(int x, int y, int z, int w) {
-	Vec::vector_int4 ret;
+Vec::vec_int4 Vec::vec_make_int4(int x, int y, int z, int w) {
+	Vec::vec_int4 ret;
 	ret.x = x;
 	ret.y = y;
 	ret.z = z;

@@ -268,7 +268,7 @@ unsigned Model::MakeVertex(float x, float y, float z) {
     return num_vertices-1;
 }
 
-unsigned Model::MakeFace(unsigned v0, unsigned v1, unsigned v2, vector_float4 color) {
+unsigned Model::MakeFace(unsigned v0, unsigned v1, unsigned v2, vec_float4 color) {
     Face *f = new Face();
     f->vertices[0] = v0;
     f->vertices[1] = v1;
@@ -281,7 +281,7 @@ unsigned Model::MakeFace(unsigned v0, unsigned v1, unsigned v2, vector_float4 co
     return faces.size()-1;
 }
 
-unsigned Model::MakeFaceWithLighting(unsigned v0, unsigned v1, unsigned v2, vector_float4 color, bool normal_reversed, vector_float3 lighting_offset, float shading_multiplier) {
+unsigned Model::MakeFaceWithLighting(unsigned v0, unsigned v1, unsigned v2, vec_float4 color, bool normal_reversed, vec_float3 lighting_offset, float shading_multiplier) {
     Face *f = new Face();
     f->vertices[0] = v0;
     f->vertices[1] = v1;
@@ -297,7 +297,7 @@ unsigned Model::MakeFaceWithLighting(unsigned v0, unsigned v1, unsigned v2, vect
 unsigned Model::MakeNode(float x, float y, float z) {
     Node *node = new Node();
     node->b = Basis();
-    node->b.pos = vector_make_float3(x, y, z);
+    node->b.pos = vec_make_float3(x, y, z);
     nodes.push_back(node);
     
     for (int i = 0; i < animations.size(); i++) {
@@ -452,7 +452,7 @@ void Model::MoveVertexBy(unsigned vid, float dx, float dy, float dz) {
 }
 
 void Model::MoveNodeBy(unsigned nid, float dx, float dy, float dz) {
-    vector_float3 nodepos = nodes[nid]->b.pos;
+    vec_float3 nodepos = nodes[nid]->b.pos;
     
     float new_x = nodes[nid]->b.pos.x + dx;
     float new_y = nodes[nid]->b.pos.y + dy;
@@ -463,17 +463,17 @@ void Model::MoveNodeBy(unsigned nid, float dx, float dy, float dz) {
         nodes[nid]->b.pos.y = new_y;
         nodes[nid]->b.pos.z = new_z;
     } else {
-        vector_float3 lockpos = nodes[nodes[nid]->locked_to]->b.pos;
-        vector_float3 vec = vector_make_float3(nodepos.x-lockpos.x, nodepos.y-lockpos.y, nodepos.z-lockpos.z);
+        vec_float3 lockpos = nodes[nodes[nid]->locked_to]->b.pos;
+        vec_float3 vec = vec_make_float3(nodepos.x-lockpos.x, nodepos.y-lockpos.y, nodepos.z-lockpos.z);
         float curr_dist = Magnitude(vec);
-        vector_float3 newvec = vector_make_float3(new_x-lockpos.x, new_y-lockpos.y, new_z-lockpos.z);
+        vec_float3 newvec = vec_make_float3(new_x-lockpos.x, new_y-lockpos.y, new_z-lockpos.z);
         float new_dist = Magnitude(newvec);
         nodes[nid]->b.pos.x = lockpos.x+(newvec.x * curr_dist / new_dist);
         nodes[nid]->b.pos.y = lockpos.y+(newvec.y * curr_dist / new_dist);
         nodes[nid]->b.pos.z = lockpos.z+(newvec.z * curr_dist / new_dist);
     }
     
-    vector_float3 change;
+    vec_float3 change;
     change.x = nodes[nid]->b.pos.x - nodepos.x;
     change.y = nodes[nid]->b.pos.y - nodepos.y;
     change.z = nodes[nid]->b.pos.z - nodepos.z;
@@ -503,7 +503,7 @@ void Model::MoveVertexTo(unsigned vid, float x, float y, float z) {
 }
 
 void Model::MoveNodeTo(unsigned nid, float x, float y, float z) {
-    vector_float3 nodepos = nodes[nid]->b.pos;
+    vec_float3 nodepos = nodes[nid]->b.pos;
     MoveNodeBy(nid, x - nodepos.x, y - nodepos.y, z - nodepos.z);
 //    if (nodes[nid]->locked_to == -1) {
 //        nodes[nid]->b.pos.x = x;
@@ -529,12 +529,12 @@ void Model::RotateNodeOnX(unsigned nid, float angle) {
     
     //std::cout<<Magnitude(nodes[nid]->b.x)<<" "<<Magnitude(nodes[nid]->b.y)<<" "<<Magnitude(nodes[nid]->b.z)<<std::endl;
     
-    vector_float3 nodepos = nodes[nid]->b.pos;
+    vec_float3 nodepos = nodes[nid]->b.pos;
     for (int i = 0; i < nodes.size(); i++) {
         if (nodes[i]->locked_to == nid) {
             nodes[i]->locked_to = -1;
-            vector_float3 childpos = nodes[i]->b.pos;
-            vector_float3 vec = vector_make_float3(childpos.x - nodepos.x, childpos.y - nodepos.y, childpos.z - nodepos.z);
+            vec_float3 childpos = nodes[i]->b.pos;
+            vec_float3 vec = vec_make_float3(childpos.x - nodepos.x, childpos.y - nodepos.y, childpos.z - nodepos.z);
             vec = RotatePointToBasis(&origb, vec);
             vec = RotatePointToStandard(&nodes[nid]->b, vec);
             MoveNodeTo(i, nodepos.x+vec.x, nodepos.y+vec.y, nodepos.z+vec.z);
@@ -548,12 +548,12 @@ void Model::RotateNodeOnY(unsigned nid, float angle) {
     Basis origb = nodes[nid]->b;
     RotateBasisOnY(&nodes[nid]->b, angle);
     
-    vector_float3 nodepos = nodes[nid]->b.pos;
+    vec_float3 nodepos = nodes[nid]->b.pos;
     for (int i = 0; i < nodes.size(); i++) {
         if (nodes[i]->locked_to == nid) {
             nodes[i]->locked_to = -1;
-            vector_float3 childpos = nodes[i]->b.pos;
-            vector_float3 vec = vector_make_float3(childpos.x - nodepos.x, childpos.y - nodepos.y, childpos.z - nodepos.z);
+            vec_float3 childpos = nodes[i]->b.pos;
+            vec_float3 vec = vec_make_float3(childpos.x - nodepos.x, childpos.y - nodepos.y, childpos.z - nodepos.z);
             vec = RotatePointToBasis(&origb, vec);
             vec = RotatePointToStandard(&nodes[nid]->b, vec);
             MoveNodeTo(i, nodepos.x+vec.x, nodepos.y+vec.y, nodepos.z+vec.z);
@@ -567,12 +567,12 @@ void Model::RotateNodeOnZ(unsigned nid, float angle) {
     Basis origb = nodes[nid]->b;
     RotateBasisOnZ(&nodes[nid]->b, angle);
     
-    vector_float3 nodepos = nodes[nid]->b.pos;
+    vec_float3 nodepos = nodes[nid]->b.pos;
     for (int i = 0; i < nodes.size(); i++) {
         if (nodes[i]->locked_to == nid) {
             nodes[i]->locked_to = -1;
-            vector_float3 childpos = nodes[i]->b.pos;
-            vector_float3 vec = vector_make_float3(childpos.x - nodepos.x, childpos.y - nodepos.y, childpos.z - nodepos.z);
+            vec_float3 childpos = nodes[i]->b.pos;
+            vec_float3 vec = vec_make_float3(childpos.x - nodepos.x, childpos.y - nodepos.y, childpos.z - nodepos.z);
             vec = RotatePointToBasis(&origb, vec);
             vec = RotatePointToStandard(&nodes[nid]->b, vec);
             MoveNodeTo(i, nodepos.x+vec.x, nodepos.y+vec.y, nodepos.z+vec.z);
@@ -588,27 +588,27 @@ void Model::RotateNodeToBasis(unsigned nid, Basis *b) {
     nodes[nid]->b.y = b->y;
     nodes[nid]->b.z = b->z;
     
-    vector_float3 nodepos = nodes[nid]->b.pos;
+    vec_float3 nodepos = nodes[nid]->b.pos;
     for (int i = 0; i < nodes.size(); i++) {
         if (nodes[i]->locked_to == nid) {
             nodes[i]->locked_to = -1;
-            vector_float3 childpos = nodes[i]->b.pos;
-            vector_float3 vec = vector_make_float3(childpos.x - nodepos.x, childpos.y - nodepos.y, childpos.z - nodepos.z);
+            vec_float3 childpos = nodes[i]->b.pos;
+            vec_float3 vec = vec_make_float3(childpos.x - nodepos.x, childpos.y - nodepos.y, childpos.z - nodepos.z);
             vec = RotatePointToBasis(&origb, vec);
             vec = RotatePointToStandard(&nodes[nid]->b, vec);
             MoveNodeTo(i, nodepos.x+vec.x, nodepos.y+vec.y, nodepos.z+vec.z);
             
-            vector_float3 childx = nodes[i]->b.x;
+            vec_float3 childx = nodes[i]->b.x;
             childx = RotatePointToBasis(&origb, childx);
             childx = RotatePointToStandard(&nodes[nid]->b, childx);
             nodes[i]->b.x = childx;
 
-            vector_float3 childy = nodes[i]->b.y;
+            vec_float3 childy = nodes[i]->b.y;
             childy = RotatePointToBasis(&origb, childy);
             childy = RotatePointToStandard(&nodes[nid]->b, childy);
             nodes[i]->b.y = childy;
 
-            vector_float3 childz = nodes[i]->b.z;
+            vec_float3 childz = nodes[i]->b.z;
             childz = RotatePointToBasis(&origb, childz);
             childz = RotatePointToStandard(&nodes[nid]->b, childz);
             nodes[i]->b.z = childz;
@@ -782,7 +782,7 @@ NodeVertexLink *Model::GetNodeVertexLink(unsigned long nvlid) {
 }
 
 Vertex Model::GetVertex(unsigned long vid) {
-    Vertex ret = vector_make_float3(0, 0, 0);
+    Vertex ret = vec_make_float3(0, 0, 0);
     
     NodeVertexLink *link1 = nvlinks[vid*2];
     NodeVertexLink *link2 = nvlinks[vid*2 + 1];
@@ -982,7 +982,7 @@ void Model::FromFile(std::string path) {
             sscanf(line.c_str(), "%d %f %f %f %f", &nid, &nvweight, &posx, &posy, &posz);
             nvlink->nid = nid;
             nvlink->weight = nvweight;
-            nvlink->vector = vector_make_float3(posx, posy, posz);
+            nvlink->vector = vec_make_float3(posx, posy, posz);
             
             nvlinks.push_back(nvlink);
         }
@@ -1003,10 +1003,10 @@ void Model::FromFile(std::string path) {
             f->vertices[0] = v1;
             f->vertices[1] = v2;
             f->vertices[2] = v3;
-            f->color = vector_make_float4(cx, cy, cz, cw);
+            f->color = vec_make_float4(cx, cy, cz, cw);
             f->normal_reversed = nr == 1;
             f->shading_multiplier = sm;
-            f->lighting_offset = vector_make_float3(lx, ly, lz);
+            f->lighting_offset = vec_make_float3(lx, ly, lz);
             
             faces.push_back(f);
         }

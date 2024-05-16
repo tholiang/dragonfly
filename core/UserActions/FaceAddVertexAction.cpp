@@ -33,11 +33,11 @@ void FaceAddVertexAction::Do() {
     unsigned vid1 = original_vertices_[0];
     unsigned vid2 = original_vertices_[1];
     unsigned vid3 = original_vertices_[2];
-    vector_float3 v1 = model_->GetVertex(vid1);
-    vector_float3 v2 = model_->GetVertex(vid2);
-    vector_float3 v3 = model_->GetVertex(vid3);
+    vec_float3 v1 = model_->GetVertex(vid1);
+    vec_float3 v2 = model_->GetVertex(vid2);
+    vec_float3 v3 = model_->GetVertex(vid3);
     
-    vector_float3 new_v = DragonflyUtils::TriAvg(v1, v2, v3);
+    vec_float3 new_v = DragonflyUtils::TriAvg(v1, v2, v3);
     model_->InsertVertex(new_v.x, new_v.y, new_v.z, vid_);
     
     //1,2,new

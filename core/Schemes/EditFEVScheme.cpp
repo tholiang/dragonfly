@@ -15,7 +15,7 @@ using namespace DragonflyUtils;
 EditFEVScheme::EditFEVScheme() {
     type = SchemeType::EditFEV;
     
-    selected_edge = vector_make_int2(-1, -1);
+    selected_edge = vec_make_int2(-1, -1);
     button_size_ = ImVec2(100, 30);
     
     should_render.faces = true;
@@ -35,43 +35,43 @@ void EditFEVScheme::CreateControlsModels() {
     z_arrow = new Arrow();
     
     ModelTransform z_arrow_uniform;
-    z_arrow_uniform.b.pos = vector_make_float3(0, 0, 0);
-    z_arrow_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    z_arrow_uniform.b.pos = vec_make_float3(0, 0, 0);
+    z_arrow_uniform.rotate_origin = vec_make_float3(0, 0, 0);
     
     controls_model_uniforms_.push_back(z_arrow_uniform);
     controls_model_default_bases_.push_back(z_arrow_uniform.b);
-    arrow_projections[0] = vector_make_float2(0,0);
-    arrow_projections[1] = vector_make_float2(0,1);
+    arrow_projections[0] = vec_make_float2(0,0);
+    arrow_projections[1] = vec_make_float2(0,1);
     
     controls_models_.push_back(z_arrow);
     
-    x_arrow = new Arrow(vector_make_float4(0, 1, 0, 1));
+    x_arrow = new Arrow(vec_make_float4(0, 1, 0, 1));
     
     ModelTransform x_arrow_uniform;
-    x_arrow_uniform.b.pos = vector_make_float3(0, 0, 0);
-    x_arrow_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    x_arrow_uniform.b.pos = vec_make_float3(0, 0, 0);
+    x_arrow_uniform.rotate_origin = vec_make_float3(0, 0, 0);
     //x_arrow_uniform.angle = vector_make_float3(M_PI_2, 0, 0);
     RotateBasisOnY(&x_arrow_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(x_arrow_uniform);
     controls_model_default_bases_.push_back(x_arrow_uniform.b);
-    arrow_projections[2] = vector_make_float2(0,0);
-    arrow_projections[3] = vector_make_float2(0,0);
+    arrow_projections[2] = vec_make_float2(0,0);
+    arrow_projections[3] = vec_make_float2(0,0);
     
     controls_models_.push_back(x_arrow);
     
-    y_arrow = new Arrow(vector_make_float4(0, 0, 1, 1));
+    y_arrow = new Arrow(vec_make_float4(0, 0, 1, 1));
     
     ModelTransform y_arrow_uniform;
-    y_arrow_uniform.b.pos = vector_make_float3(0, 0, 0);
-    y_arrow_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    y_arrow_uniform.b.pos = vec_make_float3(0, 0, 0);
+    y_arrow_uniform.rotate_origin = vec_make_float3(0, 0, 0);
 //    y_arrow_uniform.angle = vector_make_float3(0, -M_PI_2, 0);
     RotateBasisOnX(&y_arrow_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(y_arrow_uniform);
     controls_model_default_bases_.push_back(y_arrow_uniform.b);
-    arrow_projections[4] = vector_make_float2(0,0);
-    arrow_projections[5] = vector_make_float2(1,0);
+    arrow_projections[4] = vec_make_float2(0,0);
+    arrow_projections[5] = vec_make_float2(1,0);
     
     controls_models_.push_back(y_arrow);
 }
@@ -93,7 +93,7 @@ int EditFEVScheme::GetVertexModel(int vid) {
     return -1;
 }
 
-void EditFEVScheme::HandleMouseDown(vector_float2 loc, bool left) {
+void EditFEVScheme::HandleMouseDown(vec_float2 loc, bool left) {
     Scheme::HandleMouseDown(loc, left);
     
     loc.x = ((float) loc.x / (float) window_width_)*2 - 1;
@@ -112,7 +112,7 @@ void EditFEVScheme::HandleMouseDown(vector_float2 loc, bool left) {
     }
 }
 
-void EditFEVScheme::HandleMouseUp(vector_float2 loc, bool left) {
+void EditFEVScheme::HandleMouseUp(vec_float2 loc, bool left) {
     Scheme::HandleMouseUp(loc, left);
     
     loc.x = ((float) loc.x / (float) window_width_)*2 - 1;
@@ -125,7 +125,7 @@ void EditFEVScheme::HandleMouseUp(vector_float2 loc, bool left) {
             render_rightclick_popup_ = false;
         }
         
-        if (dist2to3(drag_size, vector_make_float3(0, 0, 0)) > 0.05) {
+        if (dist2to3(drag_size, vec_make_float3(0, 0, 0)) > 0.05) {
             SelectVerticesInDrag();
         }
     }
@@ -140,7 +140,7 @@ void EditFEVScheme::HandleMouseUp(vector_float2 loc, bool left) {
     }
 }
 
-std::pair<std::pair<int, int>, float> EditFEVScheme::FaceClicked(vector_float2 loc) {
+std::pair<std::pair<int, int>, float> EditFEVScheme::FaceClicked(vec_float2 loc) {
     float d1, d2, d3;
     bool has_neg, has_pos;
     
@@ -172,7 +172,7 @@ std::pair<std::pair<int, int>, float> EditFEVScheme::FaceClicked(vector_float2 l
     return std::make_pair(std::make_pair(clickedFid, clickedMid), minZ);
 }
 
-std::pair<std::pair<int, int>, float> EditFEVScheme::VertexClicked(vector_float2 loc) {
+std::pair<std::pair<int, int>, float> EditFEVScheme::VertexClicked(vec_float2 loc) {
     float minZ = -1;
     int clickedVid = -1;
     int clickedMid = -1;
@@ -202,7 +202,7 @@ std::pair<std::pair<int, int>, float> EditFEVScheme::VertexClicked(vector_float2
     return std::make_pair(std::make_pair(clickedVid, clickedMid), minZ);
 }
 
-std::pair<std::pair<std::pair<int, int>, int>, float> EditFEVScheme::EdgeClicked(vector_float2 loc) {
+std::pair<std::pair<std::pair<int, int>, int>, float> EditFEVScheme::EdgeClicked(vec_float2 loc) {
     float minZ = -1;
     int clickedv1 = -1;
     int clickedv2 = -1;
@@ -220,7 +220,7 @@ std::pair<std::pair<std::pair<int, int>, int>, float> EditFEVScheme::EdgeClicked
                 Vertex v1 = computed_compiled_vertices_[face.vertices[vid]];
                 Vertex v2 = computed_compiled_vertices_[face.vertices[(vid+1) % 3]];
                 
-                vector_float2 edgeVec = vector_make_float2(v1.x-v2.x, v1.y-v2.y);
+                vec_float2 edgeVec = vec_make_float2(v1.x-v2.x, v1.y-v2.y);
                 float mag = sqrt(pow(edgeVec.x, 2) + pow(edgeVec.y, 2));
                 if (mag == 0) {
                     continue;
@@ -231,10 +231,10 @@ std::pair<std::pair<std::pair<int, int>, int>, float> EditFEVScheme::EdgeClicked
                 edgeVec.x *= 0.01;
                 edgeVec.y *= 0.01;
                 
-                Vertex v1plus = vector_make_float3(v1.x+edgeVec.y, v1.y-edgeVec.x, v1.z);
-                Vertex v1sub = vector_make_float3(v1.x-edgeVec.y, v1.y+edgeVec.x, v1.z);
-                Vertex v2plus = vector_make_float3(v2.x+edgeVec.y, v2.y-edgeVec.x, v2.z);
-                Vertex v2sub = vector_make_float3(v2.x-edgeVec.y, v2.y+edgeVec.x, v2.z);
+                Vertex v1plus = vec_make_float3(v1.x+edgeVec.y, v1.y-edgeVec.x, v1.z);
+                Vertex v1sub = vec_make_float3(v1.x-edgeVec.y, v1.y+edgeVec.x, v1.z);
+                Vertex v2plus = vec_make_float3(v2.x+edgeVec.y, v2.y-edgeVec.x, v2.z);
+                Vertex v2sub = vec_make_float3(v2.x-edgeVec.y, v2.y+edgeVec.x, v2.z);
                 
                 if (InTriangle(loc, v1plus, v1sub, v2plus) || InTriangle(loc, v1sub, v2sub, v2plus)) {
                     float dist1 = dist2to3(loc, v1);
@@ -259,7 +259,7 @@ std::pair<std::pair<std::pair<int, int>, int>, float> EditFEVScheme::EdgeClicked
     return std::make_pair(std::make_pair(std::make_pair(clickedv1, clickedv2), clickedMid), minZ);
 }
 
-std::pair<int, float> EditFEVScheme::SliceClicked(vector_float2 loc) {
+std::pair<int, float> EditFEVScheme::SliceClicked(vec_float2 loc) {
     float minZ = -1;
     int clicked = -1;
     
@@ -295,7 +295,7 @@ std::pair<int, float> EditFEVScheme::SliceClicked(vector_float2 loc) {
     return std::make_pair(clicked, minZ);
 }
 
-bool EditFEVScheme::ClickOnScene(vector_float2 loc) {
+bool EditFEVScheme::ClickOnScene(vec_float2 loc) {
     if (render_rightclick_popup_ && InRectangle(rightclick_popup_loc_, rightclick_popup_size_, loc)) {
         return false;
     }
@@ -314,7 +314,7 @@ bool EditFEVScheme::ClickOnScene(vector_float2 loc) {
     return true;
 }
 
-void EditFEVScheme::HandleSelection(vector_float2 loc) {
+void EditFEVScheme::HandleSelection(vec_float2 loc) {
     std::pair<int, float> controls_selection = ControlModelClicked(loc);
     std::pair<std::pair<int, int>, float> face_selection = FaceClicked(loc);
     std::pair<std::pair<std::pair<int, int>, int>, float> edge_selection = EdgeClicked(loc);
@@ -530,7 +530,7 @@ void EditFEVScheme::SelectVerticesInDrag() {
 
 void EditFEVScheme::SetControlsBasis() {
     if (!selected_vertices.empty()) {
-        vector_float3 avg = vector_make_float3(0, 0, 0);
+        vec_float3 avg = vec_make_float3(0, 0, 0);
         for (int i = 0; i < selected_vertices.size(); i++) {
             avg.x += computed_model_vertices_[selected_vertices[i]].x;
             avg.y += computed_model_vertices_[selected_vertices[i]].y;
@@ -538,11 +538,11 @@ void EditFEVScheme::SetControlsBasis() {
         }
         
         controls_basis_ = scene_->GetModelUniforms(selected_model)->b;
-        controls_basis_.pos = vector_make_float3(avg.x/selected_vertices.size(), avg.y/selected_vertices.size(), avg.z/selected_vertices.size());
+        controls_basis_.pos = vec_make_float3(avg.x/selected_vertices.size(), avg.y/selected_vertices.size(), avg.z/selected_vertices.size());
     } else if (selected_slice != -1) {
         controls_basis_ = scene_->GetSliceUniforms(selected_slice)->b;
     } else {
-        vector_float3 behind_camera;
+        vec_float3 behind_camera;
         behind_camera.x = camera_->pos.x - camera_->vector.x*10;
         behind_camera.y = camera_->pos.y - camera_->vector.y*10;
         behind_camera.z = camera_->pos.z - camera_->vector.z*10;
@@ -573,8 +573,8 @@ void EditFEVScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
     if (input_enabled) {
         if (selected_arrow != -1) {
             // find the projected location of the tip and the base
-            vector_float2 top = arrow_projections[selected_arrow*2];
-            vector_float2 bot = arrow_projections[selected_arrow*2+1];
+            vec_float2 top = arrow_projections[selected_arrow*2];
+            vec_float2 bot = arrow_projections[selected_arrow*2+1];
             
             // find direction to move
             float xDiff = top.x-bot.x;
@@ -595,7 +595,7 @@ void EditFEVScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
             x_vec *= 0.01*mvmt;
             y_vec *= 0.01*mvmt;
             z_vec *= 0.01*mvmt;
-            Vertex mvmt_vec = vector_make_float3(x_vec, y_vec, z_vec);
+            Vertex mvmt_vec = vec_make_float3(x_vec, y_vec, z_vec);
             
             if (selected_model != -1) {
                 //mvmt_vec = TranslatePointToBasis(&scene_->GetModelUniforms(selected_model)->b, mvmt_vec);
@@ -614,7 +614,7 @@ void EditFEVScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
         } else {
             float relx = ((float) (x) / (float) window_width_)*2 - 1;
             float rely = -(((float) (y) / (float) window_height_)*2 - 1);
-            drag_size = vector_make_float2(relx - click_loc_.x, rely - click_loc_.y);
+            drag_size = vec_make_float2(relx - click_loc_.x, rely - click_loc_.y);
         }
     }
 }
@@ -862,7 +862,7 @@ void EditFEVScheme::RightClickPopup() {
             int v0 = GetModelVertexIdx(selected_vertices[0]).second;
             int v1 = GetModelVertexIdx(selected_vertices[1]).second;
             int v2 = GetModelVertexIdx(selected_vertices[2]).second;
-            m->MakeFace(v0, v1, v2, vector_make_float4(1, 1, 1, 1));
+            m->MakeFace(v0, v1, v2, vec_make_float4(1, 1, 1, 1));
             
             scene_face_length_++;
             should_reset_empty_buffers = true;
@@ -893,7 +893,7 @@ void EditFEVScheme::RightClickPopup() {
     }
     
 
-    rightclick_popup_size_ = vector_make_float2((button_size_.x)/(float)(window_width_/2), (button_size_.y * num_right_click_buttons_)/(float)(window_height_/2));
+    rightclick_popup_size_ = vec_make_float2((button_size_.x)/(float)(window_width_/2), (button_size_.y * num_right_click_buttons_)/(float)(window_height_/2));
 }
 
 void EditFEVScheme::VertexEditMenu() {
@@ -1309,7 +1309,7 @@ void EditFEVScheme::MainWindow() {
     
     ImGui::End();
     
-    bool should_show_drag = left_mouse_down_ && dist2to3(drag_size, vector_make_float3(0, 0, 0)) > 0.05;
+    bool should_show_drag = left_mouse_down_ && dist2to3(drag_size, vec_make_float3(0, 0, 0)) > 0.05;
     if (should_show_drag) {
         ImVec2 start;
         if (drag_size.x < 0) {

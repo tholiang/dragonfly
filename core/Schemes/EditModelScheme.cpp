@@ -47,41 +47,41 @@ void EditModelScheme::CreateControlsModels() {
     z_arrow = new Arrow();
     
     ModelTransform z_arrow_uniform;
-    z_arrow_uniform.b.pos = vector_make_float3(0, 0, 0);
-    z_arrow_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    z_arrow_uniform.b.pos = vec_make_float3(0, 0, 0);
+    z_arrow_uniform.rotate_origin = vec_make_float3(0, 0, 0);
     
     controls_model_uniforms_.push_back(z_arrow_uniform);
     controls_model_default_bases_.push_back(z_arrow_uniform.b);
-    arrow_projections[0] = vector_make_float2(0,0);
-    arrow_projections[1] = vector_make_float2(0,1);
+    arrow_projections[0] = vec_make_float2(0,0);
+    arrow_projections[1] = vec_make_float2(0,1);
     
     controls_models_.push_back(z_arrow);
     
-    x_arrow = new Arrow(vector_make_float4(0, 1, 0, 1));
+    x_arrow = new Arrow(vec_make_float4(0, 1, 0, 1));
     
     ModelTransform x_arrow_uniform;
-    x_arrow_uniform.b.pos = vector_make_float3(0, 0, 0);
-    x_arrow_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    x_arrow_uniform.b.pos = vec_make_float3(0, 0, 0);
+    x_arrow_uniform.rotate_origin = vec_make_float3(0, 0, 0);
     RotateBasisOnY(&x_arrow_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(x_arrow_uniform);
     controls_model_default_bases_.push_back(x_arrow_uniform.b);
-    arrow_projections[2] = vector_make_float2(0,0);
-    arrow_projections[3] = vector_make_float2(0,0);
+    arrow_projections[2] = vec_make_float2(0,0);
+    arrow_projections[3] = vec_make_float2(0,0);
     
     controls_models_.push_back(x_arrow);
     
-    y_arrow = new Arrow(vector_make_float4(0, 0, 1, 1));
+    y_arrow = new Arrow(vec_make_float4(0, 0, 1, 1));
     
     ModelTransform y_arrow_uniform;
-    y_arrow_uniform.b.pos = vector_make_float3(0, 0, 0);
-    y_arrow_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    y_arrow_uniform.b.pos = vec_make_float3(0, 0, 0);
+    y_arrow_uniform.rotate_origin = vec_make_float3(0, 0, 0);
     RotateBasisOnX(&y_arrow_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(y_arrow_uniform);
     controls_model_default_bases_.push_back(y_arrow_uniform.b);
-    arrow_projections[4] = vector_make_float2(0,0);
-    arrow_projections[5] = vector_make_float2(1,0);
+    arrow_projections[4] = vec_make_float2(0,0);
+    arrow_projections[5] = vec_make_float2(1,0);
     
     controls_models_.push_back(y_arrow);
     
@@ -90,49 +90,49 @@ void EditModelScheme::CreateControlsModels() {
     z_rotator->ScaleBy(1, 1, 0.8);
     
     ModelTransform z_rotator_uniform;
-    z_rotator_uniform.b.pos = vector_make_float3(0, 0, 0);
-    z_rotator_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    z_rotator_uniform.b.pos = vec_make_float3(0, 0, 0);
+    z_rotator_uniform.rotate_origin = vec_make_float3(0, 0, 0);
     RotateBasisOnZ(&z_rotator_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(z_rotator_uniform);
     controls_model_default_bases_.push_back(z_rotator_uniform.b);
-    rotator_projections[0] = vector_make_float2(0,0);
-    rotator_projections[1] = vector_make_float2(0,1);
+    rotator_projections[0] = vec_make_float2(0,0);
+    rotator_projections[1] = vec_make_float2(0,1);
     
     controls_models_.push_back(z_rotator);
     
-    x_rotator = new Rotator(vector_make_float4(0, 1, 0, 1));
+    x_rotator = new Rotator(vec_make_float4(0, 1, 0, 1));
     x_rotator->ScaleBy(1, 1, 0.8);
     
     ModelTransform x_rotator_uniform;
-    x_rotator_uniform.b.pos = vector_make_float3(0, 0, 0);
-    x_rotator_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    x_rotator_uniform.b.pos = vec_make_float3(0, 0, 0);
+    x_rotator_uniform.rotate_origin = vec_make_float3(0, 0, 0);
     RotateBasisOnY(&x_rotator_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(x_rotator_uniform);
     controls_model_default_bases_.push_back(x_rotator_uniform.b);
-    rotator_projections[2] = vector_make_float2(0,0);
-    rotator_projections[3] = vector_make_float2(0,0);
+    rotator_projections[2] = vec_make_float2(0,0);
+    rotator_projections[3] = vec_make_float2(0,0);
     
     controls_models_.push_back(x_rotator);
     
-    y_rotator = new Rotator(vector_make_float4(0, 0, 1, 1));
+    y_rotator = new Rotator(vec_make_float4(0, 0, 1, 1));
     y_rotator->ScaleBy(1, 1, 0.8);
     
     ModelTransform y_rotator_uniform;
-    y_rotator_uniform.b.pos = vector_make_float3(0, 0, 0);
-    y_rotator_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    y_rotator_uniform.b.pos = vec_make_float3(0, 0, 0);
+    y_rotator_uniform.rotate_origin = vec_make_float3(0, 0, 0);
     RotateBasisOnX(&y_rotator_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(y_rotator_uniform);
     controls_model_default_bases_.push_back(y_rotator_uniform.b);
-    rotator_projections[4] = vector_make_float2(0,0);
-    rotator_projections[5] = vector_make_float2(1,0);
+    rotator_projections[4] = vec_make_float2(0,0);
+    rotator_projections[5] = vec_make_float2(1,0);
     
     controls_models_.push_back(y_rotator);
 }
 
-void EditModelScheme::HandleMouseDown(vector_float2 loc, bool left) {
+void EditModelScheme::HandleMouseDown(vec_float2 loc, bool left) {
     Scheme::HandleMouseDown(loc, left);
     
     loc.x = ((float) loc.x / (float) window_width_)*2 - 1;
@@ -148,7 +148,7 @@ void EditModelScheme::HandleMouseDown(vector_float2 loc, bool left) {
     }
 }
 
-void EditModelScheme::HandleMouseUp(vector_float2 loc, bool left) {
+void EditModelScheme::HandleMouseUp(vec_float2 loc, bool left) {
     Scheme::HandleMouseUp(loc, left);
     
     loc.x = ((float) loc.x / (float) window_width_)*2 - 1;
@@ -170,7 +170,7 @@ void EditModelScheme::HandleMouseUp(vector_float2 loc, bool left) {
     }
 }
 
-bool EditModelScheme::ClickOnScene(vector_float2 loc) {
+bool EditModelScheme::ClickOnScene(vec_float2 loc) {
     if (render_rightclick_popup_ && InRectangle(rightclick_popup_loc_, rightclick_popup_size_, loc)) {
         return false;
     }
@@ -189,7 +189,7 @@ bool EditModelScheme::ClickOnScene(vector_float2 loc) {
     return true;
 }
 
-std::pair<int, float> EditModelScheme::ModelClicked(vector_float2 loc) {
+std::pair<int, float> EditModelScheme::ModelClicked(vec_float2 loc) {
     float d1, d2, d3;
     bool has_neg, has_pos;
     
@@ -219,7 +219,7 @@ std::pair<int, float> EditModelScheme::ModelClicked(vector_float2 loc) {
     return std::make_pair(clickedIdx, minZ);
 }
 
-void EditModelScheme::HandleSelection(vector_float2 loc) {
+void EditModelScheme::HandleSelection(vec_float2 loc) {
     if (!input_enabled) {
         return;
     }
@@ -257,7 +257,7 @@ void EditModelScheme::SetControlsBasis() {
     if (selected_model != -1) {
         controls_basis_ = scene_->GetModelUniforms(selected_model)->b;
     } else {
-        vector_float3 behind_camera;
+        vec_float3 behind_camera;
         behind_camera.x = camera_->pos.x - camera_->vector.x*10;
         behind_camera.y = camera_->pos.y - camera_->vector.y*10;
         behind_camera.z = camera_->pos.z - camera_->vector.z*10;
@@ -304,8 +304,8 @@ void EditModelScheme::HandleMouseMovement(float x, float y, float dx, float dy) 
     if (input_enabled) {
         if (selected_arrow != -1) {
             // find the projected location of the tip and the base
-            vector_float2 top = arrow_projections[selected_arrow*2];
-            vector_float2 bot = arrow_projections[selected_arrow*2+1];
+            vec_float2 top = arrow_projections[selected_arrow*2];
+            vec_float2 bot = arrow_projections[selected_arrow*2+1];
             
             // find direction to move
             float xDiff = top.x-bot.x;
@@ -342,8 +342,8 @@ void EditModelScheme::HandleMouseMovement(float x, float y, float dx, float dy) 
             }
         } else if (selected_rotator != -1) {
             // find the projected location of the tip and the base
-            vector_float2 top = rotator_projections[selected_rotator*2];
-            vector_float2 bot = rotator_projections[selected_rotator*2+1];
+            vec_float2 top = rotator_projections[selected_rotator*2];
+            vec_float2 bot = rotator_projections[selected_rotator*2+1];
             
             // find direction to move
             float xDiff = top.x-bot.x;
@@ -395,7 +395,7 @@ void EditModelScheme::RightClickPopup() {
         ImGui::SetCursorPos(ImVec2(pixel_loc.x, pixel_loc.y));
     }
     
-    rightclick_popup_size_ = vector_make_float2((button_size_.x)/(float)(window_width_/2), (button_size_.y * num_right_click_buttons_)/(float)(window_height_/2));
+    rightclick_popup_size_ = vec_make_float2((button_size_.x)/(float)(window_width_/2), (button_size_.y * num_right_click_buttons_)/(float)(window_height_/2));
 }
 
 void EditModelScheme::ModelEditMenu() {

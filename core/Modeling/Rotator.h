@@ -18,11 +18,11 @@ using namespace Vec;
 class Rotator : public Model {
 public:
     Rotator();
-    Rotator(vector_float4 c);
+    Rotator(vec_float4 c);
 private:
     void MakeRotator();
     
-    vector_float4 color;
+    vec_float4 color;
 };
 
 #endif /* Rotator_h */

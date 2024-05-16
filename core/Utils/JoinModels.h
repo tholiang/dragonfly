@@ -29,7 +29,7 @@ int match(std::vector<std::vector<float>> &graph, std::vector<int> &matches);
 void alternate(int i, std::vector<std::vector<float>> &graph, std::vector<bool> &visitedi, std::vector<bool> &visitedj, std::vector<int> &matches);
 void koenig(std::vector<std::vector<float>> &graph, std::vector<int> &matches, std::vector<int> &icover, std::vector<int> &jcover);
 // O(n^5) implementation - can change to the n^3 one
-std::vector<int> Hungarian(std::vector<vector_float3> &A, std::vector<vector_float3> &B);
+std::vector<int> Hungarian(std::vector<vec_float3> &A, std::vector<vec_float3> &B);
 void JoinModels(Model *A, Model *B, ModelTransform *muA, ModelTransform *muB, std::vector<int> &A_pts, std::vector<int> &B_pts);
 
 std::vector<int> GetNeighborsIn(Model *m, std::vector<int> vertices, int curr);

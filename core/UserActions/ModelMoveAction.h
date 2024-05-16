@@ -25,8 +25,8 @@ public:
 private:
     Scene *scene_;
     int mid_;
-    vector_float3 initial_location_;
-    vector_float3 movement_vector_;
+    vec_float3 initial_location_;
+    vec_float3 movement_vector_;
 };
 
 #endif /* ModelMoveAction_h */

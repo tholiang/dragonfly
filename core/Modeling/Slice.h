@@ -19,7 +19,7 @@ using namespace Vec;
 
 #include "../Utils/Utils.h"
 
-typedef vector_float2 Dot;
+typedef vec_float2 Dot;
 
 struct SliceAttributes {
     float width;

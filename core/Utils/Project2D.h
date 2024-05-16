@@ -21,12 +21,12 @@ using namespace Vec;
 
 namespace DragonflyUtils {
 struct PointData {
-    std::vector<vector_float2> points;
+    std::vector<vec_float2> points;
     std::vector<std::vector<int>> edges; // index i contains the indices of vertices the vertex at index i is connected to
     int dim = 0;
 };
 PointData *PointDataFromFile(std::string path);
-std::vector<vector_int3> FindPointDataTriangles(PointData* pd);
+std::vector<vec_int3> FindPointDataTriangles(PointData* pd);
 Model *ModelFromPointData(PointData *pd);
 }
 

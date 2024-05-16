@@ -18,11 +18,11 @@ UIElement::~UIElement() {
 }
 
 int UIElement::MakeVertex(int x, int y, int z) {
-    vertices.push_back(vector_make_int3(x, y, z));
+    vertices.push_back(vec_make_int3(x, y, z));
     return vertices.size() - 1;
 }
 
-int UIElement::MakeFace(int v0, int v1, int v2, vector_float4 color) {
+int UIElement::MakeFace(int v0, int v1, int v2, vec_float4 color) {
     UIFace *f = new UIFace();
     f->vertices[0] = v0;
     f->vertices[1] = v1;

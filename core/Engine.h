@@ -66,7 +66,7 @@ protected:
 
     // send to scheme
     void HandleKeyboardEvents(int key, bool down);
-    void HandleMouseClick(vector_float2 loc, int button, bool down);
+    void HandleMouseClick(vec_float2 loc, int button, bool down);
     void HandleMouseMovement(float x, float y, float dx, float dy);
 public:
     Engine();

@@ -19,11 +19,11 @@ using namespace Vec;
 
 #include "../Utils/Utils.h"
 
-typedef vector_int3 UIVertex;
+typedef vec_int3 UIVertex;
 
 struct UIFace {
     uint32_t vertices[3];
-    vector_float4 color;
+    vec_float4 color;
 };
 
 class UIElement {
@@ -41,7 +41,7 @@ public:
     ~UIElement();
     
     int MakeVertex(int x, int y, int z);
-    int MakeFace(int v0, int v1, int v2, vector_float4 color);
+    int MakeFace(int v0, int v1, int v2, vec_float4 color);
     
     UIVertex *GetVertex(int vid);
     UIFace *GetFace(int fid);

@@ -24,7 +24,7 @@ using namespace Vec;
 #include "Utils.h"
 
 namespace DragonflyUtils {
-int FaceIntercept(Model *m, vector_float3 start, vector_float3 vector, int avoid);
+int FaceIntercept(Model *m, vec_float3 start, vec_float3 vector, int avoid);
 void FindNormals(Model *m);
 void ReverseNormals(Model *m);
 }

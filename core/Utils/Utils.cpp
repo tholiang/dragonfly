@@ -60,46 +60,46 @@ std::vector<float> DragonflyUtils::splitStringToFloats (std::string str) {
     return ret;
 }
 
-vector_float3 DragonflyUtils::TriAvg (vector_float3 p1, vector_float3 p2, vector_float3 p3) {
+vec_float3 DragonflyUtils::TriAvg (vec_float3 p1, vec_float3 p2, vec_float3 p3) {
     float x = (p1.x + p2.x + p3.x)/3;
     float y = (p1.y + p2.y + p3.y)/3;
     float z = (p1.z + p2.z + p3.z)/3;
     
-    return vector_make_float3(x, y, z);
+    return vec_make_float3(x, y, z);
 }
 
-vector_float3 DragonflyUtils::BiAvg (vector_float3 p1, vector_float3 p2) {
+vec_float3 DragonflyUtils::BiAvg (vec_float3 p1, vec_float3 p2) {
     float x = (p1.x + p2.x)/2;
     float y = (p1.y + p2.y)/2;
     float z = (p1.z + p2.z)/2;
     
-    return vector_make_float3(x, y, z);
+    return vec_make_float3(x, y, z);
 }
 
-float DragonflyUtils::sign2D (vector_float2 p1, vector_float2 p2, vector_float2 p3) {
+float DragonflyUtils::sign2D (vec_float2 p1, vec_float2 p2, vec_float2 p3) {
     return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
 }
 
-float DragonflyUtils::sign (vector_float2 p1, vector_float3 p2, vector_float3 p3) {
+float DragonflyUtils::sign (vec_float2 p1, vec_float3 p2, vec_float3 p3) {
     return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
 }
 
-float DragonflyUtils::dist2to3 (vector_float2 p1, vector_float3 p2) {
+float DragonflyUtils::dist2to3 (vec_float2 p1, vec_float3 p2) {
     return std::sqrt(std::pow(p1.x - p2.x, 2) + std::pow(p1.y - p2.y, 2));
 }
 
-float DragonflyUtils::dist3to3 (vector_float3 p1, vector_float3 p2) {
+float DragonflyUtils::dist3to3 (vec_float3 p1, vec_float3 p2) {
     return std::sqrt(std::pow(p1.x - p2.x, 2) + std::pow(p1.y - p2.y, 2) + std::pow(p1.z - p2.z, 2));
 }
 
-float DragonflyUtils::acos2(vector_float3 v1, vector_float3 v2) {
+float DragonflyUtils::acos2(vec_float3 v1, vec_float3 v2) {
     float dot = v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
-    vector_float3 cross = CrossProduct(v1, v2);
-    float det = dist3to3(cross, vector_make_float3(0, 0, 0));
+    vec_float3 cross = CrossProduct(v1, v2);
+    float det = dist3to3(cross, vec_make_float3(0, 0, 0));
     return std::atan2(det, dot);
 }
 
-float DragonflyUtils::WeightedZ (vector_float2 click, vector_float3 p1, vector_float3 p2, vector_float3 p3) {
+float DragonflyUtils::WeightedZ (vec_float2 click, vec_float3 p1, vec_float3 p2, vec_float3 p3) {
     float dist1 = dist2to3(click, p1);
     float dist2 = dist2to3(click, p2);
     float dist3 = dist2to3(click, p3);
@@ -111,47 +111,47 @@ float DragonflyUtils::WeightedZ (vector_float2 click, vector_float3 p1, vector_f
     return weightedZ;
 }
 
-float DragonflyUtils::Magnitude (vector_float3 v) {
+float DragonflyUtils::Magnitude (vec_float3 v) {
     return std::sqrt(std::pow(v.x, 2) + std::pow(v.y, 2) + std::pow(v.z, 2));
 }
 
-vector_float3 DragonflyUtils::CrossProduct (vector_float3 p1, vector_float3 p2) {
-    vector_float3 cross;
+vec_float3 DragonflyUtils::CrossProduct (vec_float3 p1, vec_float3 p2) {
+    vec_float3 cross;
     cross.x = p1.y*p2.z - p1.z*p2.y;
     cross.y = -(p1.x*p2.z - p1.z*p2.x);
     cross.z = p1.x*p2.y - p1.y*p2.x;
     return cross;
 }
 
-float DragonflyUtils::DotProduct (vector_float3 p1, vector_float3 p2) {
+float DragonflyUtils::DotProduct (vec_float3 p1, vec_float3 p2) {
     return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
 }
 
-vector_float3 DragonflyUtils::ScaleVector (vector_float3 v, float k) {
-    return vector_make_float3(v.x * k, v.y * k, v.z * k);
+vec_float3 DragonflyUtils::ScaleVector (vec_float3 v, float k) {
+    return vec_make_float3(v.x * k, v.y * k, v.z * k);
 }
 
-vector_float3 DragonflyUtils::AddVectors (vector_float3 v1, vector_float3 v2) {
-    return vector_make_float3(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
+vec_float3 DragonflyUtils::AddVectors (vec_float3 v1, vec_float3 v2) {
+    return vec_make_float3(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
 }
 
-float DragonflyUtils::Projection (vector_float3 v1, vector_float3 v2) {
+float DragonflyUtils::Projection (vec_float3 v1, vec_float3 v2) {
     float dot = DotProduct(v1, v2);
     float mag = Magnitude(v2);
     return dot / mag;
 }
 
-vector_float3 DragonflyUtils::GetNormal (vector_float3 p1, vector_float3 p2, vector_float3 p3) {
-    vector_float3 u = vector_make_float3(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
-    vector_float3 v = vector_make_float3(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
+vec_float3 DragonflyUtils::GetNormal (vec_float3 p1, vec_float3 p2, vec_float3 p3) {
+    vec_float3 u = vec_make_float3(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
+    vec_float3 v = vec_make_float3(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
     
-    return vector_make_float3(u.y*v.z - u.z*v.y, u.z*v.x - u.x*v.z, u.x*v.y - u.y*v.x);
+    return vec_make_float3(u.y*v.z - u.z*v.y, u.z*v.x - u.x*v.z, u.x*v.y - u.y*v.x);
 }
 
-vector_float4 DragonflyUtils::PlaneEquation(vector_float3 p1, vector_float3 p2, vector_float3 p3) {
-    vector_float4 plane;
+vec_float4 DragonflyUtils::PlaneEquation(vec_float3 p1, vec_float3 p2, vec_float3 p3) {
+    vec_float4 plane;
     
-    vector_float3 n = GetNormal(p1, p2, p3);
+    vec_float3 n = GetNormal(p1, p2, p3);
     plane.x = n.x;
     plane.y = n.y;
     plane.z = n.z;
@@ -160,7 +160,7 @@ vector_float4 DragonflyUtils::PlaneEquation(vector_float3 p1, vector_float3 p2, 
     return plane;
 }
 
-float DragonflyUtils::LineAndPlane(vector_float3 start, vector_float3 vector, vector_float4 plane) {
+float DragonflyUtils::LineAndPlane(vec_float3 start, vec_float3 vector, vec_float4 plane) {
     float co = plane.x * vector.x + plane.y * vector.y + plane.z * vector.z;
     float k = plane.w - (plane.x * start.x + plane.y * start.y + plane.z * start.z);
     
@@ -169,23 +169,23 @@ float DragonflyUtils::LineAndPlane(vector_float3 start, vector_float3 vector, ve
     return t;
 }
 
-float DragonflyUtils::TriangleArea(vector_float3 p1, vector_float3 p2, vector_float3 p3) {
-    vector_float3 cross = GetNormal(p1, p2, p3);
+float DragonflyUtils::TriangleArea(vec_float3 p1, vec_float3 p2, vec_float3 p3) {
+    vec_float3 cross = GetNormal(p1, p2, p3);
     return std::sqrt(std::pow(cross.x, 2) + std::pow(cross.y, 2) + std::pow(cross.z, 2)) / 2;
 }
 
-vector_float3 DragonflyUtils::DistancePolynomial(vector_float3 start, vector_float3 vector, vector_float3 origin) {
+vec_float3 DragonflyUtils::DistancePolynomial(vec_float3 start, vec_float3 vector, vec_float3 origin) {
     start.x -= origin.x;
     start.y -= origin.y;
     start.z -= origin.z;
-    vector_float3 x = vector_make_float3(std::pow(vector.x, 2), 2 * start.x * vector.x, std::pow(start.x, 2));
-    vector_float3 y = vector_make_float3(std::pow(vector.y, 2), 2 * start.y * vector.y, std::pow(start.y, 2));
-    vector_float3 z = vector_make_float3(std::pow(vector.z, 2), 2 * start.z * vector.z, std::pow(start.z, 2));
+    vec_float3 x = vec_make_float3(std::pow(vector.x, 2), 2 * start.x * vector.x, std::pow(start.x, 2));
+    vec_float3 y = vec_make_float3(std::pow(vector.y, 2), 2 * start.y * vector.y, std::pow(start.y, 2));
+    vec_float3 z = vec_make_float3(std::pow(vector.z, 2), 2 * start.z * vector.z, std::pow(start.z, 2));
     
-    return vector_make_float3(x.x + y.x + z.x, x.y + y.y + z.y, x.z + y.z + z.z);
+    return vec_make_float3(x.x + y.x + z.x, x.y + y.y + z.y, x.z + y.z + z.z);
 }
 
-float DragonflyUtils::QuadraticEquation(vector_float3 coeff) {
+float DragonflyUtils::QuadraticEquation(vec_float3 coeff) {
     float inner = std::pow(coeff.y, 2) - 4 * coeff.x * coeff.z;
     float t1 = (-coeff.y - std::sqrt(inner)) / (2 * coeff.x);
     float t2 = (-coeff.y + std::sqrt(inner)) / (2 * coeff.x);
@@ -248,7 +248,7 @@ vector_float3 DragonflyUtils::MouseFaceIntercept (vector_float2 &mouse, int fid)
     return LinePlaneIntersect(camera->pos, mouse_vec, scene_vertices.at(face.vertices[0]), scene_vertices.at(face.vertices[1]), scene_vertices.at(face.vertices[2]));
 }*/
 
-bool DragonflyUtils::InTriangle2D(vector_float2 point, vector_float2 v1, vector_float2 v2, vector_float2 v3) {
+bool DragonflyUtils::InTriangle2D(vec_float2 point, vec_float2 v1, vec_float2 v2, vec_float2 v3) {
     float d1 = sign2D(point, v1, v2);
     float d2 = sign2D(point, v2, v3);
     float d3 = sign2D(point, v3, v1);
@@ -259,7 +259,7 @@ bool DragonflyUtils::InTriangle2D(vector_float2 point, vector_float2 v1, vector_
     return (!(has_neg && has_pos));
 }
 
-bool DragonflyUtils::InTriangle(vector_float2 point, vector_float3 v1, vector_float3 v2, vector_float3 v3) {
+bool DragonflyUtils::InTriangle(vec_float2 point, vec_float3 v1, vec_float3 v2, vec_float3 v3) {
     float d1 = sign(point, v1, v2);
     float d2 = sign(point, v2, v3);
     float d3 = sign(point, v3, v1);
@@ -270,18 +270,18 @@ bool DragonflyUtils::InTriangle(vector_float2 point, vector_float3 v1, vector_fl
     return (!(has_neg && has_pos));
 }
 
-bool DragonflyUtils::InRectangle(vector_float2 top_left, vector_float2 size, vector_float2 loc) {
+bool DragonflyUtils::InRectangle(vec_float2 top_left, vec_float2 size, vec_float2 loc) {
     return loc.x >= top_left.x && loc.x < top_left.x+size.x && loc.y >= top_left.y-size.y && loc.y < top_left.y;
 }
 
 
-vector_float3 DragonflyUtils::RotateAround (vector_float3 point, vector_float3 origin, vector_float3 angle) {
-    vector_float3 vec;
+vec_float3 DragonflyUtils::RotateAround (vec_float3 point, vec_float3 origin, vec_float3 angle) {
+    vec_float3 vec;
     vec.x = point.x-origin.x;
     vec.y = point.y-origin.y;
     vec.z = point.z-origin.z;
     
-    vector_float3 newvec;
+    vec_float3 newvec;
     
     // gimbal locked
     
@@ -313,7 +313,7 @@ vector_float3 DragonflyUtils::RotateAround (vector_float3 point, vector_float3 o
     return point;
 }
 
-float DragonflyUtils::AngleBetween (vector_float3 v1, vector_float3 v2) {
+float DragonflyUtils::AngleBetween (vec_float3 v1, vec_float3 v2) {
     float mag1 = std::sqrt(std::pow(v1.x, 2) + std::pow(v1.y, 2) + std::pow(v1.z, 2));
     float mag2 = std::sqrt(std::pow(v2.x, 2) + std::pow(v2.y, 2) + std::pow(v2.z, 2));
     

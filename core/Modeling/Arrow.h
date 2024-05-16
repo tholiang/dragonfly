@@ -18,10 +18,10 @@ using namespace Vec;
 class Arrow : public Model {
 public:
     Arrow();
-    Arrow(vector_float4 c);
+    Arrow(vec_float4 c);
 private:
     void MakeArrow();
     
-    vector_float4 color;
+    vec_float4 color;
 };
 #endif /* Arrow_h */

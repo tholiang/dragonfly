@@ -45,8 +45,8 @@ void DragonflyUtils::BuildSliceOnModel(Model *m, ModelTransform *mu, Slice *s, M
         int d1 = l->d1;
         int d2 = l->d2;
         
-        m->MakeFace(newslicestart+d1, newslicestart+d2, lastslicestart+d1, vector_make_float4(1, 1, 1, 1));
-        m->MakeFace(lastslicestart+d1, lastslicestart+d2, newslicestart+d2, vector_make_float4(1, 1, 1, 1));
+        m->MakeFace(newslicestart+d1, newslicestart+d2, lastslicestart+d1, vec_make_float4(1, 1, 1, 1));
+        m->MakeFace(lastslicestart+d1, lastslicestart+d2, newslicestart+d2, vec_make_float4(1, 1, 1, 1));
     }
 }
 
@@ -57,8 +57,8 @@ std::vector<int> DragonflyUtils::LinesAcross(Slice *a, ModelTransform *au, Model
         Vertex v1 = GetStandardVertexFromDot(a, au, a->GetLine(i)->d1);
         Vertex v2 = GetStandardVertexFromDot(a, au, a->GetLine(i)->d2);
         
-        vector_float3 vec1 = vector_make_float3(v1.x - bu->b.pos.x, v1.y - bu->b.pos.y, v1.z - bu->b.pos.z);
-        vector_float3 vec2 = vector_make_float3(v2.x - bu->b.pos.x, v2.y - bu->b.pos.y, v2.z - bu->b.pos.z);
+        vec_float3 vec1 = vec_make_float3(v1.x - bu->b.pos.x, v1.y - bu->b.pos.y, v1.z - bu->b.pos.z);
+        vec_float3 vec2 = vec_make_float3(v2.x - bu->b.pos.x, v2.y - bu->b.pos.y, v2.z - bu->b.pos.z);
         
         float p1 = Projection(vec1, bu->b.z);
         float p2 = Projection(vec2, bu->b.z);
@@ -77,8 +77,8 @@ std::vector<int> DragonflyUtils::LowerDotsOnLinesAcross(Slice *a, ModelTransform
         Vertex v1 = GetStandardVertexFromDot(a, au, a->GetLine(i)->d1);
         Vertex v2 = GetStandardVertexFromDot(a, au, a->GetLine(i)->d2);
         
-        vector_float3 vec1 = vector_make_float3(v1.x - bu->b.pos.x, v1.y - bu->b.pos.y, v1.z - bu->b.pos.z);
-        vector_float3 vec2 = vector_make_float3(v2.x - bu->b.pos.x, v2.y - bu->b.pos.y, v2.z - bu->b.pos.z);
+        vec_float3 vec1 = vec_make_float3(v1.x - bu->b.pos.x, v1.y - bu->b.pos.y, v1.z - bu->b.pos.z);
+        vec_float3 vec2 = vec_make_float3(v2.x - bu->b.pos.x, v2.y - bu->b.pos.y, v2.z - bu->b.pos.z);
         
         float p1 = Projection(vec1, bu->b.z);
         float p2 = Projection(vec2, bu->b.z);
@@ -92,25 +92,25 @@ std::vector<int> DragonflyUtils::LowerDotsOnLinesAcross(Slice *a, ModelTransform
     return ret;
 }
 
-std::vector<vector_float3> DragonflyUtils::CrossedPointsOnLinesAcross(Slice *a, ModelTransform *au, ModelTransform *bu) {
-    std::vector<vector_float3> ret;
+std::vector<vec_float3> DragonflyUtils::CrossedPointsOnLinesAcross(Slice *a, ModelTransform *au, ModelTransform *bu) {
+    std::vector<vec_float3> ret;
     
     for (int i = 0; i < a->NumLines(); i++) {
         Vertex v1 = GetStandardVertexFromDot(a, au, a->GetLine(i)->d1);
         Vertex v2 = GetStandardVertexFromDot(a, au, a->GetLine(i)->d2);
         
-        vector_float3 vec1 = vector_make_float3(v1.x - bu->b.pos.x, v1.y - bu->b.pos.y, v1.z - bu->b.pos.z);
-        vector_float3 vec2 = vector_make_float3(v2.x - bu->b.pos.x, v2.y - bu->b.pos.y, v2.z - bu->b.pos.z);
+        vec_float3 vec1 = vec_make_float3(v1.x - bu->b.pos.x, v1.y - bu->b.pos.y, v1.z - bu->b.pos.z);
+        vec_float3 vec2 = vec_make_float3(v2.x - bu->b.pos.x, v2.y - bu->b.pos.y, v2.z - bu->b.pos.z);
         
         float p1 = Projection(vec1, bu->b.z);
         float p2 = Projection(vec2, bu->b.z);
         
         if (p1 * p2 < 0) { // different signs
-            vector_float3 vec = vector_make_float3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z);
+            vec_float3 vec = vec_make_float3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z);
             float planed = -(bu->b.z.x*bu->b.pos.x + bu->b.z.y*bu->b.pos.y + bu->b.z.z*bu->b.pos.z);
-            float intersect = LineAndPlane(v1, vec, vector_make_float4(bu->b.z.x, bu->b.z.y, bu->b.z.z, planed));
+            float intersect = LineAndPlane(v1, vec, vec_make_float4(bu->b.z.x, bu->b.z.y, bu->b.z.z, planed));
             
-            vector_float3 point = vector_make_float3(v1.x + intersect * vec.x, v1.y + intersect * vec.y, v1.z + intersect * vec.z);
+            vec_float3 point = vec_make_float3(v1.x + intersect * vec.x, v1.y + intersect * vec.y, v1.z + intersect * vec.z);
             ret.push_back(point);
         }
     }
@@ -153,7 +153,7 @@ std::pair<int,int> DragonflyUtils::GetNextMergeDots(std::pair<int, int> curr, bo
                 Vertex v1 = GetStandardVertexFromDot(b, bu, curr.first);
                 Vertex v2 = GetStandardVertexFromDot(b, bu, other);
                 
-                vector_float3 vec = vector_make_float3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z);
+                vec_float3 vec = vec_make_float3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z);
                 float proj = Projection(vec, au->b.z);
                 
                 if ((proj > 0 && up) || (proj < 0 && !up)) {
@@ -178,7 +178,7 @@ std::pair<int,int> DragonflyUtils::GetNextMergeDots(std::pair<int, int> curr, bo
                 Vertex v1 = GetStandardVertexFromDot(b, bu, curr.second);
                 Vertex v2 = GetStandardVertexFromDot(b, bu, other);
                 
-                vector_float3 vec = vector_make_float3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z);
+                vec_float3 vec = vec_make_float3(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z);
                 float proj = Projection(vec, au->b.z);
                 
                 if ((proj > 0 && up) || (proj < 0 && !up)) {
@@ -207,12 +207,12 @@ void DragonflyUtils::MoveToMerge(Slice *a, ModelTransform *au, Slice *b, ModelTr
     // float atov2 = dist3to3(v2, au->b.pos);
     
     // for the edges on a that cross through b, find points on those edges that are closest to b
-    std::vector<vector_float3> acrosses = CrossedPointsOnLinesAcross(a, au, bu);
+    std::vector<vec_float3> acrosses = CrossedPointsOnLinesAcross(a, au, bu);
     if (acrosses.size() < 2) {
         return;
     }
-    vector_float3 cross1;
-    vector_float3 cross2;
+    vec_float3 cross1;
+    vec_float3 cross2;
     float maxcrossdist = 0;
     for (int i = 0; i < acrosses.size(); i++) {
         for (int j = i+1; j < acrosses.size(); j++) {
@@ -225,11 +225,11 @@ void DragonflyUtils::MoveToMerge(Slice *a, ModelTransform *au, Slice *b, ModelTr
         }
     }
     
-    vector_float3 vmidpoint = BiAvg(v1, v2);
-    vector_float3 crossmidpoint = BiAvg(cross1, cross2);
-    vector_float3 ashift = vector_make_float3(vmidpoint.x - crossmidpoint.x, vmidpoint.y - crossmidpoint.y, vmidpoint.z - crossmidpoint.z);
-    vector_float3 vvec = vector_make_float3(v1.x - vmidpoint.x, v1.y - vmidpoint.y, v1.z - vmidpoint.z);
-    vector_float3 cvec = vector_make_float3(cross1.x - crossmidpoint.x, cross1.y - crossmidpoint.y, cross1.z - crossmidpoint.z);
+    vec_float3 vmidpoint = BiAvg(v1, v2);
+    vec_float3 crossmidpoint = BiAvg(cross1, cross2);
+    vec_float3 ashift = vec_make_float3(vmidpoint.x - crossmidpoint.x, vmidpoint.y - crossmidpoint.y, vmidpoint.z - crossmidpoint.z);
+    vec_float3 vvec = vec_make_float3(v1.x - vmidpoint.x, v1.y - vmidpoint.y, v1.z - vmidpoint.z);
+    vec_float3 cvec = vec_make_float3(cross1.x - crossmidpoint.x, cross1.y - crossmidpoint.y, cross1.z - crossmidpoint.z);
     float vradius = Projection(vvec, cvec);
     float crossradius = Magnitude(cvec);
     float ascale = vradius / crossradius;
@@ -242,8 +242,8 @@ void DragonflyUtils::MoveToMerge(Slice *a, ModelTransform *au, Slice *b, ModelTr
     au->b.pos = AddVectors(au->b.pos, ashift);
     
     // get angle
-    vector_float3 avec = vector_make_float3(cross2.x-cross1.x, cross2.y-cross1.y, cross2.z-cross1.z);
-    vector_float3 bvec = vector_make_float3(v2.x-v1.x, v2.y-v1.y, v2.z-v1.z);
+    vec_float3 avec = vec_make_float3(cross2.x-cross1.x, cross2.y-cross1.y, cross2.z-cross1.z);
+    vec_float3 bvec = vec_make_float3(v2.x-v1.x, v2.y-v1.y, v2.z-v1.z);
     float angle = AngleBetween(avec, bvec);
     angle = abs(GetAcute(angle));
     ascale /= cos(angle);
@@ -255,9 +255,9 @@ void DragonflyUtils::MoveToMerge(Slice *a, ModelTransform *au, Slice *b, ModelTr
     if (abs(anglex) < abs(angley)) {
         // check if rotating positive or negative is better
         RotateBasisOnY(&au->b, angle); // positive
-        vector_float3 posx = au->b.x;
+        vec_float3 posx = au->b.x;
         RotateBasisOnY(&au->b, -2*angle); //negative
-        vector_float3 negx = au->b.x;
+        vec_float3 negx = au->b.x;
         RotateBasisOnY(&au->b, angle); // back to previous
         
         if (abs(AngleBetween(posx, bvec)) < abs(AngleBetween(negx, bvec))) {
@@ -282,9 +282,9 @@ void DragonflyUtils::MoveToMerge(Slice *a, ModelTransform *au, Slice *b, ModelTr
         }
         // check if rotating positive or negative is better
         RotateBasisOnX(&au->b, angle); // positive
-        vector_float3 posy = au->b.y;
+        vec_float3 posy = au->b.y;
         RotateBasisOnX(&au->b, -2*angle); //negative
-        vector_float3 negy = au->b.y;
+        vec_float3 negy = au->b.y;
         RotateBasisOnX(&au->b, angle); // back to previous
         
         if (abs(AngleBetween(posy, bvec)) < abs(AngleBetween(negy, bvec))) {
@@ -503,8 +503,8 @@ void DragonflyUtils::BridgeEqualSlices(Model *m, ModelTransform *mu, Slice *a, S
         int b1 = matching[a1];
         int b2 = matching[a2];
         
-        m->MakeFace(a1, a2, b1+a->NumDots(), vector_make_float4(1, 1, 1, 1));
-        m->MakeFace(a2, b1+a->NumDots(), b2+a->NumDots(), vector_make_float4(1, 1, 1, 1));
+        m->MakeFace(a1, a2, b1+a->NumDots(), vec_make_float4(1, 1, 1, 1));
+        m->MakeFace(a2, b1+a->NumDots(), b2+a->NumDots(), vec_make_float4(1, 1, 1, 1));
     }
 }
 

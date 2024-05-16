@@ -26,7 +26,7 @@ using namespace Vec;
 using namespace DragonflyUtils;
 
 struct ModelTransform {
-    vector_float3 rotate_origin;
+    vec_float3 rotate_origin;
     Basis b;
 };
 
@@ -51,11 +51,11 @@ public:
     Slice *GetSlice(unsigned long sid);
     ModelTransform *GetSliceUniforms(unsigned long sid);
     
-    vector_float3 GetModelPosition(unsigned long mid);
+    vec_float3 GetModelPosition(unsigned long mid);
     Basis *GetModelBasis(unsigned long mid);
 //    vector_float3 GetModelAngle(unsigned long mid);
     
-    vector_float3 GetSlicePosition(unsigned long sid);
+    vec_float3 GetSlicePosition(unsigned long sid);
 //    vector_float3 GetSliceAngle(unsigned long sid);
     
     void MoveModelBy(unsigned int mid, float dx, float dy, float dz);

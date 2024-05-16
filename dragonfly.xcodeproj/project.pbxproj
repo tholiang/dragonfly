@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		D28B7D852793B4AC00C0E47F /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D28B7D842793B4AC00C0E47F /* SDL2.framework */; };
 		D28B7D862793B4AC00C0E47F /* SDL2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D28B7D842793B4AC00C0E47F /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D29549682BF5779900FE1130 /* Vec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D29549662BF5779900FE1130 /* Vec.cpp */; };
 		D2D841202B9D0F44007224D3 /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2D840FD2B9D0F43007224D3 /* imgui_widgets.cpp */; };
 		D2D841212B9D0F44007224D3 /* imgui_impl_metal.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2D841052B9D0F43007224D3 /* imgui_impl_metal.mm */; };
 		D2D841262B9D0F44007224D3 /* imgui_impl_sdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2D8410C2B9D0F43007224D3 /* imgui_impl_sdl.cpp */; };
@@ -72,6 +73,8 @@
 
 /* Begin PBXFileReference section */
 		D28B7D842793B4AC00C0E47F /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
+		D29549662BF5779900FE1130 /* Vec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Vec.cpp; sourceTree = "<group>"; };
+		D29549672BF5779900FE1130 /* Vec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Vec.h; sourceTree = "<group>"; };
 		D2D840FA2B9D0F43007224D3 /* imgui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imgui.h; sourceTree = "<group>"; };
 		D2D840FB2B9D0F43007224D3 /* imstb_textedit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imstb_textedit.h; sourceTree = "<group>"; };
 		D2D840FC2B9D0F43007224D3 /* imconfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imconfig.h; sourceTree = "<group>"; };
@@ -80,11 +83,9 @@
 		D2D841002B9D0F43007224D3 /* imgui_impl_sdl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imgui_impl_sdl.h; sourceTree = "<group>"; };
 		D2D841012B9D0F43007224D3 /* imgui_impl_opengl3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imgui_impl_opengl3.h; sourceTree = "<group>"; };
 		D2D841022B9D0F43007224D3 /* imgui_impl_glut.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imgui_impl_glut.h; sourceTree = "<group>"; };
-		D2D841032B9D0F43007224D3 /* imgui_impl_opengl2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imgui_impl_opengl2.h; sourceTree = "<group>"; };
 		D2D841042B9D0F43007224D3 /* imgui_impl_opengl3_loader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imgui_impl_opengl3_loader.h; sourceTree = "<group>"; };
 		D2D841052B9D0F43007224D3 /* imgui_impl_metal.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = imgui_impl_metal.mm; sourceTree = "<group>"; };
 		D2D841062B9D0F43007224D3 /* imgui_impl_glut.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_impl_glut.cpp; sourceTree = "<group>"; };
-		D2D841072B9D0F43007224D3 /* imgui_impl_opengl2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_impl_opengl2.cpp; sourceTree = "<group>"; };
 		D2D841082B9D0F43007224D3 /* imgui_impl_glfw.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imgui_impl_glfw.h; sourceTree = "<group>"; };
 		D2D841092B9D0F43007224D3 /* imgui_impl_metal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imgui_impl_metal.h; sourceTree = "<group>"; };
 		D2D8410A2B9D0F43007224D3 /* imgui_impl_opengl3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_impl_opengl3.cpp; sourceTree = "<group>"; };
@@ -211,11 +212,9 @@
 				D2D841002B9D0F43007224D3 /* imgui_impl_sdl.h */,
 				D2D841012B9D0F43007224D3 /* imgui_impl_opengl3.h */,
 				D2D841022B9D0F43007224D3 /* imgui_impl_glut.h */,
-				D2D841032B9D0F43007224D3 /* imgui_impl_opengl2.h */,
 				D2D841042B9D0F43007224D3 /* imgui_impl_opengl3_loader.h */,
 				D2D841052B9D0F43007224D3 /* imgui_impl_metal.mm */,
 				D2D841062B9D0F43007224D3 /* imgui_impl_glut.cpp */,
-				D2D841072B9D0F43007224D3 /* imgui_impl_opengl2.cpp */,
 				D2D841082B9D0F43007224D3 /* imgui_impl_glfw.h */,
 				D2D841092B9D0F43007224D3 /* imgui_impl_metal.h */,
 				D2D8410A2B9D0F43007224D3 /* imgui_impl_opengl3.cpp */,
@@ -286,6 +285,8 @@
 			children = (
 				D2D841512B9D0F4F007224D3 /* Utils.h */,
 				D2D841532B9D0F4F007224D3 /* Utils.cpp */,
+				D29549672BF5779900FE1130 /* Vec.h */,
+				D29549662BF5779900FE1130 /* Vec.cpp */,
 				D2D841522B9D0F4F007224D3 /* Basis.h */,
 				D2D841592B9D0F4F007224D3 /* Basis.cpp */,
 				D2D841502B9D0F4F007224D3 /* Normals.h */,
@@ -493,6 +494,7 @@
 				D2D8418C2B9D0F4F007224D3 /* UserAction.cpp in Sources */,
 				D2D841812B9D0F4F007224D3 /* JoinSlices.cpp in Sources */,
 				D2D841342B9D0F44007224D3 /* imgui_draw.cpp in Sources */,
+				D29549682BF5779900FE1130 /* Vec.cpp in Sources */,
 				D2D841852B9D0F4F007224D3 /* JoinModels.cpp in Sources */,
 				D2D8418E2B9D0F4F007224D3 /* FaceAddVertexAction.cpp in Sources */,
 				D2D8417E2B9D0F4F007224D3 /* RenderPipelineMetalSDL.mm in Sources */,
@@ -554,7 +556,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
 			};
@@ -646,7 +648,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
 			};

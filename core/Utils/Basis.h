@@ -23,25 +23,25 @@ using namespace Vec;
 
 namespace DragonflyUtils {
 struct Basis {
-    vector_float3 pos;
+    vec_float3 pos;
     // angles
-    vector_float3 x;
-    vector_float3 y;
-    vector_float3 z;
+    vec_float3 x;
+    vec_float3 y;
+    vec_float3 z;
     Basis() {
-        pos = vector_make_float3(0,0,0);
-        x = vector_make_float3(1,0,0);
-        y = vector_make_float3(0,1,0);
-        z = vector_make_float3(0,0,1);
+        pos = vec_make_float3(0,0,0);
+        x = vec_make_float3(1,0,0);
+        y = vec_make_float3(0,1,0);
+        z = vec_make_float3(0,0,1);
     }
 };
 void RotateBasisOnX(Basis *b, float angle);
 void RotateBasisOnY(Basis *b, float angle);
 void RotateBasisOnZ(Basis *b, float angle);
-vector_float3 TranslatePointToStandard(Basis *b, vector_float3 point);
-vector_float3 RotatePointToStandard(Basis *b, vector_float3 point);
-vector_float3 TranslatePointToBasis(Basis *b, vector_float3 point);
-vector_float3 RotatePointToBasis(Basis *b, vector_float3 point);
+vec_float3 TranslatePointToStandard(Basis *b, vec_float3 point);
+vec_float3 RotatePointToStandard(Basis *b, vec_float3 point);
+vec_float3 TranslatePointToBasis(Basis *b, vec_float3 point);
+vec_float3 RotatePointToBasis(Basis *b, vec_float3 point);
 Basis TranslateBasis(Basis *b, Basis *onto);
 void BasisToFile(std::ofstream &file, Basis *b);
 Basis BasisFromFile(std::ifstream &file);

@@ -28,26 +28,6 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D2EAF76227914119002DE553"
-               BuildableName = "dragonflyTests.xctest"
-               BlueprintName = "dragonflyTests"
-               ReferencedContainer = "container:dragonfly.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D2EAF76C27914119002DE553"
-               BuildableName = "dragonflyUITests.xctest"
-               BlueprintName = "dragonflyUITests"
-               ReferencedContainer = "container:dragonfly.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

@@ -28,14 +28,14 @@ EditNodeScheme::~EditNodeScheme() {
 }
 
 void EditNodeScheme::GenerateCustomUI() {
-    MakeRect(-window_width_/2, -window_height_/2, window_width_-right_menu_width_, 200, 9, vector_make_float4(0.3, 0.3, 0.3, 1));
-    MakeRect(-window_width_/2+50, -window_height_/2 + 75, window_width_-right_menu_width_-100, 2, 8, vector_make_float4(0.9, 0.9, 0.9, 1));
-    MakeRect(-window_width_/2+50, -window_height_/2 + 55, window_width_-right_menu_width_-100, 20, 7, vector_make_float4(0.55, 0.35, 0.35, 0.2));
-    MakeRect(-window_width_/2+50, -window_height_/2 + 77, window_width_-right_menu_width_-100, 20, 7, vector_make_float4(0.35, 0.35, 0.55, 0.2));
+    MakeRect(-window_width_/2, -window_height_/2, window_width_-right_menu_width_, 200, 9, vec_make_float4(0.3, 0.3, 0.3, 1));
+    MakeRect(-window_width_/2+50, -window_height_/2 + 75, window_width_-right_menu_width_-100, 2, 8, vec_make_float4(0.9, 0.9, 0.9, 1));
+    MakeRect(-window_width_/2+50, -window_height_/2 + 55, window_width_-right_menu_width_-100, 20, 7, vec_make_float4(0.55, 0.35, 0.35, 0.2));
+    MakeRect(-window_width_/2+50, -window_height_/2 + 77, window_width_-right_menu_width_-100, 20, 7, vec_make_float4(0.35, 0.35, 0.55, 0.2));
     clickable_ui.push_back(2);
     clickable_ui.push_back(3);
     
-    MakeIsoTriangle(-window_width_/2+40, -window_height_/2 + 95, 20, -20, 5, vector_make_float4(0, 0, 1, 1));
+    MakeIsoTriangle(-window_width_/2+40, -window_height_/2 + 95, 20, -20, 5, vec_make_float4(0, 0, 1, 1));
 }
 
 void EditNodeScheme::UpdateCustomUI() {
@@ -87,7 +87,7 @@ void EditNodeScheme::SetNewAnimations(int aid) {
         float ratio = kf->time / anim->GetLength();
         int x = -window_width_/2+40+(ratio * (window_width_-right_menu_width_-100));
         clickable_ui.push_back(ui_elements_.size()-1);
-        MakeIsoTriangle(x, -window_height_/2 + 55, 20, 20, 5, vector_make_float4(1, 0, 0, 1));
+        MakeIsoTriangle(x, -window_height_/2 + 55, 20, 20, 5, vec_make_float4(1, 0, 0, 1));
     }
     
     CalculateNumUIFaces();
@@ -108,7 +108,7 @@ void EditNodeScheme::UpdateTimeKey() {
     eu->position.x = x;
 }
 
-float EditNodeScheme::GetTimeFromLocation(vector_float2 loc) {
+float EditNodeScheme::GetTimeFromLocation(vec_float2 loc) {
     int x = window_width_*loc.x/2;
     
     if (selected_model_ < 0) return 0;
@@ -128,43 +128,43 @@ void EditNodeScheme::CreateControlsModels() {
     z_arrow = new Arrow();
     
     ModelTransform z_arrow_uniform;
-    z_arrow_uniform.b.pos = vector_make_float3(0, 0, 0);
-    z_arrow_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    z_arrow_uniform.b.pos = vec_make_float3(0, 0, 0);
+    z_arrow_uniform.rotate_origin = vec_make_float3(0, 0, 0);
     
     controls_model_uniforms_.push_back(z_arrow_uniform);
     controls_model_default_bases_.push_back(z_arrow_uniform.b);
-    arrow_projections[0] = vector_make_float2(0,0);
-    arrow_projections[1] = vector_make_float2(0,1);
+    arrow_projections[0] = vec_make_float2(0,0);
+    arrow_projections[1] = vec_make_float2(0,1);
     
     controls_models_.push_back(z_arrow);
     
-    x_arrow = new Arrow(vector_make_float4(0, 1, 0, 1));
+    x_arrow = new Arrow(vec_make_float4(0, 1, 0, 1));
     
     ModelTransform x_arrow_uniform;
-    x_arrow_uniform.b.pos = vector_make_float3(0, 0, 0);
-    x_arrow_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    x_arrow_uniform.b.pos = vec_make_float3(0, 0, 0);
+    x_arrow_uniform.rotate_origin = vec_make_float3(0, 0, 0);
     //x_arrow_uniform.angle = vector_make_float3(M_PI_2, 0, 0);
     RotateBasisOnY(&x_arrow_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(x_arrow_uniform);
     controls_model_default_bases_.push_back(x_arrow_uniform.b);
-    arrow_projections[2] = vector_make_float2(0,0);
-    arrow_projections[3] = vector_make_float2(0,0);
+    arrow_projections[2] = vec_make_float2(0,0);
+    arrow_projections[3] = vec_make_float2(0,0);
     
     controls_models_.push_back(x_arrow);
     
-    y_arrow = new Arrow(vector_make_float4(0, 0, 1, 1));
+    y_arrow = new Arrow(vec_make_float4(0, 0, 1, 1));
     
     ModelTransform y_arrow_uniform;
-    y_arrow_uniform.b.pos = vector_make_float3(0, 0, 0);
-    y_arrow_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    y_arrow_uniform.b.pos = vec_make_float3(0, 0, 0);
+    y_arrow_uniform.rotate_origin = vec_make_float3(0, 0, 0);
 //    y_arrow_uniform.angle = vector_make_float3(0, -M_PI_2, 0);
     RotateBasisOnX(&y_arrow_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(y_arrow_uniform);
     controls_model_default_bases_.push_back(y_arrow_uniform.b);
-    arrow_projections[4] = vector_make_float2(0,0);
-    arrow_projections[5] = vector_make_float2(1,0);
+    arrow_projections[4] = vec_make_float2(0,0);
+    arrow_projections[5] = vec_make_float2(1,0);
     
     controls_models_.push_back(y_arrow);
     
@@ -173,46 +173,46 @@ void EditNodeScheme::CreateControlsModels() {
     z_rotator->ScaleBy(1, 1, 0.8);
     
     ModelTransform z_rotator_uniform;
-    z_rotator_uniform.b.pos = vector_make_float3(0, 0, 0);
-    z_rotator_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    z_rotator_uniform.b.pos = vec_make_float3(0, 0, 0);
+    z_rotator_uniform.rotate_origin = vec_make_float3(0, 0, 0);
     RotateBasisOnZ(&z_rotator_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(z_rotator_uniform);
     controls_model_default_bases_.push_back(z_rotator_uniform.b);
-    rotator_projections[0] = vector_make_float2(0,0);
-    rotator_projections[1] = vector_make_float2(0,1);
+    rotator_projections[0] = vec_make_float2(0,0);
+    rotator_projections[1] = vec_make_float2(0,1);
     
     controls_models_.push_back(z_rotator);
     
-    x_rotator = new Rotator(vector_make_float4(0, 1, 0, 1));
+    x_rotator = new Rotator(vec_make_float4(0, 1, 0, 1));
     x_rotator->ScaleBy(1, 1, 0.8);
     
     ModelTransform x_rotator_uniform;
-    x_rotator_uniform.b.pos = vector_make_float3(0, 0, 0);
-    x_rotator_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    x_rotator_uniform.b.pos = vec_make_float3(0, 0, 0);
+    x_rotator_uniform.rotate_origin = vec_make_float3(0, 0, 0);
     //x_arrow_uniform.angle = vector_make_float3(M_PI_2, 0, 0);
     RotateBasisOnY(&x_rotator_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(x_rotator_uniform);
     controls_model_default_bases_.push_back(x_rotator_uniform.b);
-    rotator_projections[2] = vector_make_float2(0,0);
-    rotator_projections[3] = vector_make_float2(0,0);
+    rotator_projections[2] = vec_make_float2(0,0);
+    rotator_projections[3] = vec_make_float2(0,0);
     
     controls_models_.push_back(x_rotator);
     
-    y_rotator = new Rotator(vector_make_float4(0, 0, 1, 1));
+    y_rotator = new Rotator(vec_make_float4(0, 0, 1, 1));
     y_rotator->ScaleBy(1, 1, 0.8);
     
     ModelTransform y_rotator_uniform;
-    y_rotator_uniform.b.pos = vector_make_float3(0, 0, 0);
-    y_rotator_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    y_rotator_uniform.b.pos = vec_make_float3(0, 0, 0);
+    y_rotator_uniform.rotate_origin = vec_make_float3(0, 0, 0);
 //    y_arrow_uniform.angle = vector_make_float3(0, -M_PI_2, 0);
     RotateBasisOnX(&y_rotator_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(y_rotator_uniform);
     controls_model_default_bases_.push_back(y_rotator_uniform.b);
-    rotator_projections[4] = vector_make_float2(0,0);
-    rotator_projections[5] = vector_make_float2(1,0);
+    rotator_projections[4] = vec_make_float2(0,0);
+    rotator_projections[5] = vec_make_float2(1,0);
     
     controls_models_.push_back(y_rotator);
 }
@@ -223,8 +223,8 @@ void EditNodeScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
     if (input_enabled) {
         if (selected_arrow != -1 && selected_model_ != -1) {
             // find the projected location of the tip and the base
-            vector_float2 top = arrow_projections[selected_arrow*2];
-            vector_float2 bot = arrow_projections[selected_arrow*2+1];
+            vec_float2 top = arrow_projections[selected_arrow*2];
+            vec_float2 bot = arrow_projections[selected_arrow*2+1];
             
             // find direction to move
             float xDiff = top.x-bot.x;
@@ -245,7 +245,7 @@ void EditNodeScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
             x_vec *= 0.01*mvmt;
             y_vec *= 0.01*mvmt;
             z_vec *= 0.01*mvmt;
-            Vertex mvmt_vec = vector_make_float3(x_vec, y_vec, z_vec);
+            Vertex mvmt_vec = vec_make_float3(x_vec, y_vec, z_vec);
             //mvmt_vec = TranslatePointToBasis(&scene_->GetModelUniforms(selected_model_)->b, mvmt_vec);
             
             if (selected_node_ != -1) {
@@ -257,8 +257,8 @@ void EditNodeScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
             }
         } else if (selected_rotator != -1) {
             // find the projected location of the tip and the base
-            vector_float2 top = rotator_projections[selected_rotator*2];
-            vector_float2 bot = rotator_projections[selected_rotator*2+1];
+            vec_float2 top = rotator_projections[selected_rotator*2];
+            vec_float2 bot = rotator_projections[selected_rotator*2+1];
             
             // find direction to move
             float xDiff = top.x-bot.x;
@@ -283,7 +283,7 @@ void EditNodeScheme::HandleMouseMovement(float x, float y, float dx, float dy) {
     }
 }
 
-void EditNodeScheme::HandleMouseDown(vector_float2 loc, bool left) {
+void EditNodeScheme::HandleMouseDown(vec_float2 loc, bool left) {
     Scheme::HandleMouseDown(loc, left);
     
     loc.x = ((float) loc.x / (float) window_width_)*2 - 1;
@@ -292,7 +292,7 @@ void EditNodeScheme::HandleMouseDown(vector_float2 loc, bool left) {
     if (!left) {
         if (selected_node_ != -1) {
             rightclick_popup_loc_ = loc;
-            rightclick_popup_size_ = vector_make_float2(90/(float)(window_width_/2), 40/(float)(window_height_/2));
+            rightclick_popup_size_ = vec_make_float2(90/(float)(window_width_/2), 40/(float)(window_height_/2));
             render_rightclick_popup_ = true;
         } else {
             render_rightclick_popup_ = false;
@@ -300,7 +300,7 @@ void EditNodeScheme::HandleMouseDown(vector_float2 loc, bool left) {
     }
 }
 
-void EditNodeScheme::HandleMouseUp(vector_float2 loc, bool left) {
+void EditNodeScheme::HandleMouseUp(vec_float2 loc, bool left) {
     Scheme::HandleMouseUp(loc, left);
     
     loc.x = ((float) loc.x / (float) window_width_)*2 - 1;
@@ -316,7 +316,7 @@ void EditNodeScheme::HandleMouseUp(vector_float2 loc, bool left) {
     }
 }
 
-std::pair<std::pair<int, int>, float> EditNodeScheme::NodeClicked(vector_float2 loc) {
+std::pair<std::pair<int, int>, float> EditNodeScheme::NodeClicked(vec_float2 loc) {
     float minZ = -1;
     int clickedNid = -1;
     int clickedMid = -1;
@@ -331,8 +331,8 @@ std::pair<std::pair<int, int>, float> EditNodeScheme::NodeClicked(vector_float2 
             float radius = (1/projected_node_center.z) / 500;
             radius = radius * window_width_;
             
-            vector_float2 scaled_click = vector_make_float2(loc.x * window_width_, loc.y * window_height_);
-            vector_float3 scaled_node = vector_make_float3(projected_node_center.x * window_width_, projected_node_center.y * window_height_, projected_node_center.z);
+            vec_float2 scaled_click = vec_make_float2(loc.x * window_width_, loc.y * window_height_);
+            vec_float3 scaled_node = vec_make_float3(projected_node_center.x * window_width_, projected_node_center.y * window_height_, projected_node_center.z);
             
             float d = dist2to3(scaled_click, scaled_node);
             
@@ -349,7 +349,7 @@ std::pair<std::pair<int, int>, float> EditNodeScheme::NodeClicked(vector_float2 
     return std::make_pair(std::make_pair(clickedNid, clickedMid), minZ);
 }
 
-bool EditNodeScheme::ClickOnScene(vector_float2 loc) {
+bool EditNodeScheme::ClickOnScene(vec_float2 loc) {
     if (render_rightclick_popup_ && InRectangle(rightclick_popup_loc_, rightclick_popup_size_, loc)) {
         return false;
     }
@@ -368,7 +368,7 @@ bool EditNodeScheme::ClickOnScene(vector_float2 loc) {
     return true;
 }
 
-void EditNodeScheme::HandleSelection(vector_float2 loc) {
+void EditNodeScheme::HandleSelection(vec_float2 loc) {
     std::pair<int, float> controls_selection = ControlModelClicked(loc);
     std::pair<std::pair<int, int>, float> node_selection = NodeClicked(loc);
     std::pair<int, float> ui_selection = UIElementClicked(loc);
@@ -448,7 +448,7 @@ void EditNodeScheme::SetControlsBasis() {
             controls_basis_ = computed_model_nodes_[selected_node_].b;
         }
     } else {
-        vector_float3 behind_camera;
+        vec_float3 behind_camera;
         behind_camera.x = camera_->pos.x - camera_->vector.x*10;
         behind_camera.y = camera_->pos.y - camera_->vector.y*10;
         behind_camera.z = camera_->pos.z - camera_->vector.z*10;

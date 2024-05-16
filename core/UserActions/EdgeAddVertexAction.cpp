@@ -30,9 +30,9 @@ void EdgeAddVertexAction::EndRecording() {
 void EdgeAddVertexAction::Do() {
     fids_ = model_->GetEdgeFaces(vid1_, vid2_);
     
-    vector_float3 v1 = model_->GetVertex(vid1_);
-    vector_float3 v2 = model_->GetVertex(vid2_);
-    vector_float3 new_v = DragonflyUtils::BiAvg(v1, v2);
+    vec_float3 v1 = model_->GetVertex(vid1_);
+    vec_float3 v2 = model_->GetVertex(vid2_);
+    vec_float3 new_v = DragonflyUtils::BiAvg(v1, v2);
     model_->InsertVertex(new_v.x, new_v.y, new_v.z, vid_new_);
     
     for (std::size_t i = 0; i < fids_.size(); i++) {

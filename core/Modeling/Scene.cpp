@@ -101,9 +101,9 @@ ModelTransform * Scene::GetSliceUniforms(unsigned long sid) {
     return &slice_uniforms[sid];
 }
 
-vector_float3 Scene::GetModelPosition(unsigned long mid) {
+vec_float3 Scene::GetModelPosition(unsigned long mid) {
     if (mid >= model_uniforms.size()) {
-        return vector_make_float3(0,0,0);
+        return vec_make_float3(0,0,0);
     }
     
     return model_uniforms[mid].b.pos;
@@ -125,9 +125,9 @@ Basis *Scene::GetModelBasis(unsigned long mid) {
 //    return model_uniforms[mid].angle;
 //}
 
-vector_float3 Scene::GetSlicePosition(unsigned long sid) {
+vec_float3 Scene::GetSlicePosition(unsigned long sid) {
     if (sid >= slice_uniforms.size()) {
-        return vector_make_float3(0,0,0);
+        return vec_make_float3(0,0,0);
     }
     
     return slice_uniforms[sid].b.pos;
@@ -279,7 +279,7 @@ void Scene::CreateNewModel() {
     models.push_back(m);
     ModelTransform new_uniform;
     new_uniform.b = Basis();
-    new_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    new_uniform.rotate_origin = vec_make_float3(0, 0, 0);
     
     model_uniforms.push_back(new_uniform);
 }
@@ -290,7 +290,7 @@ void Scene::NewModelFromFile(std::string path) {
     models.push_back(m);
     ModelTransform new_uniform;
     new_uniform.b = Basis();
-    new_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    new_uniform.rotate_origin = vec_make_float3(0, 0, 0);
     
     model_uniforms.push_back(new_uniform);
 }
@@ -302,7 +302,7 @@ void Scene::NewModelFromPointData(std::string path) {
     models.push_back(m);
     ModelTransform new_uniform;
     new_uniform.b = Basis();
-    new_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    new_uniform.rotate_origin = vec_make_float3(0, 0, 0);
     
     model_uniforms.push_back(new_uniform);
 }
@@ -317,7 +317,7 @@ void Scene::AddSlice(Slice *s) {
     
     ModelTransform new_uniform;
     new_uniform.b = Basis();
-    new_uniform.rotate_origin = vector_make_float3(0, 0, 0);
+    new_uniform.rotate_origin = vec_make_float3(0, 0, 0);
     
     slice_uniforms.push_back(new_uniform);
 }

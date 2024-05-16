@@ -1,4 +1,4 @@
-// TODO: CHANGE vector_ TYPES
+// TODO: CHANGE vec_ TYPES
 
 
 //
@@ -14,9 +14,45 @@ using namespace metal;
 constant float pi = 3.14159265358979;
 constant float render_dist = 50;
 
-typedef vector_float3 Vertex;
-typedef vector_int3 UIVertex;
-typedef vector_float2 Dot;
+struct vec_float2 {
+    float x;
+    float y;
+};
+
+struct vec_float3 {
+    float x;
+    float y;
+    float z;
+};
+
+struct vec_float4 {
+    float x;
+    float y;
+    float z;
+    float w;
+};
+
+struct vec_int2 {
+    int x;
+    int y;
+};
+
+struct vec_int3 {
+    int x;
+    int y;
+    int z;
+};
+
+struct vec_int4 {
+    int x;
+    int y;
+    int z;
+    int w;
+};
+
+typedef vec_float3 Vertex;
+typedef vec_int3 UIVertex;
+typedef vec_float2 Dot;
 
 struct WindowAttributes {
     unsigned int width = 1280;
@@ -49,33 +85,33 @@ struct CompiledBufferKeyIndices {
 };
 
 struct Basis {
-    vector_float3 pos;
+    vec_float3 pos;
     // angles
-    vector_float3 x;
-    vector_float3 y;
-    vector_float3 z;
+    vec_float3 x;
+    vec_float3 y;
+    vec_float3 z;
 };
 
 struct Camera {
-    vector_float3 pos;
-    vector_float3 vector;
-    vector_float3 upVector;
-    vector_float2 FOV;
+    vec_float3 pos;
+    vec_float3 vector;
+    vec_float3 upVector;
+    vec_float2 FOV;
 };
 
 struct Face {
     unsigned int vertices[3];
-    vector_float4 color;
+    vec_float4 color;
     
     bool normal_reversed;
-    vector_float3 lighting_offset; // if there were a light source directly in front of the face, this is the rotation to get to its brightest orientation
+    vec_float3 lighting_offset; // if there were a light source directly in front of the face, this is the rotation to get to its brightest orientation
     float shading_multiplier;
 };
 
 struct UIElementTransform {
-    vector_int3 position;
-    vector_float3 up;
-    vector_float3 right;
+    vec_int3 position;
+    vec_float3 up;
+    vec_float3 right;
 };
 
 struct Node {
@@ -85,7 +121,7 @@ struct Node {
 
 struct NodeVertexLink {
     int nid;
-    vector_float3 vector;
+    vec_float3 vector;
     float weight;
 };
 
@@ -95,7 +131,7 @@ struct VertexOut {
 };
 
 struct ModelTransform {
-    vector_float3 rotate_origin;
+    vec_float3 rotate_origin;
     Basis b;
 };
 
@@ -105,9 +141,58 @@ struct SliceAttributes {
 };
 
 // ---HELPER FUNCTIONS---
+// vec
+vec_float2 vec_make_float2(float x, float y) {
+    vec_float2 ret;
+    ret.x = x;
+    ret.y = y;
+    return ret;
+}
+
+vec_float3 vec_make_float3(float x, float y, float z) {
+    vec_float3 ret;
+    ret.x = x;
+    ret.y = y;
+    ret.z = z;
+    return ret;
+}
+
+vec_float4 vec_make_float4(float x, float y, float z, int w) {
+    vec_float4 ret;
+    ret.x = x;
+    ret.y = y;
+    ret.z = z;
+    ret.w = w;
+    return ret;
+}
+
+vec_int2 vec_make_int2(int x, int y) {
+    vec_int2 ret;
+    ret.x = x;
+    ret.y = y;
+    return ret;
+}
+
+vec_int3 vec_make_int3(int x, int y, int z) {
+    vec_int3 ret;
+    ret.x = x;
+    ret.y = y;
+    ret.z = z;
+    return ret;
+}
+
+vec_int4 vec_make_int4(int x, int y, int z, int w) {
+    vec_int4 ret;
+    ret.x = x;
+    ret.y = y;
+    ret.z = z;
+    ret.w = w;
+    return ret;
+}
+
 // add two 3D vectors
-vector_float3 AddVectors(vector_float3 v1, vector_float3 v2) {
-    vector_float3 ret;
+vec_float3 AddVectors(vec_float3 v1, vec_float3 v2) {
+    vec_float3 ret;
     ret.x = v1.x + v2.x;
     ret.y = v1.y + v2.y;
     ret.z = v1.z + v2.z;
@@ -115,16 +200,16 @@ vector_float3 AddVectors(vector_float3 v1, vector_float3 v2) {
 }
 
 // calculate cross product of 3D triangle
-vector_float3 cross_product (vector_float3 p1, vector_float3 p2, vector_float3 p3) {
-    vector_float3 u = vector_float3(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
-    vector_float3 v = vector_float3(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
+vec_float3 cross_product (vec_float3 p1, vec_float3 p2, vec_float3 p3) {
+    vec_float3 u = vec_make_float3(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
+    vec_float3 v = vec_make_float3(p3.x - p1.x, p3.y - p1.y, p3.z - p1.z);
     
-    return vector_float3(u.y*v.z - u.z*v.y, u.z*v.x - u.x*v.z, u.x*v.y - u.y*v.x);
+    return vec_make_float3(u.y*v.z - u.z*v.y, u.z*v.x - u.x*v.z, u.x*v.y - u.y*v.x);
 }
 
 // calculate cross product of 3D vectors
-vector_float3 cross_vectors(vector_float3 p1, vector_float3 p2) {
-    vector_float3 cross;
+vec_float3 cross_vectors(vec_float3 p1, vec_float3 p2) {
+    vec_float3 cross;
     cross.x = p1.y*p2.z - p1.z*p2.y;
     cross.y = -(p1.x*p2.z - p1.z*p2.x);
     cross.z = p1.x*p2.y - p1.y*p2.x;
@@ -132,24 +217,24 @@ vector_float3 cross_vectors(vector_float3 p1, vector_float3 p2) {
 }
 
 // calculate average of three 3D points
-vector_float3 TriAvg (vector_float3 p1, vector_float3 p2, vector_float3 p3) {
+vec_float3 TriAvg (vec_float3 p1, vec_float3 p2, vec_float3 p3) {
     float x = (p1.x + p2.x + p3.x)/3;
     float y = (p1.y + p2.y + p3.y)/3;
     float z = (p1.z + p2.z + p3.z)/3;
     
-    return vector_float3(x, y, z);
+    return vec_make_float3(x, y, z);
 }
 
 // idk what this is tbh
-float acos2(vector_float3 v1, vector_float3 v2) {
+float acos2(vec_float3 v1, vec_float3 v2) {
     float dot = v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
-    vector_float3 cross = cross_vectors(v1, v2);
+    vec_float3 cross = cross_vectors(v1, v2);
     float det = sqrt(pow(cross.x, 2) + pow(cross.y, 2) + pow(cross.z, 2));
     return atan2(det, dot);
 }
 
 // calculate angle between 3D vectors
-float angle_between (vector_float3 v1, vector_float3 v2) {
+float angle_between (vec_float3 v1, vec_float3 v2) {
     float mag1 = sqrt(pow(v1.x, 2) + pow(v1.y, 2) + pow(v1.z, 2));
     float mag2 = sqrt(pow(v2.x, 2) + pow(v2.y, 2) + pow(v2.z, 2));
     
@@ -158,9 +243,9 @@ float angle_between (vector_float3 v1, vector_float3 v2) {
 
 // TODO: make this not shit pls
 // convert a 3d point to a pixel (vertex) value
-vector_float3 PointToPixel (vector_float3 point, constant Camera &camera)  {
+vec_float3 PointToPixel (vec_float3 point, constant Camera &camera)  {
     //vector from camera position to object position
-    vector_float4 toObject;
+    vec_float4 toObject;
     toObject.x = (point.x-camera.pos.x);
     toObject.y = (point.y-camera.pos.y);
     toObject.z = (point.z-camera.pos.z);
@@ -168,14 +253,14 @@ vector_float3 PointToPixel (vector_float3 point, constant Camera &camera)  {
     
     //project camera vector onto object vector
     float dotProduct = (toObject.x*camera.vector.x)+(toObject.y*camera.vector.y)+(toObject.z*camera.vector.z);
-    vector_float4 proj;
+    vec_float4 proj;
     proj.x = dotProduct*camera.vector.x;
     proj.y = dotProduct*camera.vector.y;
     proj.z = dotProduct*camera.vector.z;
     proj.w = sqrt(pow(proj.x, 2)+pow(proj.y, 2)+pow(proj.z, 2));
     
     //subtract projected vector from the object vector to get the "on screen" vector
-    vector_float4 distTo;
+    vec_float4 distTo;
     distTo.x = toObject.x-proj.x;
     distTo.y = toObject.y-proj.y;
     distTo.z = toObject.z-proj.z;
@@ -211,20 +296,20 @@ vector_float3 PointToPixel (vector_float3 point, constant Camera &camera)  {
     
     // if dot product is negative then the vertex is behind
     if (dotProduct < 0) {
-        return vector_float3(screenX, screenY, -proj.w/render_dist);
+        return vec_make_float3(screenX, screenY, -proj.w/render_dist);
     }
     
-    return vector_float3(screenX, screenY, proj.w/render_dist);
+    return vec_make_float3(screenX, screenY, proj.w/render_dist);
 }
 
 // rotate a point around a point
-vector_float3 RotateAround (vector_float3 point, vector_float3 origin, vector_float3 angle) {
-    vector_float3 vec;
+vec_float3 RotateAround (vec_float3 point, vec_float3 origin, vec_float3 angle) {
+    vec_float3 vec;
     vec.x = point.x-origin.x;
     vec.y = point.y-origin.y;
     vec.z = point.z-origin.z;
     
-    vector_float3 newvec;
+    vec_float3 newvec;
     
     // gimbal locked
     
@@ -257,8 +342,8 @@ vector_float3 RotateAround (vector_float3 point, vector_float3 origin, vector_fl
 }
 
 // translate point from given basis to standard basis
-vector_float3 TranslatePointToStandard(Basis b, vector_float3 point) {
-    vector_float3 ret;
+vec_float3 TranslatePointToStandard(Basis b, vec_float3 point) {
+    vec_float3 ret;
     // x component
     ret.x = point.x * b.x.x;
     ret.y = point.x * b.x.y;
@@ -280,8 +365,8 @@ vector_float3 TranslatePointToStandard(Basis b, vector_float3 point) {
 }
 
 // rotate point from given basis to standard basis (ignore basis translation offset)
-vector_float3 RotatePointToStandard(Basis b, vector_float3 point) {
-    vector_float3 ret;
+vec_float3 RotatePointToStandard(Basis b, vec_float3 point) {
+    vec_float3 ret;
     // x component
     ret.x = point.x * b.x.x;
     ret.y = point.x * b.x.y;
@@ -322,7 +407,7 @@ kernel void CalculateVertices(
     const constant Node *nodes [[buffer(2)]],
     unsigned int vid [[thread_position_in_grid]]
 ) {
-    Vertex v = vector_float3(0,0,0);
+    Vertex v = vec_make_float3(0,0,0);
     
     NodeVertexLink link1 = nvlinks[vid*2];
     NodeVertexLink link2 = nvlinks[vid*2 + 1];
@@ -371,30 +456,30 @@ kernel void CalculateVertexSquares(
     unsigned int vid [[thread_position_in_grid]]
 ) {
     // get current projected vertex
-    vector_float3 currentVertex = compiled_vertices[key_indices->compiled_vertex_scene_start+vid];
+    vec_float3 currentVertex = compiled_vertices[key_indices->compiled_vertex_scene_start+vid];
     
     // find index of the start of the 4 corner indices
     unsigned int square_vertex_start_index = key_indices->compiled_vertex_vertex_square_start+(vid*4);
     float screen_ratio = (float) window_attributes->height / window_attributes->width;
     
     // add to compiled vertices
-    compiled_vertices[square_vertex_start_index+0] = vector_float3(currentVertex.x-0.007, currentVertex.y - 0.007/screen_ratio, currentVertex.z-0.01);
-    compiled_vertices[square_vertex_start_index+1] = vector_float3(currentVertex.x-0.007, currentVertex.y + 0.007/screen_ratio, currentVertex.z-0.01);
-    compiled_vertices[square_vertex_start_index+2] = vector_float3(currentVertex.x+0.007, currentVertex.y - 0.007/screen_ratio, currentVertex.z-0.01);
-    compiled_vertices[square_vertex_start_index+3] = vector_float3(currentVertex.x+0.007, currentVertex.y + 0.007/screen_ratio, currentVertex.z-0.01);
+    compiled_vertices[square_vertex_start_index+0] = vec_make_float3(currentVertex.x-0.007, currentVertex.y - 0.007/screen_ratio, currentVertex.z-0.01);
+    compiled_vertices[square_vertex_start_index+1] = vec_make_float3(currentVertex.x-0.007, currentVertex.y + 0.007/screen_ratio, currentVertex.z-0.01);
+    compiled_vertices[square_vertex_start_index+2] = vec_make_float3(currentVertex.x+0.007, currentVertex.y - 0.007/screen_ratio, currentVertex.z-0.01);
+    compiled_vertices[square_vertex_start_index+3] = vec_make_float3(currentVertex.x+0.007, currentVertex.y + 0.007/screen_ratio, currentVertex.z-0.01);
     
     // add to compiled faces
     unsigned int square_face_start_index = key_indices->compiled_face_vertex_square_start+(vid*2);
     
     Face f1;
-    f1.color = vector_float4(0,1,0,1);
+    f1.color = vec_make_float4(0,1,0,1);
     f1.vertices[0] = square_vertex_start_index+0;
     f1.vertices[1] = square_vertex_start_index+1;
     f1.vertices[2] = square_vertex_start_index+2;
     compiled_faces[square_face_start_index+0] = f1;
 
     Face f2;
-    f2.color = vector_float4(0,1,0,1);
+    f2.color = vec_make_float4(0,1,0,1);
     f2.vertices[0] = square_vertex_start_index+1;
     f2.vertices[1] = square_vertex_start_index+2;
     f2.vertices[2] = square_vertex_start_index+3;
@@ -409,7 +494,7 @@ kernel void CalculateScaledDots(
     const constant Dot *dots[[buffer(2)]],
     const constant SliceAttributes *attr[[buffer(3)]],
     const constant WindowAttributes *window_attr[[buffer(4)]],
-    const constant vector_float4 *edit_window [[buffer(5)]],
+    const constant vec_float4 *edit_window [[buffer(5)]],
     const constant CompiledBufferKeyIndices *key_indices[[buffer(6)]],
     unsigned int did [[thread_position_in_grid]]
 ) {
@@ -441,22 +526,22 @@ kernel void CalculateScaledDots(
     
     // set (4) dot square corners in cvb
     unsigned long cvb_dot_corner_idx = key_indices->compiled_vertex_dot_square_start + did*4;
-    compiled_vertices[cvb_dot_corner_idx+0] = vector_float3(scaled_dot.x-0.007, scaled_dot.y-0.007 * screen_ratio, scaled_dot.z-0.01);
-    compiled_vertices[cvb_dot_corner_idx+1] = vector_float3(scaled_dot.x-0.007, scaled_dot.y+0.007 * screen_ratio, scaled_dot.z-0.01);
-    compiled_vertices[cvb_dot_corner_idx+2] = vector_float3(scaled_dot.x+0.007, scaled_dot.y-0.007 * screen_ratio, scaled_dot.z-0.01);
-    compiled_vertices[cvb_dot_corner_idx+3] = vector_float3(scaled_dot.x+0.007, scaled_dot.y+0.007 * screen_ratio, scaled_dot.z-0.01);
+    compiled_vertices[cvb_dot_corner_idx+0] = vec_make_float3(scaled_dot.x-0.007, scaled_dot.y-0.007 * screen_ratio, scaled_dot.z-0.01);
+    compiled_vertices[cvb_dot_corner_idx+1] = vec_make_float3(scaled_dot.x-0.007, scaled_dot.y+0.007 * screen_ratio, scaled_dot.z-0.01);
+    compiled_vertices[cvb_dot_corner_idx+2] = vec_make_float3(scaled_dot.x+0.007, scaled_dot.y-0.007 * screen_ratio, scaled_dot.z-0.01);
+    compiled_vertices[cvb_dot_corner_idx+3] = vec_make_float3(scaled_dot.x+0.007, scaled_dot.y+0.007 * screen_ratio, scaled_dot.z-0.01);
     
     // set (2) dot square faces in cfb
     unsigned long cfb_dot_square_idx = key_indices->compiled_face_dot_square_start + did*2;
     Face f1;
-    f1.color = vector_float4(0, 1, 0, 1);
+    f1.color = vec_make_float4(0, 1, 0, 1);
     f1.vertices[0] = cvb_dot_corner_idx+0;
     f1.vertices[1] = cvb_dot_corner_idx+1;
     f1.vertices[2] = cvb_dot_corner_idx+2;
     compiled_faces[cfb_dot_square_idx+0] = f1;
     
     Face f2;
-    f2.color = vector_float4(0, 1, 0, 1);
+    f2.color = vec_make_float4(0, 1, 0, 1);
     f2.vertices[0] = cvb_dot_corner_idx+1;
     f2.vertices[1] = cvb_dot_corner_idx+2;
     f2.vertices[2] = cvb_dot_corner_idx+3;
@@ -499,22 +584,22 @@ kernel void CalculateProjectedDots(
     // set (4) dot square corners in cvb
     float screen_ratio = (float) window_attr->height / window_attr->width;
     unsigned long cvb_dot_corner_idx = key_indices->compiled_vertex_dot_square_start + did*4;
-    compiled_vertices[cvb_dot_corner_idx+0] = vector_float3(proj_dot.x-0.007, proj_dot.y-0.007 * screen_ratio, proj_dot.z-0.01);
-    compiled_vertices[cvb_dot_corner_idx+1] = vector_float3(proj_dot.x-0.007, proj_dot.y+0.007 * screen_ratio, proj_dot.z-0.01);
-    compiled_vertices[cvb_dot_corner_idx+2] = vector_float3(proj_dot.x+0.007, proj_dot.y-0.007 * screen_ratio, proj_dot.z-0.01);
-    compiled_vertices[cvb_dot_corner_idx+3] = vector_float3(proj_dot.x+0.007, proj_dot.y+0.007 * screen_ratio, proj_dot.z-0.01);
+    compiled_vertices[cvb_dot_corner_idx+0] = vec_make_float3(proj_dot.x-0.007, proj_dot.y-0.007 * screen_ratio, proj_dot.z-0.01);
+    compiled_vertices[cvb_dot_corner_idx+1] = vec_make_float3(proj_dot.x-0.007, proj_dot.y+0.007 * screen_ratio, proj_dot.z-0.01);
+    compiled_vertices[cvb_dot_corner_idx+2] = vec_make_float3(proj_dot.x+0.007, proj_dot.y-0.007 * screen_ratio, proj_dot.z-0.01);
+    compiled_vertices[cvb_dot_corner_idx+3] = vec_make_float3(proj_dot.x+0.007, proj_dot.y+0.007 * screen_ratio, proj_dot.z-0.01);
     
     // set (2) dot square faces in cfb
     unsigned long cfb_dot_square_idx = key_indices->compiled_face_dot_square_start + did*2;
     Face f1;
-    f1.color = vector_float4(0, 1, 0, 1);
+    f1.color = vec_make_float4(0, 1, 0, 1);
     f1.vertices[0] = cvb_dot_corner_idx+0;
     f1.vertices[1] = cvb_dot_corner_idx+1;
     f1.vertices[2] = cvb_dot_corner_idx+2;
     compiled_faces[cfb_dot_square_idx+0] = f1;
     
     Face f2;
-    f2.color = vector_float4(0, 1, 0, 1);
+    f2.color = vec_make_float4(0, 1, 0, 1);
     f2.vertices[0] = cvb_dot_corner_idx+1;
     f2.vertices[1] = cvb_dot_corner_idx+2;
     f2.vertices[2] = cvb_dot_corner_idx+3;
@@ -552,11 +637,11 @@ kernel void CalculateProjectedNodes(
         float angle = i*pi/4;
         
         // calculate value (with trig) and add to cvb
-        compiled_vertices[cvb_node_circle_idx+1+i] = Vertex(proj_node_center.x + radius * cos(angle), proj_node_center.y + (radius * sin(angle) / screen_ratio), proj_node_center.z+0.05);
+        compiled_vertices[cvb_node_circle_idx+1+i] = vec_make_float3(proj_node_center.x + radius * cos(angle), proj_node_center.y + (radius * sin(angle) / screen_ratio), proj_node_center.z+0.05);
         
         // add face to cfb
         Face f;
-        f.color = vector_float4(0.8, 0.8, 0.9, 1);
+        f.color = vec_make_float4(0.8, 0.8, 0.9, 1);
         f.vertices[0] = cvb_node_circle_idx; // center
         f.vertices[1] = cvb_node_circle_idx+1+i; // just added vertex
         f.vertices[2] = cvb_node_circle_idx+(1+(1+i)%8); // next vertex (or first added if at the end)
@@ -576,7 +661,7 @@ kernel void CalculateFaceLighting(
 ) {
     // get scene face and calculate normal
     Face f = faces[fid];
-    vector_float3 f_norm = cross_product(vertices[f.vertices[0]], vertices[f.vertices[1]], vertices[f.vertices[2]]);
+    vec_float3 f_norm = cross_product(vertices[f.vertices[0]], vertices[f.vertices[1]], vertices[f.vertices[2]]);
     if (f.normal_reversed) {
         f_norm.x *= -1;
         f_norm.y *= -1;
@@ -585,7 +670,7 @@ kernel void CalculateFaceLighting(
     
     // get angle between normal and light
     Vertex center = TriAvg(vertices[f.vertices[0]], vertices[f.vertices[1]], vertices[f.vertices[2]]);
-    vector_float3 vec_to = vector_float3(light->x - center.x, light->y - center.y, light->z - center.z);
+    vec_float3 vec_to = vec_make_float3(light->x - center.x, light->y - center.y, light->z - center.z);
     float ang = abs(acos2(f_norm, vec_to));
     // make darker the larger the angle - considering the shading multiplier
     f.color.x /= ang * f.shading_multiplier;
@@ -613,10 +698,10 @@ kernel void CalculateSlicePlates (
     ModelTransform st = slice_transforms[sid];
     
     // calculate vertices in slice space
-    Vertex v1 = Vertex(sa.width/2, sa.height/2, 0);
-    Vertex v2 = Vertex(sa.width/2, -sa.height/2, 0);
-    Vertex v3 = Vertex(-sa.width/2, sa.height/2, 0);
-    Vertex v4 = Vertex(-sa.width/2, -sa.height/2, 0);
+    Vertex v1 = vec_make_float3(sa.width/2, sa.height/2, 0);
+    Vertex v2 = vec_make_float3(sa.width/2, -sa.height/2, 0);
+    Vertex v3 = vec_make_float3(-sa.width/2, sa.height/2, 0);
+    Vertex v4 = vec_make_float3(-sa.width/2, -sa.height/2, 0);
     
     // translate to world space from slice transform
     v1 = TranslatePointToStandard(st.b, v1);
@@ -644,14 +729,14 @@ kernel void CalculateSlicePlates (
     // add faces to cfb
     unsigned long cfb_slice_plate_idx = key_indices->compiled_face_slice_plate_start+sid*2;
     Face f1;
-    f1.color = vector_float4(0.7, 0.7, 0.7, 1);
+    f1.color = vec_make_float4(0.7, 0.7, 0.7, 1);
     f1.vertices[0] = cvb_slice_plate_idx+0;
     f1.vertices[1] = cvb_slice_plate_idx+1;
     f1.vertices[2] = cvb_slice_plate_idx+2;
     compiled_faces[cfb_slice_plate_idx+0] = f1;
     
     Face f2;
-    f2.color = vector_float4(0.7, 0.7, 0.7, 1);
+    f2.color = vec_make_float4(0.7, 0.7, 0.7, 1);
     f2.vertices[0] = cvb_slice_plate_idx+1;
     f2.vertices[1] = cvb_slice_plate_idx+2;
     f2.vertices[2] = cvb_slice_plate_idx+3;
@@ -695,10 +780,10 @@ kernel void CalculateUIVertices (
 // vertex shader with set color (white)
 // takes 3D vertex and outputs location exactly
 vertex VertexOut SuperDefaultVertexShader (
-    const constant vector_float3 *vertex_array [[buffer(0)]],
+    const constant vec_float3 *vertex_array [[buffer(0)]],
     unsigned int vid [[vertex_id]]
 ) {
-    vector_float3 currentVertex = vertex_array[vid];
+    vec_float3 currentVertex = vertex_array[vid];
     VertexOut output;
     output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z, 1);
     output.color = vector_float4(1, 1, 1, 1);
@@ -709,19 +794,19 @@ vertex VertexOut SuperDefaultVertexShader (
 // operates per each vertex index given in every face
 // outputs vertex location exactly and with face color
 vertex VertexOut DefaultFaceShader (
-    const constant vector_float3 *vertex_array [[buffer(0)]],
+    const constant vec_float3 *vertex_array [[buffer(0)]],
     const constant Face *face_array[[buffer(1)]],
     unsigned int vid [[vertex_id]]
 ) {
     // get current face - 3 vertices per face
     Face currentFace = face_array[vid/3];
     // get current vertex in face
-    vector_float3 currentVertex = vertex_array[currentFace.vertices[vid%3]];
+    vec_float3 currentVertex = vertex_array[currentFace.vertices[vid%3]];
     
     // make and return output vertex
     VertexOut output;
     output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z, 1);
-    output.color = currentFace.color;
+    output.color = vector_float4(currentFace.color.x, currentFace.color.y, currentFace.color.z, currentFace.color.w);
     output.pos.z += 0.1;
     return output;
 }
@@ -730,12 +815,12 @@ vertex VertexOut DefaultFaceShader (
 // operates per face * 4 - need 4 vertices for the 3 edges in a face
 // outputs vertex location exactly
 vertex VertexOut SuperDefaultEdgeShader (
-     const constant vector_float3 *vertex_array [[buffer(0)]],
-     const constant vector_int2 *edge_array[[buffer(1)]],
+     const constant vec_float3 *vertex_array [[buffer(0)]],
+     const constant vec_int2 *edge_array[[buffer(1)]],
      unsigned int vid [[vertex_id]]
  ) {
      // get current edge - 2 vertices to each edge
-     vector_int2 current_edge = edge_array[vid/2];
+     vec_int2 current_edge = edge_array[vid/2];
      
      // get vertex and output
      Vertex currentVertex;
@@ -756,68 +841,68 @@ fragment vector_float4 FragmentShader(
 
 
 // UNUSED
-/*vertex VertexOut UIVertexShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant UIFace *face_array[[buffer(1)]], unsigned int vid [[vertex_id]]) {
+/*vertex VertexOut UIVertexShader (const constant vec_float3 *vertex_array [[buffer(0)]], const constant UIFace *face_array[[buffer(1)]], unsigned int vid [[vertex_id]]) {
     UIFace currentFace = face_array[vid/3];
-    vector_float3 currentVertex = vertex_array[currentFace.vertices[vid%3]];
+    vec_float3 currentVertex = vertex_array[currentFace.vertices[vid%3]];
     VertexOut output;
-    output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z, 1);
+    output.pos = vec_float4(currentVertex.x, currentVertex.y, currentVertex.z, 1);
     output.color = currentFace.color;
     return output;
 }
 
-vertex VertexOut LineShader (const constant vector_float3 *vertex_array [[buffer(0)]], const constant Line *line_array[[buffer(1)]], unsigned int vid [[vertex_id]]) {
+vertex VertexOut LineShader (const constant vec_float3 *vertex_array [[buffer(0)]], const constant Line *line_array[[buffer(1)]], unsigned int vid [[vertex_id]]) {
     Line currentLine = line_array[vid/2];
-    vector_float3 currentVertex = vertex_array[currentLine.did[vid%2]];
+    vec_float3 currentVertex = vertex_array[currentLine.did[vid%2]];
     VertexOut output;
-    output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z-0.0001, 1);
-    output.color = vector_float4(0, 0, 1, 1);
+    output.pos = vec_float4(currentVertex.x, currentVertex.y, currentVertex.z-0.0001, 1);
+    output.color = vec_float4(0, 0, 1, 1);
     
     output.pos.z += 0.1;
     return output;
 }
 
-vertex VertexOut VertexPointShader (const constant vector_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant VertexRenderUniforms *uniforms [[buffer(1)]], const constant int *selected_vertices [[buffer(2)]]) {
-    vector_float3 currentVertex = vertex_array[vid/4];
+vertex VertexOut VertexPointShader (const constant vec_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant VertexRenderUniforms *uniforms [[buffer(1)]], const constant int *selected_vertices [[buffer(2)]]) {
+    vec_float3 currentVertex = vertex_array[vid/4];
     VertexOut output;
     if (vid % 4 == 0) {
-        output.pos = vector_float4(currentVertex.x-0.007, currentVertex.y-0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
+        output.pos = vec_float4(currentVertex.x-0.007, currentVertex.y-0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
     } else if (vid % 4 == 1) {
-        output.pos = vector_float4(currentVertex.x-0.007, currentVertex.y+0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
+        output.pos = vec_float4(currentVertex.x-0.007, currentVertex.y+0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
     } else if (vid % 4 == 2) {
-        output.pos = vector_float4(currentVertex.x+0.007, currentVertex.y-0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
+        output.pos = vec_float4(currentVertex.x+0.007, currentVertex.y-0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
     } else {
-        output.pos = vector_float4(currentVertex.x+0.007, currentVertex.y+0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
+        output.pos = vec_float4(currentVertex.x+0.007, currentVertex.y+0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
     }
     
     bool is_selected = false;
     for (int i = 0; i < uniforms->num_selected_vertices; i++) {
         if (vid/4 == selected_vertices[i]) {
-            output.color = vector_float4(1, 0.5, 0, 1);
+            output.color = vec_float4(1, 0.5, 0, 1);
             is_selected = true;
             break;
         }
     }
     if (!is_selected) {
-        output.color = vector_float4(0, 1, 0, 1);
+        output.color = vec_float4(0, 1, 0, 1);
     }
     output.pos.z += 0.1;
     return output;
 }
 
-vertex VertexOut DotShader (const constant vector_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant VertexRenderUniforms *uniforms [[buffer(1)]]) {
-    vector_float3 currentVertex = vertex_array[vid/4];
+vertex VertexOut DotShader (const constant vec_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant VertexRenderUniforms *uniforms [[buffer(1)]]) {
+    vec_float3 currentVertex = vertex_array[vid/4];
     VertexOut output;
     if (vid % 4 == 0) {
-        output.pos = vector_float4(currentVertex.x-0.007, currentVertex.y-0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
+        output.pos = vec_float4(currentVertex.x-0.007, currentVertex.y-0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
     } else if (vid % 4 == 1) {
-        output.pos = vector_float4(currentVertex.x-0.007, currentVertex.y+0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
+        output.pos = vec_float4(currentVertex.x-0.007, currentVertex.y+0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
     } else if (vid % 4 == 2) {
-        output.pos = vector_float4(currentVertex.x+0.007, currentVertex.y-0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
+        output.pos = vec_float4(currentVertex.x+0.007, currentVertex.y-0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
     } else {
-        output.pos = vector_float4(currentVertex.x+0.007, currentVertex.y+0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
+        output.pos = vec_float4(currentVertex.x+0.007, currentVertex.y+0.007 * uniforms->screen_ratio, currentVertex.z-0.001, 1);
     }
     
-    output.color = vector_float4(0, 1, 0, 1);
+    output.color = vec_float4(0, 1, 0, 1);
     output.pos.z += 0.1;
     return output;
 }
@@ -842,12 +927,12 @@ vertex VertexOut NodeShader (const constant Vertex *node_array [[buffer(0)]], un
         angle = (float) (angle_idx+1) * pi / 20;
     }
     
-    output.pos = vector_float4(currentNode.x + radius * cos(angle), currentNode.y + (radius * sin(angle) * uniforms->screen_ratio), currentNode.z-0.01, 1);
+    output.pos = vec_float4(currentNode.x + radius * cos(angle), currentNode.y + (radius * sin(angle) * uniforms->screen_ratio), currentNode.z-0.01, 1);
     
     if (vid/40 == uniforms->selected_node) {
-        output.color = vector_float4(1, 0.5, 0, 1);
+        output.color = vec_float4(1, 0.5, 0, 1);
     } else {
-        output.color = vector_float4(0.8, 0.8, 0.9, 1);
+        output.color = vec_float4(0.8, 0.8, 0.9, 1);
     }
     
     output.pos.z += 0.1;
@@ -855,18 +940,18 @@ vertex VertexOut NodeShader (const constant Vertex *node_array [[buffer(0)]], un
 }
 
 kernel void ResetVertices (device Vertex *vertices [[buffer(0)]], unsigned int vid [[thread_position_in_grid]]) {
-    vertices[vid] = vector_float3(0,0,0);
+    vertices[vid] = vec_float3(0,0,0);
 }
 
-float sign (vector_float2 p1, vector_float3 p2, vector_float3 p3) {
+float sign (vec_float2 p1, vec_float3 p2, vec_float3 p3) {
     return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
 }
 
-float dist (vector_float2 p1, vector_float3 p2) {
+float dist (vec_float2 p1, vec_float3 p2) {
     return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2));
 }
 
-float WeightedZ (vector_float2 click, vector_float3 p1, vector_float3 p2, vector_float3 p3) {
+float WeightedZ (vec_float2 click, vec_float3 p1, vec_float3 p2, vec_float3 p3) {
     float dist1 = dist(click, p1);
     float dist2 = dist(click, p2);
     float dist3 = dist(click, p3);
@@ -878,14 +963,14 @@ float WeightedZ (vector_float2 click, vector_float3 p1, vector_float3 p2, vector
     return weightedZ;
 }
 
-kernel void FaceClicked(device int &clickedIdx [[buffer(0)]], device float &minZ [[buffer(1)]], unsigned int fid [[thread_position_in_grid]], constant vector_float2 &clickLoc [[buffer(2)]], const constant vector_float3 *vertices [[buffer(3)]], device Face *face_array[[buffer(4)]]) {
+kernel void FaceClicked(device int &clickedIdx [[buffer(0)]], device float &minZ [[buffer(1)]], unsigned int fid [[thread_position_in_grid]], constant vec_float2 &clickLoc [[buffer(2)]], const constant vec_float3 *vertices [[buffer(3)]], device Face *face_array[[buffer(4)]]) {
     float d1, d2, d3;
     bool has_neg, has_pos;
     
     Face face = face_array[fid];
-    vector_float3 v1 = vertices[face.vertices[0]];
-    vector_float3 v2 = vertices[face.vertices[1]];
-    vector_float3 v3 = vertices[face.vertices[2]];
+    vec_float3 v1 = vertices[face.vertices[0]];
+    vec_float3 v2 = vertices[face.vertices[1]];
+    vec_float3 v3 = vertices[face.vertices[2]];
 
     d1 = sign(clickLoc, v1, v2);
     d2 = sign(clickLoc, v2, v3);
@@ -906,13 +991,13 @@ kernel void FaceClicked(device int &clickedIdx [[buffer(0)]], device float &minZ
     }
 }*/
 
-/*vertex VertexOut ProjectionCalculationVertexShader (const constant vector_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant vector_float4 *color_array [[buffer(1)]], constant Camera &camera [[buffer(2)]]) {
-    vector_float3 currentVertex = vertex_array[vid];
+/*vertex VertexOut ProjectionCalculationVertexShader (const constant vec_float3 *vertex_array [[buffer(0)]], unsigned int vid [[vertex_id]], const constant vec_float4 *color_array [[buffer(1)]], constant Camera &camera [[buffer(2)]]) {
+    vec_float3 currentVertex = vertex_array[vid];
     VertexOut output;
     
-    vector_float3 pixel = PointToPixel(currentVertex, camera);
+    vec_float3 pixel = PointToPixel(currentVertex, camera);
     
-    output.pos = vector_float4(pixel.x, pixel.y, pixel.z, 1.0);
+    output.pos = vec_float4(pixel.x, pixel.y, pixel.z, 1.0);
     
     output.color = color_array[vid/4];
     
