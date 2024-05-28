@@ -269,6 +269,8 @@ unsigned Model::MakeVertex(float x, float y, float z) {
 }
 
 unsigned Model::MakeFace(unsigned v0, unsigned v1, unsigned v2, vec_float4 color) {
+    if (v0 == v1 || v1 == v2 || v0 == v2) { return -1; }
+    
     Face *f = new Face();
     f->vertices[0] = v0;
     f->vertices[1] = v1;
@@ -697,6 +699,42 @@ void Model::ScaleOnNodeBy(float x, float y, float z, int nid) {
     }
 }
 
+bool Model::PointIn(vec_float3 p) {
+    vec_float3 vec = vec_make_float3(1, 0, -1);
+    
+    int z_steps = 10;
+    int xy_steps = 10;
+    int total_tries = z_steps*xy_steps;
+    int votes = 0;
+    for (int i = 0; i < z_steps; i++) {
+        for (int j = 0; j < 10; j++) {
+            vec = RotateAround(vec, vec_make_float3(0, 0, 0), vec_make_float3(0, 0, 2*M_PI/xy_steps));
+            
+            int num_collisions = 0;
+            for (int i = 0; i < NumFaces(); i++) {
+                Face *f = faces[i];
+                vec_float3 v1 = GetVertex(f->vertices[0]);
+                vec_float3 v2 = GetVertex(f->vertices[1]);
+                vec_float3 v3 = GetVertex(f->vertices[2]);
+                
+                vec_float4 plane = PlaneEquation(v1, v2, v3);
+                float to_plane = LineAndPlane(p, vec, plane);
+                if (to_plane <= 0 || to_plane == INFINITY) { continue; }
+                vec_float3 intersect = p + ScaleVector(vec, to_plane);
+                if (InTriangle3D(intersect, v1, v2, v3, 0.5)) {
+                    num_collisions++;
+                }
+            }
+            
+            if (num_collisions % 2 == 1) { votes++; }
+        }
+        
+        vec.z += ((float) 2) / z_steps;
+    }
+    
+    return votes > total_tries/2;
+}
+
 Animation *Model::GetAnimation(int aid) {
     return animations[aid];
 }
@@ -818,6 +856,21 @@ Vertex Model::GetVertex(unsigned long vid) {
 
 Face *Model::GetFace(unsigned long fid) {
     return faces.at(fid);
+}
+
+bool Model::FaceExists(unsigned long vid1, unsigned long vid2, unsigned long vid3) {
+    for (std::size_t fid = 0; fid < faces.size(); fid++) {
+        Face *f = faces[fid];
+        if (f->vertices[0] == vid1 || f->vertices[1] == vid1 || f->vertices[2] == vid1) {
+            if (f->vertices[0] == vid2 || f->vertices[1] == vid2 || f->vertices[2] == vid2) {
+                if (f->vertices[0] == vid3 || f->vertices[1] == vid3 || f->vertices[2] == vid3) {
+                    return true;
+                }
+            }
+        }
+    }
+    
+    return false;
 }
 
 std::vector<unsigned long> Model::GetEdgeFaces(unsigned long vid1, unsigned long vid2) {

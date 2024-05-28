@@ -20,6 +20,8 @@ namespace Vec {
 		float x;
 		float y;
 		float z;
+        vec_float3 operator+(vec_float3 other);
+        vec_float3 operator-(vec_float3 other);
 	};
 
 	struct vec_float4 {

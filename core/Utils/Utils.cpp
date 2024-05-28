@@ -92,6 +92,11 @@ float DragonflyUtils::dist3to3 (vec_float3 p1, vec_float3 p2) {
     return std::sqrt(std::pow(p1.x - p2.x, 2) + std::pow(p1.y - p2.y, 2) + std::pow(p1.z - p2.z, 2));
 }
 
+vec_float3 DragonflyUtils::unit_vector(vec_float3 v) {
+    float mag = Magnitude(v);
+    return vec_make_float3(v.x / mag, v.y / mag, v.z / mag);
+}
+
 float DragonflyUtils::acos2(vec_float3 v1, vec_float3 v2) {
     float dot = v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
     vec_float3 cross = CrossProduct(v1, v2);
@@ -248,6 +253,11 @@ vector_float3 DragonflyUtils::MouseFaceIntercept (vector_float2 &mouse, int fid)
     return LinePlaneIntersect(camera->pos, mouse_vec, scene_vertices.at(face.vertices[0]), scene_vertices.at(face.vertices[1]), scene_vertices.at(face.vertices[2]));
 }*/
 
+float DragonflyUtils::PointToPlane (vec_float3 orig, vec_float3 n, vec_float3 p) {
+    vec_float3 v = p - orig;
+    return Projection(v, n);
+}
+
 bool DragonflyUtils::InTriangle2D(vec_float2 point, vec_float2 v1, vec_float2 v2, vec_float2 v3) {
     float d1 = sign2D(point, v1, v2);
     float d2 = sign2D(point, v2, v3);
@@ -257,6 +267,27 @@ bool DragonflyUtils::InTriangle2D(vec_float2 point, vec_float2 v1, vec_float2 v2
     bool has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
 
     return (!(has_neg && has_pos));
+}
+
+bool DragonflyUtils::InTriangle3D(vec_float3 point, vec_float3 v1, vec_float3 v2, vec_float3 v3, float sep) {
+    vec_float3 norm = unit_vector(CrossProduct(v2 - v1, v2 - v3));
+    float dist = PointToPlane(v1, norm, point);
+    if (abs(dist) > sep) { return false; }
+    
+    vec_float3 proj = point - ScaleVector(norm, dist);
+    
+    // proj is in the triangle if areas of sub triangles add up to total area
+    float a1 = TriangleArea(v1, v2, proj);
+    float a2 = TriangleArea(v2, v3, proj);
+    float a3 = TriangleArea(v3, v1, proj);
+    
+//    std::cout<<(a1 + a2 + a3)<<" "<<TriangleArea(v1, v2, v3)<<std::endl;
+    
+    if ((a1 + a2 + a3)*0.95 > TriangleArea(v1, v2, v3)) {
+        return false;
+    }
+    
+    return true;
 }
 
 bool DragonflyUtils::InTriangle(vec_float2 point, vec_float3 v1, vec_float3 v2, vec_float3 v3) {

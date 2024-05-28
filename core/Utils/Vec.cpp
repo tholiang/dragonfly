@@ -1,5 +1,13 @@
 #include "Vec.h"
 
+Vec::vec_float3 Vec::vec_float3::operator+(Vec::vec_float3 other) {
+    return vec_make_float3(other.x + x, other.y + y, other.z + z);
+}
+
+Vec::vec_float3 Vec::vec_float3::operator-(Vec::vec_float3 other) {
+    return vec_make_float3(x - other.x, y - other.y, z - other.z);
+}
+
 Vec::vec_float2 Vec::vec_make_float2(float x, float y) {
 	Vec::vec_float2 ret;
 	ret.x = x;

@@ -8,6 +8,7 @@
 #ifndef Scene_h
 #define Scene_h
 
+#include <functional>
 #include <stdio.h>
 #include <vector>
 #include <string>

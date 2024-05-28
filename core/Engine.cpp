@@ -21,6 +21,8 @@ Engine::~Engine() {
 }
 
 int Engine::init() {
+    srand(time(NULL));
+    
     camera = new Camera();
     camera->pos = {-2, 0, 0};
     camera->vector = {1, 0, 0};

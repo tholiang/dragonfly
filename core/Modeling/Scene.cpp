@@ -8,8 +8,30 @@
 #include <unistd.h>
 #include "Scene.h"
 
+#include "../Utils/Wrap.h"
+
+bool in_sphere(vec_float3 p) {
+    return dist3to3(p, vec_make_float3(0, 0, 0)) < 5;
+}
+
+bool in_cube(vec_float3 p) {
+    return (p.x > 3 || p.y > 3 || p.z > 3) || (p.x < -3 || p.y < -3 || p.z < -3);
+}
+
 Scene::Scene() {
     CreateNewModel();
+    
+    Model *m0 = GetModel(0);
+    
+    using std::placeholders::_1;
+    std::function<bool(vec_float3)> in_model = std::bind(&Model::PointIn, m0, _1);
+    Model *m = Wrap(0, 0, 0.2, 0.05, 0.15, false, in_model);
+    ModelTransform new_uniform;
+    new_uniform.b = Basis();
+    new_uniform.rotate_origin = vec_make_float3(0, 0, 0);
+    AddModel(m, new_uniform);
+    
+    MoveModelBy(1, 10, 0, 0);
 }
 
 Scene::~Scene() {

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D2092AD32BF6D8C4006F6DCC /* ForceField.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2092AD12BF6D8C4006F6DCC /* ForceField.cpp */; };
+		D2092AD62BF70D0F006F6DCC /* Wrap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2092AD42BF70D0F006F6DCC /* Wrap.cpp */; };
 		D28B7D852793B4AC00C0E47F /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D28B7D842793B4AC00C0E47F /* SDL2.framework */; };
 		D28B7D862793B4AC00C0E47F /* SDL2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D28B7D842793B4AC00C0E47F /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D29549682BF5779900FE1130 /* Vec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D29549662BF5779900FE1130 /* Vec.cpp */; };
@@ -72,6 +74,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D2092AD12BF6D8C4006F6DCC /* ForceField.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ForceField.cpp; sourceTree = "<group>"; };
+		D2092AD22BF6D8C4006F6DCC /* ForceField.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ForceField.h; sourceTree = "<group>"; };
+		D2092AD42BF70D0F006F6DCC /* Wrap.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Wrap.cpp; sourceTree = "<group>"; };
+		D2092AD52BF70D0F006F6DCC /* Wrap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Wrap.h; sourceTree = "<group>"; };
 		D28B7D842793B4AC00C0E47F /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
 		D29549662BF5779900FE1130 /* Vec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Vec.cpp; sourceTree = "<group>"; };
 		D29549672BF5779900FE1130 /* Vec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Vec.h; sourceTree = "<group>"; };
@@ -297,6 +303,8 @@
 				D2D841552B9D0F4F007224D3 /* JoinSlices.cpp */,
 				D2D841562B9D0F4F007224D3 /* Project2D.h */,
 				D2D8415A2B9D0F4F007224D3 /* Project2D.cpp */,
+				D2092AD52BF70D0F006F6DCC /* Wrap.h */,
+				D2092AD42BF70D0F006F6DCC /* Wrap.cpp */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -314,6 +322,8 @@
 				D2D841642B9D0F4F007224D3 /* Arrow.cpp */,
 				D2D8415D2B9D0F4F007224D3 /* Rotator.h */,
 				D2D8415F2B9D0F4F007224D3 /* Rotator.cpp */,
+				D2092AD22BF6D8C4006F6DCC /* ForceField.h */,
+				D2092AD12BF6D8C4006F6DCC /* ForceField.cpp */,
 			);
 			path = Modeling;
 			sourceTree = "<group>";
@@ -480,6 +490,7 @@
 				D2D841752B9D0F4F007224D3 /* UIElement.cpp in Sources */,
 				D2D8418F2B9D0F4F007224D3 /* ModelMoveAction.cpp in Sources */,
 				D2D841822B9D0F4F007224D3 /* Normals.cpp in Sources */,
+				D2092AD32BF6D8C4006F6DCC /* ForceField.cpp in Sources */,
 				D2D841AD2B9D1B8E007224D3 /* Engine.cpp in Sources */,
 				D2D841202B9D0F44007224D3 /* imgui_widgets.cpp in Sources */,
 				D2D8417D2B9D0F4F007224D3 /* EngineMetalSDL.mm in Sources */,
@@ -502,6 +513,7 @@
 				D2D8417A2B9D0F4F007224D3 /* EditScheme.cpp in Sources */,
 				D2D841902B9D0F4F007224D3 /* VertexMoveAction.cpp in Sources */,
 				D2D841892B9D0F4F007224D3 /* Scene.cpp in Sources */,
+				D2092AD62BF70D0F006F6DCC /* Wrap.cpp in Sources */,
 				D2D841922B9D0F4F007224D3 /* Processing.metal in Sources */,
 				D2D841802B9D0F4F007224D3 /* Utils.cpp in Sources */,
 			);

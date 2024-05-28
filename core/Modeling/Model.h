@@ -144,6 +144,8 @@ public:
     void ScaleBy(float x, float y, float z);
     void ScaleOnNodeBy(float x, float y, float z, int nid);
     
+    bool PointIn(vec_float3 p);
+    
     Animation *GetAnimation(int aid);
     unsigned MakeAnimation();
     void StartAnimation(int aid);
@@ -159,6 +161,7 @@ public:
     NodeVertexLink *GetNodeVertexLink(unsigned long nvlid);
     Vertex GetVertex(unsigned long vid);
     Face *GetFace(unsigned long fid);
+    bool FaceExists(unsigned long vid1, unsigned long vid2, unsigned long vid3);
     std::vector<unsigned long> GetEdgeFaces(unsigned long vid1, unsigned long vid2);
     bool HasFaceWith(std::vector<int> &vids);
     
