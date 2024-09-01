@@ -15,9 +15,9 @@ private:
     // GLFW
     static std::queue<std::pair<int, bool>> keyq;
     static bool mouse_moved;
-    static vector_float2 last_loc;
-    static vector_float2 mouse_loc;
-    static std::queue<std::pair<vector_float2, std::pair<int, bool>>> clickq; // loc, button, down
+    static vec_float2 last_loc;
+    static vec_float2 mouse_loc;
+    static std::queue<std::pair<vec_float2, std::pair<int, bool>>> clickq; // loc, button, down
     
     int SetPipelines();
     int HandleInputEvents();

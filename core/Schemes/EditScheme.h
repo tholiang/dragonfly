@@ -18,7 +18,7 @@ protected:
     Vertex * control_models_projected_vertices_;
     Face * control_models_faces_;
     // z base, z tip, x base, x tip, y base, y tip
-    vector_float2 arrow_projections [6];
+    vec_float2 arrow_projections [6];
 public:
     
 }

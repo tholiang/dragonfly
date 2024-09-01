@@ -68,9 +68,9 @@ void ComputePipelineGLFW::CreateBuffers() {
     
     // ---COMPILED BUFFERS---
     // create compiled vertex buffer - all data to be set by gpu
-    compiled_vertex_content = (vector_float3 *) malloc(compiled_vertex_size() * sizeof(vector_float3));
+    compiled_vertex_content = (vec_float3 *) malloc(compiled_vertex_size() * sizeof(vec_float3));
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, compiled_vertex_buffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, compiled_vertex_size() * sizeof(vector_float3), compiled_vertex_content, GL_DYNAMIC_READ);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, compiled_vertex_size() * sizeof(vec_float3), compiled_vertex_content, GL_DYNAMIC_READ);
 
     // create compiled face buffer
     compiled_face_content = (Face *) malloc(compiled_face_size() * sizeof(Face));
@@ -78,9 +78,9 @@ void ComputePipelineGLFW::CreateBuffers() {
     glBufferData(GL_SHADER_STORAGE_BUFFER, (compiled_face_size() * sizeof(Face)), compiled_face_content, GL_DYNAMIC_READ);
     
     // create compiled edge buffer
-    compiled_edge_content = (vector_int2 *) malloc(compiled_edge_size() * sizeof(vector_int2));
+    compiled_edge_content = (vec_int2 *) malloc(compiled_edge_size() * sizeof(vec_int2));
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, compiled_edge_buffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, (compiled_edge_size() * sizeof(vector_int2)), compiled_edge_content, GL_STATIC_READ);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, (compiled_edge_size() * sizeof(vec_int2)), compiled_edge_content, GL_STATIC_READ);
     
     // ---GENERAL BUFFERS---
     // create camera buffer
@@ -88,12 +88,12 @@ void ComputePipelineGLFW::CreateBuffers() {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, camera_buffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Camera), cam, GL_DYNAMIC_READ);
     // create light buffer - NEED TO UPDATE TO ALLOW MULTIPLE LIGHTS
-    scene_light_content = (vector_float3 *) malloc(sizeof(vector_float3));
+    scene_light_content = (vec_float3 *) malloc(sizeof(vec_float3));
     scene_light_content->x = 10;
     scene_light_content->y = 0;
     scene_light_content->z = 5;
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, scene_light_buffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(vector_float3), scene_light_content, GL_STATIC_READ);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(vec_float3), scene_light_content, GL_STATIC_READ);
     delete scene_light_content;
     
     
@@ -151,9 +151,9 @@ void ComputePipelineGLFW::CreateBuffers() {
     glBufferData(GL_SHADER_STORAGE_BUFFER, (num_scene_slices*sizeof(ModelTransform)), slice_transform_content, GL_DYNAMIC_READ);
     
     // create slice edit window buffer
-    vector_float4 slice_edit_window;
+    vec_float4 slice_edit_window;
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, slice_edit_window_buffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, (sizeof(vector_float4)), &slice_edit_window, GL_STATIC_READ);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, (sizeof(vec_float4)), &slice_edit_window, GL_STATIC_READ);
     
     
     // ---UI BUFFERS---
@@ -197,10 +197,10 @@ void ComputePipelineGLFW::ResetStaticBuffers() {
     glNamedBufferSubData (compiled_face_buffer, 0, compiled_face_size() * sizeof(Face), compiled_face_content);
 
     // add data to compiled edge buffer
-    glGetNamedBufferSubData (compiled_edge_buffer, 0, compiled_edge_size() * sizeof(vector_int2), compiled_edge_content);
+    glGetNamedBufferSubData (compiled_edge_buffer, 0, compiled_edge_size() * sizeof(vec_int2), compiled_edge_content);
     if (scheme->ShouldRenderEdges()) scheme->SetSceneEdgeBuffer(compiled_edge_content + compiled_edge_scene_start(), compiled_vertex_scene_start()); // scene edges
     scheme->SetSliceLineBuffer(compiled_edge_content + compiled_edge_line_start(), compiled_vertex_dot_start()); // slice lines
-    glNamedBufferSubData (compiled_edge_buffer, 0, compiled_edge_size() * sizeof(vector_int2), compiled_edge_content);
+    glNamedBufferSubData (compiled_edge_buffer, 0, compiled_edge_size() * sizeof(vec_int2), compiled_edge_content);
     
     
     // ---GENERAL BUFFERS---
@@ -209,7 +209,7 @@ void ComputePipelineGLFW::ResetStaticBuffers() {
     scene_light_content->x = 10;
     scene_light_content->y = 0;
     scene_light_content->z = 5;
-    glNamedBufferSubData (scene_light_buffer, 0, sizeof(vector_float3), scene_light_content);
+    glNamedBufferSubData (scene_light_buffer, 0, sizeof(vec_float3), scene_light_content);
     
     
     // ---MODEL BUFFERS---
@@ -247,8 +247,8 @@ void ComputePipelineGLFW::ResetStaticBuffers() {
     glNamedBufferSubData (slice_attributes_buffer, 0, num_scene_slices*sizeof(SliceAttributes), slice_attribute_content);
     
     // add data to slice edit window buffer
-    vector_float4 slice_edit_window_content = scheme->GetEditWindow();
-    glNamedBufferSubData (slice_edit_window_buffer, 0, sizeof(vector_float4), &slice_edit_window_content);
+    vec_float4 slice_edit_window_content = scheme->GetEditWindow();
+    glNamedBufferSubData (slice_edit_window_buffer, 0, sizeof(vec_float4), &slice_edit_window_content);
     
     
     // ---UI BUFFERS---
@@ -431,7 +431,7 @@ void ComputePipelineGLFW::SendDataToRenderer(RenderPipeline *renderer) {
 }
 
 void ComputePipelineGLFW::SendDataToScheme() {
-    glGetNamedBufferSubData (compiled_vertex_buffer, 0, compiled_vertex_size()*sizeof(vector_float3), compiled_vertex_content);
+    glGetNamedBufferSubData (compiled_vertex_buffer, 0, compiled_vertex_size()*sizeof(vec_float3), compiled_vertex_content);
     glGetNamedBufferSubData (compiled_face_buffer, 0, compiled_face_size()*sizeof(Face), compiled_face_content);
     glGetNamedBufferSubData (model_vertex_buffer, 0, sizeof(int) + ((num_scene_vertices+num_controls_vertices)*sizeof(Vertex)), vertex_content);
     glGetNamedBufferSubData (model_node_buffer, 0, (sizeof(int) + ((num_scene_nodes+num_controls_nodes)*sizeof(Node))), model_node_content);

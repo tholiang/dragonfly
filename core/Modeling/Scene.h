@@ -54,10 +54,10 @@ public:
     
     vec_float3 GetModelPosition(unsigned long mid);
     Basis *GetModelBasis(unsigned long mid);
-//    vector_float3 GetModelAngle(unsigned long mid);
+//    vec_float3 GetModelAngle(unsigned long mid);
     
     vec_float3 GetSlicePosition(unsigned long sid);
-//    vector_float3 GetSliceAngle(unsigned long sid);
+//    vec_float3 GetSliceAngle(unsigned long sid);
     
     void MoveModelBy(unsigned int mid, float dx, float dy, float dz);
     void RotateModelBy(unsigned int mid, float dx, float dy, float dz);

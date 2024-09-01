@@ -37,7 +37,7 @@ private:
     // ---CPU BUFFER DATA---
     struct VertexBuffer { int size; Vertex data[1]; };
     struct FaceBuffer { int size; Face data[1]; };
-    struct EdgeBuffer { int size; vector_int2 data[1]; };
+    struct EdgeBuffer { int size; vec_int2 data[1]; };
     struct NodeBuffer { int size; Node data[1]; };
     struct DotBuffer { int size; Dot data[1]; };
     struct UIVertexBuffer { int size; UIVertex data[1]; };
@@ -47,7 +47,7 @@ private:
     WindowAttributes *window_attributes_content = NULL;
     // compiled buffer key indices content exists in parent
     // camera content exists in scheme
-    vector_float3 *scene_light_content = NULL;
+    vec_float3 *scene_light_content = NULL;
     FaceBuffer *smfb_content = NULL;
     NodeBuffer *model_node_content = NULL;
     NodeVertexLink *nvlink_content = NULL;
@@ -62,9 +62,9 @@ private:
     UIElementTransform *ui_element_transform_content = NULL;
     // ui render uniforms??
     uint32_t *ui_element_id_content = NULL;
-    vector_float3 *compiled_vertex_content = NULL;
+    vec_float3 *compiled_vertex_content = NULL;
     Face *compiled_face_content = NULL;
-    vector_int2 *compiled_edge_content = NULL;
+    vec_int2 *compiled_edge_content = NULL;
     
     // ---BUFFERS FOR SCENE COMPUTE---
     // compute data

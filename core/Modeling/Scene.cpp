@@ -139,7 +139,7 @@ Basis *Scene::GetModelBasis(unsigned long mid) {
     return &model_uniforms[mid].b;
 }
 
-//vector_float3 Scene::GetModelAngle(unsigned long mid) {
+//vec_float3 Scene::GetModelAngle(unsigned long mid) {
 //    if (mid >= model_uniforms.size()) {
 //        return NULL;
 //    }
@@ -155,7 +155,7 @@ vec_float3 Scene::GetSlicePosition(unsigned long sid) {
     return slice_uniforms[sid].b.pos;
 }
 
-//vector_float3 Scene::GetSliceAngle(unsigned long sid) {
+//vec_float3 Scene::GetSliceAngle(unsigned long sid) {
 //    if (sid >= slice_uniforms.size()) {
 //        return NULL;
 //    }
