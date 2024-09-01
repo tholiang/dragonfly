@@ -215,6 +215,11 @@ void Scheme::MakeRect(int x, int y, int w, int h, int z, vec_float4 color) {
     uni.right = vec_make_float3(1, 0, 0);
     uni.up = vec_make_float3(0, 1, 0);
     ui_element_uniforms_.push_back(uni);
+    
+    CalculateNumUIVertices();
+    CalculateNumUIFaces();
+    should_reset_empty_buffers = true;
+    should_reset_static_buffers = true;
 }
 
 void Scheme::MakeIsoTriangle(int x, int y, int w, int h, int z, vec_float4 color) {
@@ -230,6 +235,11 @@ void Scheme::MakeIsoTriangle(int x, int y, int w, int h, int z, vec_float4 color
     uni.right = vec_make_float3(1, 0, 0);
     uni.up = vec_make_float3(0, 1, 0);
     ui_element_uniforms_.push_back(uni);
+    
+    CalculateNumUIVertices();
+    CalculateNumUIFaces();
+    should_reset_empty_buffers = true;
+    should_reset_static_buffers = true;
 }
 
 void Scheme::ChangeElementLocation(int eid, int x, int y) {

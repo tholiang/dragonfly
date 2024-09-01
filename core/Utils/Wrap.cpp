@@ -164,7 +164,7 @@ Model *DragonflyUtils::Wrap(float a_r, float l_r, float l_d, float step, float s
     // add starting edges to queue
     q.push(vec_make_int2(svid1, svid2));
     
-    int total_face_iterations = 10000;
+    int total_face_iterations = 100000;
     iterations_left = total_face_iterations;
     // build model
     while (!q.empty() && iterations_left > 0) {

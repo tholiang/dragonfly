@@ -175,6 +175,10 @@ bool EditModelScheme::ClickOnScene(vec_float2 loc) {
         return false;
     }
     
+    if (render_wrap_popup_ && InRectangle(wrap_popup_loc_, vec_make_float2(400.0/window_width_, 500.0/window_height_), loc)) {
+        return false;
+    }
+    
     int pixelX = window_width_ * (loc.x+1)/2;
     int pixelY = window_height_ * (loc.y+1)/2;
     
@@ -390,6 +394,16 @@ void EditModelScheme::RightClickPopup() {
             render_rightclick_popup_ = false;
             DragonflyUtils::ReverseNormals(scene_->GetModel(selected_model));
             should_reset_static_buffers = true;
+        }
+        pixel_loc.y += button_size_.y;
+        ImGui::SetCursorPos(ImVec2(pixel_loc.x, pixel_loc.y));
+    }
+    
+    if (selected_model != -1) {
+        num_right_click_buttons_++;
+        if (ImGui::Button("New Wrap", ImVec2(button_size_.x, button_size_.y))) {
+            render_rightclick_popup_ = false;
+            render_wrap_popup_ = true;
         }
         pixel_loc.y += button_size_.y;
         ImGui::SetCursorPos(ImVec2(pixel_loc.x, pixel_loc.y));
@@ -634,6 +648,32 @@ void EditModelScheme::RightMenu() {
     ImGui::End();
 }
 
+void EditModelScheme::WrapPopup() {
+    ImVec2 pixel_loc = ImVec2(window_width_/2 - UI_start_.x - 200, window_height_/2 - UI_start_.y - 250);
+    wrap_popup_loc_.x = 2*((float)pixel_loc.x - window_width_/2)/window_width_;
+    wrap_popup_loc_.y = 2*((float)pixel_loc.y - window_height_/2)/window_height_;
+    ImGui::SetNextWindowPos(pixel_loc);
+    ImGui::SetNextWindowSize(ImVec2(400, 500));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.0f, 0.0f, 0.0f, 255.0f));
+    ImGui::Begin("wrap_popup", &show_UI, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);
+    
+    ImGui::SetCursorPos(pixel_loc);
+    
+    if (selected_model != -1) {
+        if (ImGui::Button("Wrap", ImVec2(button_size_.x, button_size_.y))) {
+            render_wrap_popup_ = false;
+            WrapModel(selected_model);
+        }
+        pixel_loc.y += button_size_.y;
+        ImGui::SetCursorPos(ImVec2(pixel_loc.x, pixel_loc.y));
+    } else {
+        render_wrap_popup_ = false;
+    }
+    
+    ImGui::PopStyleColor();
+    ImGui::End();
+}
+
 void EditModelScheme::MainWindow() {
     ImGui::SetNextWindowPos(ImVec2(UI_start_.x, UI_start_.y));
     ImGui::SetNextWindowSize(ImVec2(window_width_ - right_menu_width_, window_height_));
@@ -655,7 +695,24 @@ void EditModelScheme::MainWindow() {
 void EditModelScheme::BuildUI() {
     MainWindow();
     
+    if (render_wrap_popup_) {
+        WrapPopup();
+    }
+    
     RightMenu();
+}
+
+void EditModelScheme::WrapModel(int mid) {
+    Model *og = scene_->GetModel(mid);
+    
+    using std::placeholders::_1;
+    std::function<bool(vec_float3)> in_model = std::bind(&Model::PointIn, og, _1);
+    Model *m = DragonflyUtils::Wrap(0, 0, 0.5, 0.05, 0.4, false, in_model);
+    ModelTransform new_uniform = *scene_->GetModelUniforms(mid);
+    
+    scene_->AddModel(m, new_uniform);
+    
+    scene_->MoveModelBy(scene_->NumModels()-1, 5, 0, 0);
 }
 
 void EditModelScheme::SaveSelectedModelToFile(std::string path) {

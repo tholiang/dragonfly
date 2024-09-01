@@ -23,15 +23,15 @@ Scene::Scene() {
     
     Model *m0 = GetModel(0);
     
-    using std::placeholders::_1;
-    std::function<bool(vec_float3)> in_model = std::bind(&Model::PointIn, m0, _1);
-    Model *m = Wrap(0, 0, 0.2, 0.05, 0.15, false, in_model);
-    ModelTransform new_uniform;
-    new_uniform.b = Basis();
-    new_uniform.rotate_origin = vec_make_float3(0, 0, 0);
-    AddModel(m, new_uniform);
-    
-    MoveModelBy(1, 10, 0, 0);
+//    using std::placeholders::_1;
+//    std::function<bool(vec_float3)> in_model = std::bind(&Model::PointIn, m0, _1);
+//    Model *m = Wrap(0, 0, 0.5, 0.05, 0.4, false, in_sphere);
+//    ModelTransform new_uniform;
+//    new_uniform.b = Basis();
+//    new_uniform.rotate_origin = vec_make_float3(0, 0, 0);
+//    AddModel(m, new_uniform);
+//    
+//    MoveModelBy(1, 10, 0, 0);
 }
 
 Scene::~Scene() {

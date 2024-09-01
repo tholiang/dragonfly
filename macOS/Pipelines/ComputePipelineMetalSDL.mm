@@ -411,6 +411,24 @@ void ComputePipelineMetalSDL::Compute() {
         }
     }
     
+    if (num_ui_vertices > 0) {
+        // make ui vertices
+        [compute_encoder setComputePipelineState: compute_ui_vertices_pipeline_state];
+        [compute_encoder setBuffer: compiled_vertex_buffer offset:0 atIndex:0];
+        [compute_encoder setBuffer: ui_vertex_buffer offset:0 atIndex:1];
+        [compute_encoder setBuffer: ui_vertex_element_id_buffer offset:0 atIndex:2];
+        [compute_encoder setBuffer: ui_element_transform_buffer offset:0 atIndex:3];
+        [compute_encoder setBuffer: window_attributes_buffer offset:0 atIndex:4];
+        [compute_encoder setBuffer: compiled_buffer_key_indices_buffer offset:0 atIndex:5];
+        // set thread size variables - per slice
+        gridsize = MTLSizeMake(num_ui_vertices, 1, 1);
+        numthreads = compute_ui_vertices_pipeline_state.maxTotalThreadsPerThreadgroup;
+        if (numthreads > num_ui_vertices) numthreads = num_ui_vertices;
+        threadgroupsize = MTLSizeMake(numthreads, 1, 1);
+        // execute
+        [compute_encoder dispatchThreads:gridsize threadsPerThreadgroup:threadgroupsize];
+    }
+    
     [compute_encoder endEncoding];
     
     // Synchronize the managed buffers for scheme

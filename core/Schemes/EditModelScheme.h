@@ -12,6 +12,7 @@
 #include "../UserActions/ModelMoveAction.h"
 #include "../Utils/Normals.h"
 #include "../Utils/JoinModels.h"
+#include "../Utils/Wrap.h"
 
 class EditModelScheme : public Scheme {
 private:
@@ -23,6 +24,10 @@ private:
     ImVec2 button_size_;
     vec_float2 rightclick_popup_size_;
     bool rightclick_popup_clicked_ = false;
+    
+    vec_float2 wrap_popup_loc_;
+    vec_float2 wrap_popup_size_;
+    bool render_wrap_popup_ = false;
     
     // ---CONTROL MODELS---
     Arrow *z_arrow;
@@ -75,8 +80,12 @@ private:
     
     // ---UI RENDER FUNCTIONS---
     void RightClickPopup();
+    void WrapPopup();
     void RightMenu();
     void MainWindow();
+    
+    // ---OTHER FUNCTIONS---
+    void WrapModel(int mid);
 public:
     // ---GENERAL SCHEME FUNCTIONS---
     EditModelScheme(); // constructor
