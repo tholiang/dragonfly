@@ -330,8 +330,8 @@ void Model::LinkNodeAndVertex(unsigned long vid, unsigned long nid) {
 //    nvlink->vector.y = vertex.y - node->b.pos.y;
 //    nvlink->vector.z = vertex.z - node->b.pos.z;
     
-//    vector_float3 reverse_angle = vector_make_float3(-node->angle.x, -node->angle.y, -node->angle.z);
-//    nvlink->vector = RotateAround(nvlink->vector, vector_make_float3(0, 0, 0), reverse_angle);
+//    vec_float3 reverse_angle = vec_make_float3(-node->angle.x, -node->angle.y, -node->angle.z);
+//    nvlink->vector = RotateAround(nvlink->vector, vec_make_float3(0, 0, 0), reverse_angle);
     nvlink->vector = TranslatePointToBasis(&node->b, vertex);
     nvlink->weight = 1;
     nvlinks[setIndex] = nvlink;
@@ -512,11 +512,11 @@ void Model::MoveNodeTo(unsigned nid, float x, float y, float z) {
 //        nodes[nid]->b.pos.y = y;
 //        nodes[nid]->b.pos.z = z;
 //    } else {
-//        vector_float3 nodepos = nodes[nid]->b.pos;
-//        vector_float3 lockpos = nodes[nodes[nid]->locked_to]->b.pos;
-//        vector_float3 vec = vector_make_float3(nodepos.x-lockpos.x, nodepos.y-lockpos.y, nodepos.z-lockpos.z);
+//        vec_float3 nodepos = nodes[nid]->b.pos;
+//        vec_float3 lockpos = nodes[nodes[nid]->locked_to]->b.pos;
+//        vec_float3 vec = vec_make_float3(nodepos.x-lockpos.x, nodepos.y-lockpos.y, nodepos.z-lockpos.z);
 //        float curr_dist = Magnitude(vec);
-//        vector_float3 newvec = vector_make_float3(x-lockpos.x, y-lockpos.y, z-lockpos.z);
+//        vec_float3 newvec = vec_make_float3(x-lockpos.x, y-lockpos.y, z-lockpos.z);
 //        float new_dist = Magnitude(newvec);
 //        nodes[nid]->b.pos.x = lockpos.x+(newvec.x * curr_dist / new_dist);
 //        nodes[nid]->b.pos.y = lockpos.y+(newvec.y * curr_dist / new_dist);
@@ -828,7 +828,7 @@ Vertex Model::GetVertex(unsigned long vid) {
     if (link1->nid != -1) {
         Node *n = nodes[link1->nid];
         
-//        Vertex desired1 = vector_make_float3(n->pos.x + link1->vector.x, n->pos.y + link1->vector.y, n->pos.z + link1->vector.z);
+//        Vertex desired1 = vec_make_float3(n->pos.x + link1->vector.x, n->pos.y + link1->vector.y, n->pos.z + link1->vector.z);
 //        desired1 = RotateAround(desired1, n->pos, n->b);
         
         Vertex desired1 = TranslatePointToStandard(&n->b, link1->vector);
@@ -841,7 +841,7 @@ Vertex Model::GetVertex(unsigned long vid) {
     if (link2->nid != -1) {
         Node *n = nodes[link2->nid];
         
-//        Vertex desired2 = vector_make_float3(n->pos.x + link2->vector.x, n->pos.y + link2->vector.y, n->pos.z + link2->vector.z);
+//        Vertex desired2 = vec_make_float3(n->pos.x + link2->vector.x, n->pos.y + link2->vector.y, n->pos.z + link2->vector.z);
 //        desired2 = TranslatePoint(desired2, n->pos, n->b);
         
         Vertex desired2 = TranslatePointToStandard(&n->b, link2->vector);
