@@ -2,9 +2,9 @@
 
 std::queue<std::pair<int, bool>> EngineGLFW::keyq;
 bool EngineGLFW::mouse_moved;
-vector_float2 EngineGLFW::last_loc;
-vector_float2 EngineGLFW::mouse_loc;
-std::queue<std::pair<vector_float2, std::pair<int, bool>>> EngineGLFW::clickq;
+vec_float2 EngineGLFW::last_loc;
+vec_float2 EngineGLFW::mouse_loc;
+std::queue<std::pair<vec_float2, std::pair<int, bool>>> EngineGLFW::clickq;
 
 EngineGLFW::EngineGLFW() {
 }
@@ -28,7 +28,7 @@ void EngineGLFW::key_callback(GLFWwindow* window, int key, int scancode, int act
 }
 
 void EngineGLFW::mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-    mouse_loc = vector_make_float2(xpos, ypos);
+    mouse_loc = vec_make_float2(xpos, ypos);
     mouse_moved = true;
 }
 

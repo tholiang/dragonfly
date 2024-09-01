@@ -143,7 +143,7 @@ void EditNodeScheme::CreateControlsModels() {
     ModelTransform x_arrow_uniform;
     x_arrow_uniform.b.pos = vec_make_float3(0, 0, 0);
     x_arrow_uniform.rotate_origin = vec_make_float3(0, 0, 0);
-    //x_arrow_uniform.angle = vector_make_float3(M_PI_2, 0, 0);
+    //x_arrow_uniform.angle = vec_make_float3(M_PI_2, 0, 0);
     RotateBasisOnY(&x_arrow_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(x_arrow_uniform);
@@ -158,7 +158,7 @@ void EditNodeScheme::CreateControlsModels() {
     ModelTransform y_arrow_uniform;
     y_arrow_uniform.b.pos = vec_make_float3(0, 0, 0);
     y_arrow_uniform.rotate_origin = vec_make_float3(0, 0, 0);
-//    y_arrow_uniform.angle = vector_make_float3(0, -M_PI_2, 0);
+//    y_arrow_uniform.angle = vec_make_float3(0, -M_PI_2, 0);
     RotateBasisOnX(&y_arrow_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(y_arrow_uniform);
@@ -190,7 +190,7 @@ void EditNodeScheme::CreateControlsModels() {
     ModelTransform x_rotator_uniform;
     x_rotator_uniform.b.pos = vec_make_float3(0, 0, 0);
     x_rotator_uniform.rotate_origin = vec_make_float3(0, 0, 0);
-    //x_arrow_uniform.angle = vector_make_float3(M_PI_2, 0, 0);
+    //x_arrow_uniform.angle = vec_make_float3(M_PI_2, 0, 0);
     RotateBasisOnY(&x_rotator_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(x_rotator_uniform);
@@ -206,7 +206,7 @@ void EditNodeScheme::CreateControlsModels() {
     ModelTransform y_rotator_uniform;
     y_rotator_uniform.b.pos = vec_make_float3(0, 0, 0);
     y_rotator_uniform.rotate_origin = vec_make_float3(0, 0, 0);
-//    y_arrow_uniform.angle = vector_make_float3(0, -M_PI_2, 0);
+//    y_arrow_uniform.angle = vec_make_float3(0, -M_PI_2, 0);
     RotateBasisOnX(&y_rotator_uniform.b, M_PI_2);
     
     controls_model_uniforms_.push_back(y_rotator_uniform);

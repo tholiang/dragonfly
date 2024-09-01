@@ -450,8 +450,8 @@ void ComputePipelineMetalSDL::Compute() {
         std::vector<uint32_t> selected_vertices = scheme->GetSelectedVertices();
         for (int i = 0; i < selected_vertices.size(); i++) {
             int compiled_face_square_idx_start = compiled_buffer_key_indices.compiled_face_vertex_square_start+selected_vertices[i]*2;
-            compiled_faces[compiled_face_square_idx_start+0].color = vector_make_float4(1, 0.5, 0, 1);
-            compiled_faces[compiled_face_square_idx_start+1].color = vector_make_float4(1, 0.5, 0, 1);
+            compiled_faces[compiled_face_square_idx_start+0].color = vec_make_float4(1, 0.5, 0, 1);
+            compiled_faces[compiled_face_square_idx_start+1].color = vec_make_float4(1, 0.5, 0, 1);
             [compiled_face_buffer didModifyRange:NSMakeRange(compiled_face_square_idx_start, 2)];
         }
     }
@@ -461,7 +461,7 @@ void ComputePipelineMetalSDL::Compute() {
     if (selected_node >= 0) {
         int compiled_face_node_start = compiled_buffer_key_indices.compiled_face_node_circle_start+selected_node*8;
         for (int i = 0; i < 8; i++) {
-            compiled_faces[compiled_face_node_start+i].color = vector_make_float4(1, 0.5, 0, 1);
+            compiled_faces[compiled_face_node_start+i].color = vec_make_float4(1, 0.5, 0, 1);
         }
         [compiled_face_buffer didModifyRange:NSMakeRange(compiled_face_node_start, 8)];
     }
@@ -471,8 +471,8 @@ void ComputePipelineMetalSDL::Compute() {
         std::vector<uint32_t> selected_dots = scheme->GetSelectedVertices();
         for (int i = 0; i < selected_dots.size(); i++) {
             int compiled_dot_square_idx_start = compiled_buffer_key_indices.compiled_face_dot_square_start+selected_dots[i]*2;
-            compiled_faces[compiled_dot_square_idx_start+0].color = vector_make_float4(1, 0.5, 0, 1);
-            compiled_faces[compiled_dot_square_idx_start+1].color = vector_make_float4(1, 0.5, 0, 1);
+            compiled_faces[compiled_dot_square_idx_start+0].color = vec_make_float4(1, 0.5, 0, 1);
+            compiled_faces[compiled_dot_square_idx_start+1].color = vec_make_float4(1, 0.5, 0, 1);
             [compiled_face_buffer didModifyRange:NSMakeRange(compiled_dot_square_idx_start, 2)];
         }
     }

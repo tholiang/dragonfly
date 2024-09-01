@@ -202,10 +202,10 @@ float DragonflyUtils::QuadraticEquation(vec_float3 coeff) {
     return t2;
 }
 
-/*vector_float3 DragonflyUtils::LinePlaneIntersect (vector_float3 line_origin, vector_float3 line_vector, vector_float3 plane1, vector_float3 plane2, vector_float3 plane3) {
-    vector_float3 plane_vec1 = vector_make_float3(plane1.x-plane2.x, plane1.y-plane2.y, plane1.z-plane2.z);
-    vector_float3 plane_vec2 = vector_make_float3(plane1.x-plane3.x, plane1.y-plane3.y, plane1.z-plane3.z);
-    vector_float3 plane_norm = CrossProduct(plane_vec1, plane_vec2);
+/*vec_float3 DragonflyUtils::LinePlaneIntersect (vec_float3 line_origin, vec_float3 line_vector, vec_float3 plane1, vec_float3 plane2, vec_float3 plane3) {
+    vec_float3 plane_vec1 = vec_make_float3(plane1.x-plane2.x, plane1.y-plane2.y, plane1.z-plane2.z);
+    vec_float3 plane_vec2 = vec_make_float3(plane1.x-plane3.x, plane1.y-plane3.y, plane1.z-plane3.z);
+    vec_float3 plane_norm = CrossProduct(plane_vec1, plane_vec2);
     
     float k = -(plane_norm.x*plane1.x + plane_norm.y*plane1.y + plane_norm.z*plane1.z);
     
@@ -218,16 +218,16 @@ float DragonflyUtils::QuadraticEquation(vec_float3 coeff) {
     
     //std::cout<<"t = "<<distto<<std::endl;
     
-    vector_float3 intersect = vector_make_float3(distto*line_vector.x + line_origin.x, distto*line_vector.y + line_origin.y, distto*line_vector.z + line_origin.z);
+    vec_float3 intersect = vec_make_float3(distto*line_vector.x + line_origin.x, distto*line_vector.y + line_origin.y, distto*line_vector.z + line_origin.z);
     
     //std::cout<<intersect.x<<" "<<intersect.y<<" "<<intersect.z<<std::endl;
     //std::cout<<distto<<std::endl;
     return intersect;
 }
 
-vector_float3 DragonflyUtils::MouseFaceIntercept (vector_float2 &mouse, int fid) {
+vec_float3 DragonflyUtils::MouseFaceIntercept (vec_float2 &mouse, int fid) {
     Face face = scene_faces.at(fid);
-    vector_float3 mouse_angle = vector_make_float3(atan(mouse.x*tan(camera->FOV.x/2)), -atan(mouse.y*tan(camera->FOV.y/2)), 1);
+    vec_float3 mouse_angle = vec_make_float3(atan(mouse.x*tan(camera->FOV.x/2)), -atan(mouse.y*tan(camera->FOV.y/2)), 1);
     
     std::cout<<mouse_angle.x<<" "<<mouse_angle.y<<std::endl;
     
@@ -242,7 +242,7 @@ vector_float3 DragonflyUtils::MouseFaceIntercept (vector_float2 &mouse, int fid)
     float new_theta = cam_theta + mouse_angle.y;
     
     //find vector
-    vector_float3 mouse_vec = vector_make_float3(sin(new_theta)*cos(new_phi), sin(new_theta)*sin(new_phi), cos(new_theta));
+    vec_float3 mouse_vec = vec_make_float3(sin(new_theta)*cos(new_phi), sin(new_theta)*sin(new_phi), cos(new_theta));
     
     //std::cout<<mouse_vec.x<<" "<<mouse_vec.y<<" "<<mouse_vec.z<<std::endl;
     
