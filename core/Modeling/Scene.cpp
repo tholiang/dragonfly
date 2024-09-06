@@ -18,20 +18,30 @@ bool in_cube(vec_float3 p) {
     return (p.x > 3 || p.y > 3 || p.z > 3) || (p.x < -3 || p.y < -3 || p.z < -3);
 }
 
+float dec_line(float x) {
+    return 1-x;
+}
+float flat_line(float x) {
+    return 1;
+}
+
 Scene::Scene() {
-    CreateNewModel();
+    // CreateNewModel();
     
-    Model *m0 = GetModel(0);
+    // Model *m0 = GetModel(0);
+    BeanForce *ff = new BeanForce();
+    ff->AddGuideline(0, dec_line);
+    ff->AddGuideline(M_PI, flat_line);
     
-//    using std::placeholders::_1;
-//    std::function<bool(vec_float3)> in_model = std::bind(&Model::PointIn, m0, _1);
-//    Model *m = Wrap(0, 0, 0.5, 0.05, 0.4, false, in_sphere);
-//    ModelTransform new_uniform;
-//    new_uniform.b = Basis();
-//    new_uniform.rotate_origin = vec_make_float3(0, 0, 0);
-//    AddModel(m, new_uniform);
-//    
-//    MoveModelBy(1, 10, 0, 0);
+    vec_float3 orig;
+
+   using std::placeholders::_1;
+   std::function<bool(vec_float3)> in_ff = std::bind(&ForceField::Contains, ff, _1, orig);
+   Model *m = Wrap(0, 0, 0.5, 0.05, 0.4, false, in_ff);
+   ModelTransform new_uniform;
+   new_uniform.b = Basis();
+   new_uniform.rotate_origin = vec_make_float3(0, 0, 0);
+   AddModel(m, new_uniform);
 }
 
 Scene::~Scene() {

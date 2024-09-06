@@ -29,7 +29,7 @@ vec_float3 DragonflyUtils::get_a_normal(vec_float3 v) {
 vec_float3 DragonflyUtils::find_wrap_start(float step, std::function<bool(vec_float3)> in_model) {
     // TODO: change start later
     vec_float3 origin = vec_make_float3(0, 0, 0);
-    vec_float3 vec = unit_vector(vec_make_float3(1, 0, 0));
+    vec_float3 vec = unit_vector(vec_make_float3(0, 0, 1));
     vec.x *= step;
     vec.y *= step;
     vec.z *= step;
@@ -164,7 +164,7 @@ Model *DragonflyUtils::Wrap(float a_r, float l_r, float l_d, float step, float s
     // add starting edges to queue
     q.push(vec_make_int2(svid1, svid2));
     
-    int total_face_iterations = 100000;
+    int total_face_iterations = 100;
     iterations_left = total_face_iterations;
     // build model
     while (!q.empty() && iterations_left > 0) {

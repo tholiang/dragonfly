@@ -21,6 +21,7 @@ using namespace Vec;
 
 #include "Model.h"
 #include "Slice.h"
+#include "BeanForce.h"
 #include "../Utils/Project2D.h"
 #include "../Utils/Basis.h"
 
