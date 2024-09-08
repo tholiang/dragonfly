@@ -3,13 +3,6 @@
 using namespace DragonflyUtils;
 
 BeanForce::BeanForce() {
-    axis_ = vec_make_float3(0,0,1);
-    zero_angle_ = vec_make_float3(1,0,0);
-}
-
-void BeanForce::SetAxisAndZero(vec_float3 a, vec_float3 z) {
-    axis_ = a;
-    zero_angle_ = z;
 }
 
 void BeanForce::AddGuideline(float angle, Guideline guideline) {
@@ -25,14 +18,14 @@ void BeanForce::AddGuideline(float angle, Guideline guideline) {
     guidelines_.push_back(entry);
 }
 
-bool BeanForce::Contains(vec_float3 point, vec_float3 origin) {
-    // project point onto vector
-    point = point - origin;
+bool BeanForce::Contains(vec_float3 point) {
+    // assume axis is (0,0,1)
+    // assume zero angle is (1,0,0)
 
-    float z = Projection(point, axis_);
-    vec_float3 proj = ScaleVector(axis_, z);
-    float r = Magnitude(point - proj);
-    float a = AngleBetween(zero_angle_, point);
+    // project point onto vector
+    float z = point.z;
+    float r = sqrt(pow(point.x, 2) + pow(point.y, 2));
+    float a = AngleBetween(vec_make_float3(1,0,0), point);
 
     // if no guidelines, anything "under" the tip of the axis is in 
     if (guidelines_.size() == 0 || r == 0) {
