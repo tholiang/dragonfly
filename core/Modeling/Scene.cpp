@@ -311,6 +311,7 @@ void Scene::MoveSliceTo(unsigned int sid, float x, float y, float z) {
 //}
 
 void Scene::CreateNewModel() {
+    std::cout<<"creating new model in scene"<<std::endl;
     Model *m = new Model();
     m->MakeCube();
     models.push_back(m);

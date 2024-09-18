@@ -36,4 +36,6 @@ bool ForceField::Contains(vec_float3 p) {
     } else if (type_ == FFType::XOR) {
         return l_res != r_res;
     }
+
+    return false;
 }

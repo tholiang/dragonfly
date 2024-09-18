@@ -48,6 +48,7 @@ void Engine::run() {
     // Main loop
     while (true) {
         if (HandleInputEvents()) {
+            std::cout<<"input event handling failed"<<std::endl;
             break;
         }
         
@@ -66,7 +67,6 @@ void Engine::run() {
         compute_pipeline->SendDataToScheme();
         compute_pipeline->SendDataToRenderer(render_pipeline);
         
-        //RenderUI();
         render_pipeline->Render();
         scheme = scheme_controller->GetScheme();
         compute_pipeline->SetScheme(scheme);
@@ -76,8 +76,9 @@ void Engine::run() {
             std::cout<<"where tf is the scheme"<<std::endl;
             break;
         }
-        
+
         scheme->Update();
+        
     }
 }
 

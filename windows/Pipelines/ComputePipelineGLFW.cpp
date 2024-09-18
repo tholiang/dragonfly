@@ -55,7 +55,6 @@ void ComputePipelineGLFW::init() {
 
 void ComputePipelineGLFW::CreateBuffers() {
     ComputePipeline::SetScheme(scheme);
-
     DeleteContent(); // delete and reset content to NULL
     
     // ---COMPUTE DATA BUFFERS---
@@ -94,8 +93,6 @@ void ComputePipelineGLFW::CreateBuffers() {
     scene_light_content->z = 5;
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, scene_light_buffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(vec_float3), scene_light_content, GL_STATIC_READ);
-    delete scene_light_content;
-    
     
     // ---MODEL BUFFERS---
     // create model face buffer - separate from compiled to calculate face lighting
@@ -272,7 +269,7 @@ void ComputePipelineGLFW::ResetDynamicBuffers() {
     
     // ---COMPUTE DATA BUFFERS---
     // add data to window attribute buffer
-    window_attributes_content = scheme->GetWindowAttributes();
+    *window_attributes_content = *scheme->GetWindowAttributes();
     glNamedBufferSubData (window_attributes_buffer, 0, sizeof(WindowAttributes), window_attributes_content);
     
     
@@ -444,71 +441,71 @@ void ComputePipelineGLFW::SendDataToScheme() {
 
 void ComputePipelineGLFW::DeleteContent() {
     if (window_attributes_content != NULL) {
-        delete window_attributes_content;
+        free(window_attributes_content);
         window_attributes_content = NULL;
     }
     if (scene_light_content != NULL) {
-        delete scene_light_content;
+        free(scene_light_content);
         scene_light_content = NULL;
     }
     if (smfb_content != NULL) {
-        delete smfb_content;
+        free(smfb_content);
         smfb_content = NULL;
     }
     if (model_node_content != NULL) {
-        delete model_node_content;
+        free(model_node_content);
         model_node_content = NULL;
     }
     if (nvlink_content != NULL) {
-        delete nvlink_content;
+        free(nvlink_content);
         nvlink_content = NULL;
     }
     if (vertex_content != NULL) {
-        delete vertex_content;
+        free(vertex_content);
         vertex_content = NULL;
     }
     if (node_model_id_content != NULL) {
-        delete node_model_id_content;
+        free(node_model_id_content);
         node_model_id_content = NULL;
     }
     if (model_transform_content != NULL) {
-        delete model_transform_content;
+        free(model_transform_content);
         model_transform_content = NULL;
     }
     if (dot_content != NULL) {
-        delete dot_content;
+        free(dot_content);
         dot_content = NULL;
     }
     if (slice_transform_content != NULL) {
-        delete slice_transform_content;
+        free(slice_transform_content);
         slice_transform_content = NULL;
     }
     if (dot_slice_id_content != NULL) {
-        delete dot_slice_id_content;
+        free(dot_slice_id_content);
         dot_slice_id_content = NULL;
     }
     if (ui_vertex_content != NULL) {
-        delete ui_vertex_content;
+        free(ui_vertex_content);
         ui_vertex_content = NULL;
     }
     if (ui_element_transform_content != NULL) {
-        delete ui_element_transform_content;
+        free(ui_element_transform_content);
         ui_element_transform_content = NULL;
     }
     if (ui_element_id_content != NULL) {
-        delete ui_element_id_content;
+        free(ui_element_id_content);
         ui_element_id_content = NULL;
     }
     if (compiled_vertex_content != NULL) {
-        delete compiled_vertex_content;
+        free(compiled_vertex_content);
         compiled_vertex_content = NULL;
     }
     if (compiled_face_content != NULL) {
-        delete compiled_face_content;
+        free(compiled_face_content);
         compiled_face_content = NULL;
     }
     if (compiled_edge_content != NULL) {
-        delete compiled_edge_content;
+        free(compiled_edge_content);
         compiled_edge_content = NULL;
     }
 }

@@ -1,4 +1,4 @@
-#include "EngineGLFW.h"\
+#include "EngineGLFW.h"
 
 std::queue<std::pair<int, bool>> EngineGLFW::keyq;
 bool EngineGLFW::mouse_moved;
@@ -48,6 +48,8 @@ int EngineGLFW::SetPipelines() {
     compute_pipeline = new ComputePipelineGLFW();
     compute_pipeline->init();
     compute_pipeline->SetScheme(scheme);
+
+    // compute_pipeline->CreateBuffers();
 
     GLFWwindow *window = ((RenderPipelineGLFW *) render_pipeline)->get_window();
     glfwSetKeyCallback(window, key_callback);

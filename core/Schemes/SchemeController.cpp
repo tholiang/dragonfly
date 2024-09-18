@@ -35,6 +35,7 @@ void SchemeController::MenuBar() {
         if (ImGui::BeginMenu("File")) {
             using_menu_bar = true;
             if (ImGui::MenuItem("New Model", "")) {
+                std::cout<<"new model pressed"<<std::endl;
                 scheme_->CreateNewModel();
             }
             if (ImGui::MenuItem("New Slice", "")) {

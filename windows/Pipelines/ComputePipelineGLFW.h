@@ -104,6 +104,7 @@ private:
     GLuint testssbo;
 
     void DeleteContent();
+    void DeletePtr(void **ptr);
 public:
     ComputePipelineGLFW();
     ~ComputePipelineGLFW();

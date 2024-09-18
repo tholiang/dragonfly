@@ -393,8 +393,10 @@ void Scheme::SetControlsBasis() {
 }
 
 void Scheme::CreateNewModel() {
+    std::cout<<"creating new model in scheme"<<std::endl;
     scene_->CreateNewModel();
     
+    std::cout<<"calculating new counts and flags for reset buffers"<<std::endl;
     CalculateCounts();
     should_reset_empty_buffers = true;
     should_reset_static_buffers = true;
