@@ -3,6 +3,7 @@
 
 ## MacOS with Metal (native)
 **dependencies:**
+- xcode
 - SDL
 
 **steps:**

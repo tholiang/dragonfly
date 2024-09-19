@@ -2,4 +2,4 @@
 
 a 3D modeling software
 
-see `/docs`
+see `/docs/`
