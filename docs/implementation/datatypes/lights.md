@@ -47,15 +47,15 @@ the intensity at the point is determined by a distance and angle falloff
 SimpleLight = {
     float max_intensity
     vec_float4 color
-    vec_float3 distance_multiplier_function
-    vec_float3 angle_multiplier_function
+    vec_float3 distance_falloff_function
+    vec_float3 angle_falloff_function
 }
 ```
 
 these `vec_float3`'s describe coefficients of the quadratic polynomial for the distance and angle multipliers
 
 ```
-distance_multiplier_function = (a, b, c)
+distance_falloff_function = (a, b, c)
 distance = d
 d_multiplier = a(1/d^2) + b(1/d) + c
 ```

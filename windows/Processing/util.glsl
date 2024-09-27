@@ -124,8 +124,8 @@ struct SimpleLight {
     Basis b;
     float max_intensity;
     vector_float4 color;
-    vector_float3 distance_multiplier;
-    vector_float3 angle_multiplier;
+    vector_float3 distance_falloff;
+    vector_float3 angle_falloff;
 };
 
 // ---HELPER FUNCTIONS---

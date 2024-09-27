@@ -23,8 +23,8 @@ struct SimpleLight {
     Basis b;
     float max_intensity;
     vec_float4 color;
-    vec_float3 distance_multiplier;
-    vec_float3 angle_multiplier;
+    vec_float3 distance_falloff;
+    vec_float3 angle_falloff;
 };
 
 struct LightUnit {

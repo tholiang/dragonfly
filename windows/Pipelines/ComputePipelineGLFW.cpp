@@ -96,7 +96,7 @@ void ComputePipelineGLFW::CreateBuffers() {
     scene_light_content->size = 1;
     scene_light_content->data[0] = PointLight().ToSimpleLight(b);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, scene_light_buffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(vec_float3), scene_light_content, GL_STATIC_READ);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) + sizeof(SimpleLight), scene_light_content, GL_STATIC_READ);
     
     // ---MODEL BUFFERS---
     // create model face buffer - separate from compiled to calculate face lighting
@@ -210,7 +210,7 @@ void ComputePipelineGLFW::ResetStaticBuffers() {
     scene_light_content->data->b.pos.x = 10;
     scene_light_content->data->b.pos.y = 0;
     scene_light_content->data->b.pos.z = 5;
-    glNamedBufferSubData (scene_light_buffer, 0, sizeof(vec_float3), scene_light_content);
+    glNamedBufferSubData (scene_light_buffer, 0, sizeof(int) + sizeof(SimpleLight), scene_light_content);
     
     
     // ---MODEL BUFFERS---

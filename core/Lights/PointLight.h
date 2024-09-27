@@ -7,11 +7,12 @@
 class PointLight: public Light {
 public:
     PointLight();
-    PointLight(float max_intensity, vec_float4 color);
+    PointLight(float max_intensity, vec_float3 distance_falloff, vec_float4 color);
 
     SimpleLight ToSimpleLight(Basis b);
 private:
     float max_intensity_;
+    vec_float3 distance_falloff_;
     vec_float4 color_;
 };
 

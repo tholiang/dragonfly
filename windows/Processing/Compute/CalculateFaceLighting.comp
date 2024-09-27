@@ -54,9 +54,9 @@ void main() {
         vector_float3 light_basis_point = TranslatePointToBasis(lights[i].b, center);
         float d = 1 / sqrt(pow(light_basis_point.x, 2) + pow(light_basis_point.y, 2) + pow(light_basis_point.z, 2));
         float a = 1 / angle_between(light_basis_point, vector_make_float3(1, 0, 0));
-        float dmod = lights[i].distance_multiplier.x * pow(d, 2) + lights[i].distance_multiplier.y * d + lights[i].distance_multiplier.z;
-        float amod = lights[i].angle_multiplier.x * pow(a, 2) + lights[i].angle_multiplier.y * a + lights[i].angle_multiplier.z;
-        float intens = lights[i].max_intensity; // * dmod * amod;
+        float dmod = lights[i].distance_falloff.x * pow(d, 2) + lights[i].distance_falloff.y * d + lights[i].distance_falloff.z;
+        float amod = lights[i].angle_falloff.x * pow(a, 2) + lights[i].angle_falloff.y * a + lights[i].angle_falloff.z;
+        float intens = lights[i].max_intensity * dmod * amod;
 
         // get angle between normal and light
         vector_float3 rev_dir = unit_vector(SubtractVectors(lights[i].b.pos, center));
@@ -64,7 +64,6 @@ void main() {
         intens /= ang * f.shading_multiplier;
 
         // get color
-        intens = 1;
         f.color.x *= intens * lights[i].color.x;
         f.color.y *= intens * lights[i].color.y;
         f.color.z *= intens * lights[i].color.z;
