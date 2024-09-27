@@ -42,12 +42,13 @@ private:
     struct DotBuffer { int size; Dot data[1]; };
     struct UIVertexBuffer { int size; UIVertex data[1]; };
     struct SliceAttributesBuffer { int size; SliceAttributes data[1]; };
+    struct LightBuffer { int size; SimpleLight data[1]; };
 
     // cpu used buffer contents
     WindowAttributes *window_attributes_content = NULL;
     // compiled buffer key indices content exists in parent
     // camera content exists in scheme
-    vec_float3 *scene_light_content = NULL;
+    LightBuffer *scene_light_content = NULL;
     FaceBuffer *smfb_content = NULL;
     NodeBuffer *model_node_content = NULL;
     NodeVertexLink *nvlink_content = NULL;

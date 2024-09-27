@@ -32,7 +32,7 @@ glad_inc = -I$(glad)/include
 glad_src = $(glad)/src/glad.c
 
 core = $(ROOT)/core
-core_inc = -I$(core) -I$(core)/Modeling -I$(core)/Pipelines -I$(core)/Schemes -I$(core)/UI -I$(core)/UserActions -I$(core)/Utils
+core_inc = -I$(core) -I$(core)/Modeling -I$(core)/Lights -I$(core)/Pipelines -I$(core)/Schemes -I$(core)/UI -I$(core)/UserActions -I$(core)/Utils
 core_src = $(core)/Engine.cpp $(wildcard $(core)/*/*.cpp)
 
 windows = $(ROOT)/windows

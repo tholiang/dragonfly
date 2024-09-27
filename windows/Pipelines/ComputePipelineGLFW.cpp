@@ -87,10 +87,14 @@ void ComputePipelineGLFW::CreateBuffers() {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, camera_buffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Camera), cam, GL_DYNAMIC_READ);
     // create light buffer - NEED TO UPDATE TO ALLOW MULTIPLE LIGHTS
-    scene_light_content = (vec_float3 *) malloc(sizeof(vec_float3));
-    scene_light_content->x = 10;
-    scene_light_content->y = 0;
-    scene_light_content->z = 5;
+    Basis b;
+    b.pos.x = 10;
+    b.pos.y = 0;
+    b.pos.z = 5;
+
+    scene_light_content = (LightBuffer *) malloc(sizeof(int) + sizeof(SimpleLight));
+    scene_light_content->size = 1;
+    scene_light_content->data[0] = PointLight().ToSimpleLight(b);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, scene_light_buffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(vec_float3), scene_light_content, GL_STATIC_READ);
     
@@ -203,9 +207,9 @@ void ComputePipelineGLFW::ResetStaticBuffers() {
     // ---GENERAL BUFFERS---
     // add data to light buffer
     // NEEDS UPDATE
-    scene_light_content->x = 10;
-    scene_light_content->y = 0;
-    scene_light_content->z = 5;
+    scene_light_content->data->b.pos.x = 10;
+    scene_light_content->data->b.pos.y = 0;
+    scene_light_content->data->b.pos.z = 5;
     glNamedBufferSubData (scene_light_buffer, 0, sizeof(vec_float3), scene_light_content);
     
     

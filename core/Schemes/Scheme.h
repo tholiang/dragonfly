@@ -30,6 +30,9 @@ using namespace Vec;
 #include "../Modeling/Arrow.h"
 #include "../Modeling/Rotator.h"
 
+#include "../Lights/Light.h"
+#include "../Lights/PointLight.h"
+
 #include "../UI/UIElement.h"
 
 #include "../UserActions/UserAction.h"

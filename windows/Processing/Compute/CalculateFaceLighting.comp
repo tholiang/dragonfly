@@ -22,7 +22,8 @@ layout(std430, binding = 3) buffer bufferC
 
 layout(std430, binding = 4) buffer bufferD
 {
-    vector_float3 light;
+    int num_lights;
+    SimpleLight lights[];
 };
 
 layout(std430, binding = 5) buffer bufferE
@@ -46,16 +47,30 @@ void main() {
         f_norm.z *= -1;
     }
     
-    // get angle between normal and light
     vector_float3 center = TriAvg(vertices[f.vertices[0]], vertices[f.vertices[1]], vertices[f.vertices[2]]);
-    vector_float3 vec_to = vector_make_float3(light.x - center.x, light.y - center.y, light.z - center.z);
-    float ang = abs(acos2(f_norm, vec_to));
-    // make darker the larger the angle - considering the shading multiplier
-    f.color.x /= ang * f.shading_multiplier;
-    f.color.y /= ang * f.shading_multiplier;
-    f.color.z /= ang * f.shading_multiplier;
-    
-    // set face in compiled face buffer
-    unsigned int cfb_scene_face_idx = key_indices.compiled_face_scene_start+fid;
-    compiled_faces[cfb_scene_face_idx] = f;
+
+    for (int i = 0; i < num_lights; i++) {
+        // get light intensity at face point
+        vector_float3 light_basis_point = TranslatePointToBasis(lights[i].b, center);
+        float d = 1 / sqrt(pow(light_basis_point.x, 2) + pow(light_basis_point.y, 2) + pow(light_basis_point.z, 2));
+        float a = 1 / angle_between(light_basis_point, vector_make_float3(1, 0, 0));
+        float dmod = lights[i].distance_multiplier.x * pow(d, 2) + lights[i].distance_multiplier.y * d + lights[i].distance_multiplier.z;
+        float amod = lights[i].angle_multiplier.x * pow(a, 2) + lights[i].angle_multiplier.y * a + lights[i].angle_multiplier.z;
+        float intens = lights[i].max_intensity; // * dmod * amod;
+
+        // get angle between normal and light
+        vector_float3 rev_dir = unit_vector(SubtractVectors(lights[i].b.pos, center));
+        float ang = abs(angle_between(f_norm, rev_dir));
+        intens /= ang * f.shading_multiplier;
+
+        // get color
+        intens = 1;
+        f.color.x *= intens * lights[i].color.x;
+        f.color.y *= intens * lights[i].color.y;
+        f.color.z *= intens * lights[i].color.z;
+        
+        // set face in compiled face buffer
+        unsigned int cfb_scene_face_idx = key_indices.compiled_face_scene_start+fid;
+        compiled_faces[cfb_scene_face_idx] = f;
+    }
 }

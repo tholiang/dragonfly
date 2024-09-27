@@ -120,6 +120,14 @@ struct SliceAttributes {
     float height;
 };
 
+struct SimpleLight {
+    Basis b;
+    float max_intensity;
+    vector_float4 color;
+    vector_float3 distance_multiplier;
+    vector_float3 angle_multiplier;
+};
+
 // ---HELPER FUNCTIONS---
 vector_float2 vector_make_float2(float x, float y) {
 	vector_float2 ret;
@@ -178,6 +186,14 @@ vector_float3 AddVectors(vector_float3 v1, vector_float3 v2) {
     return ret;
 }
 
+vector_float3 SubtractVectors(vector_float3 v1, vector_float3 v2) {
+    vector_float3 ret;
+    ret.x = v1.x - v2.x;
+    ret.y = v1.y - v2.y;
+    ret.z = v1.z - v2.z;
+    return ret;
+}
+
 // calculate cross product of 3D triangle
 vector_float3 cross_product (vector_float3 p1, vector_float3 p2, vector_float3 p3) {
     vector_float3 u = vector_float3(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
@@ -193,6 +209,21 @@ vector_float3 cross_vectors(vector_float3 p1, vector_float3 p2) {
     cross.y = -(p1.x*p2.z - p1.z*p2.x);
     cross.z = p1.x*p2.y - p1.y*p2.x;
     return cross;
+}
+
+// calculate projection
+float projection (vector_float3 v1, vector_float3 v2) {
+    float dot = v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
+    float mag = sqrt(pow(v2.x, 2) + pow(v2.y, 2) + pow(v2.z, 2));
+    return dot / mag;
+}
+
+vector_float3 unit_vector(vector_float3 v) {
+    float mag = sqrt(pow(v.x, 2) + pow(v.y, 2) + pow(v.z, 2));
+    v.x /= mag;
+    v.y /= mag;
+    v.z /= mag;
+    return v;
 }
 
 // calculate average of three 3D points
@@ -342,6 +373,22 @@ vector_float3 TranslatePointToStandard(Basis b, vector_float3 point) {
     
     return ret;
 }
+
+// translate point from standard basis to given basis
+vector_float3 TranslatePointToBasis(Basis b, vector_float3 point) {
+    vector_float3 ret;
+    
+    vector_float3 tobasis;
+    tobasis.x = point.x - b.pos.x;
+    tobasis.y = point.y - b.pos.y;
+    tobasis.z = point.z - b.pos.z;
+    
+    ret.x = projection(tobasis, b.x);
+    ret.y = projection(tobasis, b.y);
+    ret.z = projection(tobasis, b.z);
+    
+    return ret;
+};
 
 // rotate point from given basis to standard basis (ignore basis translation offset)
 vector_float3 RotatePointToStandard(Basis b, vector_float3 point) {
