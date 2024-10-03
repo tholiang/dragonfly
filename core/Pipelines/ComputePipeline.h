@@ -56,6 +56,7 @@ protected:
     unsigned long num_scene_faces = 0;
     unsigned long num_scene_edges = 0;
     unsigned long num_scene_nodes = 0;
+    unsigned long num_scene_lights = 0;
     
     unsigned long num_controls_models = 0;
     unsigned long num_controls_vertices = 0;

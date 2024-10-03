@@ -49,6 +49,7 @@ void main() {
     
     vector_float3 center = TriAvg(vertices[f.vertices[0]], vertices[f.vertices[1]], vertices[f.vertices[2]]);
 
+    vector_float4 endcolor = vector_float4(0,0,0,f.color.w);
     for (int i = 0; i < num_lights; i++) {
         // get light intensity at face point
         vector_float3 light_basis_point = TranslatePointToBasis(lights[i].b, center);
@@ -60,16 +61,17 @@ void main() {
 
         // get angle between normal and light
         vector_float3 rev_dir = unit_vector(SubtractVectors(lights[i].b.pos, center));
-        float ang = abs(angle_between(f_norm, rev_dir));
-        intens /= ang * f.shading_multiplier;
+        float ang = 1 - abs(angle_between(f_norm, rev_dir)) / pi;
+        intens *= ang * f.shading_multiplier;
 
         // get color
-        f.color.x *= intens * lights[i].color.x;
-        f.color.y *= intens * lights[i].color.y;
-        f.color.z *= intens * lights[i].color.z;
-        
-        // set face in compiled face buffer
-        unsigned int cfb_scene_face_idx = key_indices.compiled_face_scene_start+fid;
-        compiled_faces[cfb_scene_face_idx] = f;
+        endcolor.x += f.color.x * intens * lights[i].color.x;
+        endcolor.y += f.color.y * intens * lights[i].color.y;
+        endcolor.z += f.color.z * intens * lights[i].color.z;
     }
+        
+    // set face in compiled face buffer
+    f.color = endcolor;
+    unsigned int cfb_scene_face_idx = key_indices.compiled_face_scene_start+fid;
+    compiled_faces[cfb_scene_face_idx] = f;
 }

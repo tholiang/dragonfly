@@ -23,6 +23,7 @@ void ComputePipeline::SetScheme(Scheme *sch) {
         num_scene_faces = 0;
         num_scene_edges = 0;
         num_scene_nodes = 0;
+        num_scene_lights = 0;
         
         num_scene_slices = 1;
         num_scene_dots = scheme->NumSceneDots();
@@ -42,6 +43,7 @@ void ComputePipeline::SetScheme(Scheme *sch) {
         num_scene_faces = scheme->NumSceneFaces();
         num_scene_edges = num_scene_faces*3;
         num_scene_nodes = scheme->NumSceneNodes();
+        num_scene_lights = scheme->NumSceneLights();
         
         num_scene_slices = scheme->GetScene()->NumSlices();
         num_scene_dots = scheme->NumSceneDots();

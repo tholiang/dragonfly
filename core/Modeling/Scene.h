@@ -25,6 +25,8 @@ using namespace Vec;
 #include "ForceField.h"
 #include "../Utils/Project2D.h"
 #include "../Utils/Basis.h"
+#include "../Lights/Light.h"
+#include "../Lights/PointLight.h"
 
 using namespace DragonflyUtils;
 
@@ -40,6 +42,9 @@ private:
     
     std::vector<Slice *> slices;
     std::vector<ModelTransform> slice_uniforms;
+
+    std::vector<Light *> lights;
+    std::vector<Basis> light_bases;
     
     std::string name_;
 public:
@@ -53,6 +58,9 @@ public:
     
     Slice *GetSlice(unsigned long sid);
     ModelTransform *GetSliceUniforms(unsigned long sid);
+
+    Light *GetLight(unsigned long lid);
+    Basis *GetLightBasis(unsigned long lid);
     
     vec_float3 GetModelPosition(unsigned long mid);
     Basis *GetModelBasis(unsigned long mid);
@@ -72,6 +80,11 @@ public:
     
     void MoveSliceTo(unsigned int sid, float x, float y, float z);
 //    void RotateSliceTo(unsigned int sid, float x, float y, float z);
+
+    void MoveLightBy(unsigned int lid, float dx, float dy, float dz);
+    void RotateLightBy(unsigned int lid, float dx, float dy, float dz);
+    
+    void MoveLightTo(unsigned int lid, float x, float y, float z);
     
     void CreateNewModel();
     void NewModelFromFile(std::string path);
@@ -79,13 +92,18 @@ public:
     void AddModel(Model *m, ModelTransform mu);
     
     void AddSlice(Slice *s);
+
+    void AddLight(Light *l, Basis b);
     
     void RemoveModel(unsigned long mid);
     
     void RemoveSlice(unsigned long sid);
+
+    void RemoveLight(unsigned long lid);
     
     unsigned long NumModels();
     unsigned long NumSlices();
+    unsigned long NumLights();
     
     std::vector<Model *> *GetModels();
     std::vector<ModelTransform> *GetAllModelUniforms();
@@ -93,6 +111,9 @@ public:
     std::vector<Slice *> *GetSlices();
     //std::vector<SliceAttributes> GetAllSliceAttributes();
     std::vector<ModelTransform> *GetAllSliceUniforms();
+
+    std::vector<Light *> *GetLights();
+    std::vector<Basis> *GetLightBases();
     
     std::string GetName();
     void SetName(std::string name);

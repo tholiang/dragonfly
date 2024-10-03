@@ -93,8 +93,6 @@ void ComputePipelineGLFW::CreateBuffers() {
     b.pos.z = 5;
 
     scene_light_content = (LightBuffer *) malloc(sizeof(int) + sizeof(SimpleLight));
-    scene_light_content->size = 1;
-    scene_light_content->data[0] = PointLight().ToSimpleLight(b);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, scene_light_buffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) + sizeof(SimpleLight), scene_light_content, GL_STATIC_READ);
     
@@ -214,6 +212,14 @@ void ComputePipelineGLFW::UpdateBufferCapacities() {
     }
     
     // ---GENERAL BUFFERS---
+    if (num_scene_lights > light_buffer_capacity) {
+        light_buffer_capacity = num_scene_lights*2;
+
+        if (scene_light_content != NULL) { free(scene_light_content); }
+        scene_light_content = (LightBuffer *) malloc(sizeof(int) + (light_buffer_capacity*sizeof(SimpleLight)));
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, scene_light_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, (sizeof(int) + (light_buffer_capacity*sizeof(SimpleLight))), scene_light_content, GL_STATIC_READ);
+    }
     
     // ---MODEL BUFFERS---
     if (num_scene_faces > scene_model_face_buffer_capacity) {
@@ -342,10 +348,11 @@ void ComputePipelineGLFW::ResetStaticBuffers() {
     // ---GENERAL BUFFERS---
     // add data to light buffer
     // NEEDS UPDATE
-    scene_light_content->data->b.pos.x = 10;
-    scene_light_content->data->b.pos.y = 0;
-    scene_light_content->data->b.pos.z = 5;
-    glNamedBufferSubData (scene_light_buffer, 0, sizeof(int) + sizeof(SimpleLight), scene_light_content);
+    glGetNamedBufferSubData (scene_light_buffer, 0, sizeof(int) + (light_buffer_capacity*sizeof(SimpleLight)), scene_light_content);
+    scene_light_content->size = num_scene_lights;
+    SimpleLight *light_data = (SimpleLight *) (((char *) scene_light_content)+sizeof(int));
+    scheme->SetSceneLightBuffer(light_data);
+    glNamedBufferSubData (scene_light_buffer, 0, sizeof(int) + (num_scene_lights*sizeof(SimpleLight)), scene_light_content);
     
     
     // ---MODEL BUFFERS---
@@ -354,7 +361,7 @@ void ComputePipelineGLFW::ResetStaticBuffers() {
     smfb_content->size = num_scene_faces;
     Face *smfb_data = (Face *) (((char *) smfb_content)+sizeof(int));
     scheme->SetSceneFaceBuffer(smfb_data, compiled_vertex_scene_start()); // scene faces
-    glNamedBufferSubData (scene_model_face_buffer, 0, num_scene_faces * sizeof(Face), smfb_content);
+    glNamedBufferSubData (scene_model_face_buffer, 0, sizeof(int) + (num_scene_faces*sizeof(Face)), smfb_content);
     
     // add data to node to model id buffer
     glGetNamedBufferSubData (node_model_id_buffer, 0, (num_scene_nodes + num_controls_nodes)*sizeof(uint32_t), node_model_id_content);
@@ -374,7 +381,7 @@ void ComputePipelineGLFW::ResetStaticBuffers() {
     dot_content->size = num_scene_dots;
     Dot *dot_data = (Dot *) (((char *) dot_content)+sizeof(int));
     scheme->SetSliceDotBuffer(dot_data); // dots
-    glNamedBufferSubData (slice_dot_buffer, 0, num_scene_dots*sizeof(Dot), dot_content);
+    glNamedBufferSubData (slice_dot_buffer, 0, sizeof(int) + num_scene_dots*sizeof(Dot), dot_content);
     
     // add data to slice attributes buffer
     glGetNamedBufferSubData (slice_attributes_buffer, 0, num_scene_slices*sizeof(SliceAttributes), slice_attribute_content);
@@ -393,7 +400,7 @@ void ComputePipelineGLFW::ResetStaticBuffers() {
     ui_vertex_content->size = num_ui_vertices;
     UIVertex *uiv_data = (UIVertex *) (((char *) ui_vertex_content)+sizeof(int));
     scheme->SetUIVertexBuffer(uiv_data);
-    glNamedBufferSubData (ui_vertex_buffer, 0, num_ui_vertices*sizeof(UIVertex), ui_vertex_content);
+    glNamedBufferSubData (ui_vertex_buffer, 0, sizeof(int) + num_ui_vertices*sizeof(UIVertex), ui_vertex_content);
     
     // add data to ui element id buffer
     glGetNamedBufferSubData (ui_vertex_element_id_buffer, 0, num_ui_vertices*sizeof(uint32_t), ui_element_id_content);
@@ -508,7 +515,7 @@ void ComputePipelineGLFW::Compute() {
         }
         
         // if lighting is enabled calculate scene face lighting
-        if (scheme->LightingEnabled()) {
+        if (scheme->LightingEnabled() && num_scene_lights > 0) {
             glUseProgram(compute_lighting_shader->ID);
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, compiled_face_buffer);
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, scene_model_face_buffer);

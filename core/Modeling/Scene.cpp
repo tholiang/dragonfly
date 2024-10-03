@@ -26,27 +26,40 @@ float flat_line(float x) {
 }
 
 Scene::Scene() {
-    CreateNewModel();
+    // CreateNewModel();
+    
+    PointLight *pl = new PointLight();
+    Basis lightb;
+    lightb.pos.x = -10;
+    lightb.pos.z = 10;
+    pl->SetColor(vec_make_float4(1,0,0,1));
+    AddLight(pl, lightb);
+    
+    PointLight *pl2 = new PointLight();
+    Basis lightb2;
+    lightb2.pos.x = 10;
+    lightb2.pos.z = 10;
+    pl2->SetColor(vec_make_float4(0,1,0,1));
+    AddLight(pl2, lightb2);
 
-    // Model *m0 = GetModel(0);
-    // BeanForce *bf = new BeanForce();
-    // bf->AddGuideline(0, dec_line);
-    // ForceField *leaf = new ForceField(bf, Basis());
-    // BeanForce *bf2 = new BeanForce();
-    // bf2->AddGuideline(M_PI, flat_line);
-    // Basis b;
-    // b.z = vec_make_float3(0,0,-1);
-    // ForceField *leaf2 = new ForceField(bf2, b);
+    BeanForce *bf = new BeanForce();
+    bf->AddGuideline(0, dec_line);
+    ForceField *leaf = new ForceField(bf, Basis());
+    BeanForce *bf2 = new BeanForce();
+    bf2->AddGuideline(M_PI, flat_line);
+    Basis b;
+    b.z = vec_make_float3(0,0,-1);
+    ForceField *leaf2 = new ForceField(bf2, b);
 
-    // ForceField *ff = new ForceField(FFType::AND, leaf, leaf2, Basis());
+    ForceField *ff = new ForceField(FFType::AND, leaf, leaf2, Basis());
 
-    // using std::placeholders::_1;
-    // std::function<bool(vec_float3)> in_ff = std::bind(&ForceField::Contains, ff, _1);
-    // Model *m = Wrap(0, 0, 0.5, 0.05, 0.4, false, in_ff);
-    // ModelTransform new_uniform;
-    // new_uniform.b = Basis();
-    // new_uniform.rotate_origin = vec_make_float3(0, 0, 0);
-    // AddModel(m, new_uniform);
+    using std::placeholders::_1;
+    std::function<bool(vec_float3)> in_ff = std::bind(&ForceField::Contains, ff, _1);
+    Model *m = Wrap(0, 0, 0.5, 0.05, 0.4, false, in_ff);
+    ModelTransform new_uniform;
+    new_uniform.b = Basis();
+    new_uniform.rotate_origin = vec_make_float3(0, 0, 0);
+    AddModel(m, new_uniform);
 }
 
 Scene::~Scene() {
@@ -136,6 +149,22 @@ ModelTransform * Scene::GetSliceUniforms(unsigned long sid) {
     }
     
     return &slice_uniforms[sid];
+}
+
+Light *Scene::GetLight(unsigned long lid) {
+    if (lid >= lights.size()) {
+        return NULL;
+    }
+    
+    return lights[lid];
+}
+
+Basis *Scene::GetLightBasis(unsigned long lid) {
+    if (lid >= lights.size()) {
+        return NULL;
+    }
+    
+    return &light_bases[lid];
 }
 
 vec_float3 Scene::GetModelPosition(unsigned long mid) {
@@ -310,6 +339,48 @@ void Scene::MoveSliceTo(unsigned int sid, float x, float y, float z) {
 //    }
 //}
 
+void Scene::MoveLightBy(unsigned int lid, float dx, float dy, float dz) {
+    if (lid < light_bases.size()) {
+        Basis *b = GetLightBasis(lid);
+        
+        if (b == NULL) {
+            return;
+        }
+        
+        b->pos.x += dx;
+        b->pos.y += dy;
+        b->pos.z += dz;
+    }
+}
+
+void Scene::RotateLightBy(unsigned int lid, float dx, float dy, float dz) {
+    if (lid < light_bases.size()) {
+        Basis *b = GetLightBasis(lid);
+        
+        if (b == NULL) {
+            return;
+        }
+        
+        RotateBasisOnX(b, dx);
+        RotateBasisOnY(b, dy);
+        RotateBasisOnZ(b, dz);
+    }
+}
+
+void Scene::MoveLightTo(unsigned int lid, float x, float y, float z) {
+    if (lid < light_bases.size()) {
+        Basis *b = GetLightBasis(lid);
+        
+        if (b == NULL) {
+            return;
+        }
+        
+        b->pos.x = x;
+        b->pos.y = y;
+        b->pos.z = z;
+    }
+}
+
 void Scene::CreateNewModel() {
     Model *m = new Model();
     m->MakeCube();
@@ -359,6 +430,11 @@ void Scene::AddSlice(Slice *s) {
     slice_uniforms.push_back(new_uniform);
 }
 
+void Scene::AddLight(Light *l, Basis b) {
+    lights.push_back(l);
+    light_bases.push_back(b);
+}
+
 void Scene::RemoveModel(unsigned long mid) {
     if (mid < models.size()) {
         delete models[mid];
@@ -375,12 +451,24 @@ void Scene::RemoveSlice(unsigned long sid) {
     }
 }
 
+void Scene::RemoveLight(unsigned long lid) {
+    if (lid < lights.size()) {
+        delete lights[lid];
+        lights.erase(lights.begin() + lid);
+        light_bases.erase(light_bases.begin() + lid);
+    }
+}
+
 unsigned long Scene::NumModels() {
     return models.size();
 }
 
 unsigned long Scene::NumSlices() {
     return slices.size();
+}
+
+unsigned long Scene::NumLights() {
+    return lights.size();
 }
 
 std::vector<Model *> * Scene::GetModels() {
@@ -403,6 +491,14 @@ std::vector<ModelTransform> * Scene::GetAllSliceUniforms() {
     }
     return attr;
 }*/
+
+std::vector<Light *> *Scene::GetLights() {
+    return &lights;
+}
+
+std::vector<Basis> *Scene::GetLightBases() {
+    return &light_bases;
+}
 
 std::string Scene::GetName() {
     return name_;

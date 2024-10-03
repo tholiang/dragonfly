@@ -272,6 +272,7 @@ public:
     unsigned long NumSceneVertices();
     unsigned long NumSceneFaces();
     unsigned long NumSceneNodes();
+    unsigned long NumSceneLights();
     virtual unsigned long NumSceneSlices(); // virtual for EditSliceScheme
     virtual unsigned long NumSceneDots(); // virtual for EditSliceScheme
     virtual unsigned long NumSceneLines(); // virtual for EditSliceScheme
@@ -300,6 +301,7 @@ public:
     void SetSceneNodeModelIDBuffer(uint32_t *buf, unsigned long model_start); // start of scene models in node model id buffer
     void SetSceneNodeVertexLinkBuffer(NodeVertexLink *buf, unsigned long node_start); // start of scene nodes in node buffer
     void SetSceneModelTransformBuffer(ModelTransform *buf);
+    void SetSceneLightBuffer(SimpleLight *buf);
     
     void SetControlFaceBuffer(Face *buf, unsigned long vertex_start); // start of control vertices in cvb
     void SetControlNodeBuffer(Node *buf);

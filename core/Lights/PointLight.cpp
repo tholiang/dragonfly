@@ -19,6 +19,18 @@ PointLight::PointLight(float max_intensity, vec_float3 distance_falloff, vec_flo
     intensity_field_ = std::bind(PointLightIntensity, max_intensity_, color_, std::placeholders::_1);
 }
 
+void PointLight::SetMaxIntensity(float mi) {
+    max_intensity_ = mi;
+}
+
+void PointLight::SetDistanceFalloff(vec_float3 df) {
+    distance_falloff_ = df;
+}
+
+void PointLight::SetColor(vec_float4 color) {
+    color_ = color;
+}
+
 SimpleLight PointLight::ToSimpleLight(Basis b) {
     SimpleLight ret;
     ret.b = b;

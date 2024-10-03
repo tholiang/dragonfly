@@ -9,6 +9,9 @@ public:
     PointLight();
     PointLight(float max_intensity, vec_float3 distance_falloff, vec_float4 color);
 
+    void SetMaxIntensity(float mi);
+    void SetDistanceFalloff(vec_float3 df);
+    void SetColor(vec_float4 color);
     SimpleLight ToSimpleLight(Basis b);
 private:
     float max_intensity_;

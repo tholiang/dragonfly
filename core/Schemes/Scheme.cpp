@@ -718,6 +718,7 @@ unsigned long Scheme::NumSceneModels() { return scene_->NumModels(); }
 unsigned long Scheme::NumSceneVertices() { return scene_vertex_length_; }
 unsigned long Scheme::NumSceneFaces() { return scene_face_length_; }
 unsigned long Scheme::NumSceneNodes() { return scene_node_length_; }
+unsigned long Scheme::NumSceneLights() { return scene_->NumLights(); }
 unsigned long Scheme::NumSceneSlices() { return scene_->NumSlices(); }
 unsigned long Scheme::NumSceneDots() { return scene_dot_length_; }
 unsigned long Scheme::NumSceneLines() { return scene_line_length_; }
@@ -841,6 +842,17 @@ void Scheme::SetSceneModelTransformBuffer(ModelTransform *buf) {
     for (int i = 0; i < scene_->NumModels(); i++) { // iterate through models
         // copy model uniforms into buffer
         buf[cur_mid++] = *scene_->GetModelUniforms(i);
+    }
+}
+
+void Scheme::SetSceneLightBuffer(SimpleLight *buf) {
+    // track the current light id in the buffer
+    unsigned long cur_lid = 0;
+    
+    for (int i = 0; i < scene_->NumLights(); i++) { // iterate through lights
+        // copy light into buffer
+        Basis *b = scene_->GetLightBasis(i);
+        buf[cur_lid++] = scene_->GetLight(i)->ToSimpleLight(*b);
     }
 }
 
