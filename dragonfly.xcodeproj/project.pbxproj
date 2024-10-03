@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		D2092AD32BF6D8C4006F6DCC /* ForceField.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2092AD12BF6D8C4006F6DCC /* ForceField.cpp */; };
 		D2092AD62BF70D0F006F6DCC /* Wrap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2092AD42BF70D0F006F6DCC /* Wrap.cpp */; };
+		D24904B92CA7500F00DEA0F6 /* PointLight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D24904B62CA7500E00DEA0F6 /* PointLight.cpp */; };
+		D24904BA2CA7500F00DEA0F6 /* Light.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D24904B82CA7500E00DEA0F6 /* Light.cpp */; };
+		D24904BE2CA7503700DEA0F6 /* BeanForce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D24904BD2CA7503700DEA0F6 /* BeanForce.cpp */; };
 		D28B7D852793B4AC00C0E47F /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D28B7D842793B4AC00C0E47F /* SDL2.framework */; };
 		D28B7D862793B4AC00C0E47F /* SDL2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D28B7D842793B4AC00C0E47F /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D29549682BF5779900FE1130 /* Vec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D29549662BF5779900FE1130 /* Vec.cpp */; };
@@ -78,6 +81,45 @@
 		D2092AD22BF6D8C4006F6DCC /* ForceField.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ForceField.h; sourceTree = "<group>"; };
 		D2092AD42BF70D0F006F6DCC /* Wrap.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Wrap.cpp; sourceTree = "<group>"; };
 		D2092AD52BF70D0F006F6DCC /* Wrap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Wrap.h; sourceTree = "<group>"; };
+		D249048C2CA74B1500DEA0F6 /* test.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = test.frag; sourceTree = "<group>"; };
+		D249048D2CA74B1500DEA0F6 /* test.comp */ = {isa = PBXFileReference; lastKnownFileType = text; path = test.comp; sourceTree = "<group>"; };
+		D249048E2CA74B1500DEA0F6 /* test.vert */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = test.vert; sourceTree = "<group>"; };
+		D24904902CA74B1500DEA0F6 /* SuperDefaultVertexShader.vert */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = SuperDefaultVertexShader.vert; sourceTree = "<group>"; };
+		D24904912CA74B1500DEA0F6 /* FragmentShader.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = FragmentShader.frag; sourceTree = "<group>"; };
+		D24904922CA74B1500DEA0F6 /* SuperDefaultEdgeShader.vert */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = SuperDefaultEdgeShader.vert; sourceTree = "<group>"; };
+		D24904932CA74B1500DEA0F6 /* DefaultFaceShader.vert */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = DefaultFaceShader.vert; sourceTree = "<group>"; };
+		D24904952CA74B1500DEA0F6 /* CalculateUIVertices.comp */ = {isa = PBXFileReference; lastKnownFileType = text; path = CalculateUIVertices.comp; sourceTree = "<group>"; };
+		D24904962CA74B1500DEA0F6 /* CalculateFaceLighting.comp */ = {isa = PBXFileReference; lastKnownFileType = text; path = CalculateFaceLighting.comp; sourceTree = "<group>"; };
+		D24904972CA74B1500DEA0F6 /* CalculateVertexSquares.comp */ = {isa = PBXFileReference; lastKnownFileType = text; path = CalculateVertexSquares.comp; sourceTree = "<group>"; };
+		D24904982CA74B1500DEA0F6 /* CalculateSlicePlates.comp */ = {isa = PBXFileReference; lastKnownFileType = text; path = CalculateSlicePlates.comp; sourceTree = "<group>"; };
+		D24904992CA74B1500DEA0F6 /* CalculateProjectedNodes.comp */ = {isa = PBXFileReference; lastKnownFileType = text; path = CalculateProjectedNodes.comp; sourceTree = "<group>"; };
+		D249049A2CA74B1500DEA0F6 /* CalculateProjectedVertices.comp */ = {isa = PBXFileReference; lastKnownFileType = text; path = CalculateProjectedVertices.comp; sourceTree = "<group>"; };
+		D249049B2CA74B1500DEA0F6 /* CalculateVertices.comp */ = {isa = PBXFileReference; lastKnownFileType = text; path = CalculateVertices.comp; sourceTree = "<group>"; };
+		D249049C2CA74B1500DEA0F6 /* CalculateScaledDots.comp */ = {isa = PBXFileReference; lastKnownFileType = text; path = CalculateScaledDots.comp; sourceTree = "<group>"; };
+		D249049D2CA74B1500DEA0F6 /* CalculateModelNodeTransforms.comp */ = {isa = PBXFileReference; lastKnownFileType = text; path = CalculateModelNodeTransforms.comp; sourceTree = "<group>"; };
+		D249049E2CA74B1500DEA0F6 /* CalculateProjectedDots.comp */ = {isa = PBXFileReference; lastKnownFileType = text; path = CalculateProjectedDots.comp; sourceTree = "<group>"; };
+		D249049F2CA74B1500DEA0F6 /* util.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = util.glsl; sourceTree = "<group>"; };
+		D24904A02CA74B1500DEA0F6 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		D24904A12CA74B1500DEA0F6 /* EngineGLFW.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EngineGLFW.h; sourceTree = "<group>"; };
+		D24904A32CA74B1500DEA0F6 /* RenderPipelineGLFW.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = RenderPipelineGLFW.cpp; sourceTree = "<group>"; };
+		D24904A42CA74B1500DEA0F6 /* ComputePipelineGLFW.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ComputePipelineGLFW.cpp; sourceTree = "<group>"; };
+		D24904A52CA74B1500DEA0F6 /* RenderPipelineGLFW.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RenderPipelineGLFW.h; sourceTree = "<group>"; };
+		D24904A62CA74B1500DEA0F6 /* ComputePipelineGLFW.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ComputePipelineGLFW.h; sourceTree = "<group>"; };
+		D24904A72CA74B1500DEA0F6 /* ShaderProcessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShaderProcessor.h; sourceTree = "<group>"; };
+		D24904A82CA74B1500DEA0F6 /* imgui.ini */ = {isa = PBXFileReference; lastKnownFileType = text; path = imgui.ini; sourceTree = "<group>"; };
+		D24904AC2CA74B1500DEA0F6 /* khrplatform.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = khrplatform.h; sourceTree = "<group>"; };
+		D24904AE2CA74B1500DEA0F6 /* glad.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = glad.h; sourceTree = "<group>"; };
+		D24904B02CA74B1500DEA0F6 /* glad.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = glad.c; sourceTree = "<group>"; };
+		D24904B12CA74B1500DEA0F6 /* ShaderProcessor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ShaderProcessor.cpp; sourceTree = "<group>"; };
+		D24904B22CA74B1500DEA0F6 /* EngineGLFW.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = EngineGLFW.cpp; sourceTree = "<group>"; };
+		D24904B32CA74B1500DEA0F6 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		D24904B52CA7500E00DEA0F6 /* PointLight.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PointLight.h; sourceTree = "<group>"; };
+		D24904B62CA7500E00DEA0F6 /* PointLight.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PointLight.cpp; sourceTree = "<group>"; };
+		D24904B72CA7500E00DEA0F6 /* Light.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Light.h; sourceTree = "<group>"; };
+		D24904B82CA7500E00DEA0F6 /* Light.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Light.cpp; sourceTree = "<group>"; };
+		D24904BB2CA7503700DEA0F6 /* Force.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Force.h; sourceTree = "<group>"; };
+		D24904BC2CA7503700DEA0F6 /* BeanForce.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BeanForce.h; sourceTree = "<group>"; };
+		D24904BD2CA7503700DEA0F6 /* BeanForce.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BeanForce.cpp; sourceTree = "<group>"; };
 		D28B7D842793B4AC00C0E47F /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
 		D29549662BF5779900FE1130 /* Vec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Vec.cpp; sourceTree = "<group>"; };
 		D29549672BF5779900FE1130 /* Vec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Vec.h; sourceTree = "<group>"; };
@@ -191,6 +233,136 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D24904892CA74B1500DEA0F6 /* windows */ = {
+			isa = PBXGroup;
+			children = (
+				D249048A2CA74B1500DEA0F6 /* Processing */,
+				D24904A02CA74B1500DEA0F6 /* Makefile */,
+				D24904A12CA74B1500DEA0F6 /* EngineGLFW.h */,
+				D24904A22CA74B1500DEA0F6 /* Pipelines */,
+				D24904A72CA74B1500DEA0F6 /* ShaderProcessor.h */,
+				D24904A82CA74B1500DEA0F6 /* imgui.ini */,
+				D24904A92CA74B1500DEA0F6 /* glad */,
+				D24904B12CA74B1500DEA0F6 /* ShaderProcessor.cpp */,
+				D24904B22CA74B1500DEA0F6 /* EngineGLFW.cpp */,
+				D24904B32CA74B1500DEA0F6 /* main.cpp */,
+			);
+			path = windows;
+			sourceTree = "<group>";
+		};
+		D249048A2CA74B1500DEA0F6 /* Processing */ = {
+			isa = PBXGroup;
+			children = (
+				D249048B2CA74B1500DEA0F6 /* Test */,
+				D249048F2CA74B1500DEA0F6 /* Render */,
+				D24904942CA74B1500DEA0F6 /* Compute */,
+				D249049F2CA74B1500DEA0F6 /* util.glsl */,
+			);
+			path = Processing;
+			sourceTree = "<group>";
+		};
+		D249048B2CA74B1500DEA0F6 /* Test */ = {
+			isa = PBXGroup;
+			children = (
+				D249048C2CA74B1500DEA0F6 /* test.frag */,
+				D249048D2CA74B1500DEA0F6 /* test.comp */,
+				D249048E2CA74B1500DEA0F6 /* test.vert */,
+			);
+			path = Test;
+			sourceTree = "<group>";
+		};
+		D249048F2CA74B1500DEA0F6 /* Render */ = {
+			isa = PBXGroup;
+			children = (
+				D24904902CA74B1500DEA0F6 /* SuperDefaultVertexShader.vert */,
+				D24904912CA74B1500DEA0F6 /* FragmentShader.frag */,
+				D24904922CA74B1500DEA0F6 /* SuperDefaultEdgeShader.vert */,
+				D24904932CA74B1500DEA0F6 /* DefaultFaceShader.vert */,
+			);
+			path = Render;
+			sourceTree = "<group>";
+		};
+		D24904942CA74B1500DEA0F6 /* Compute */ = {
+			isa = PBXGroup;
+			children = (
+				D24904952CA74B1500DEA0F6 /* CalculateUIVertices.comp */,
+				D24904962CA74B1500DEA0F6 /* CalculateFaceLighting.comp */,
+				D24904972CA74B1500DEA0F6 /* CalculateVertexSquares.comp */,
+				D24904982CA74B1500DEA0F6 /* CalculateSlicePlates.comp */,
+				D24904992CA74B1500DEA0F6 /* CalculateProjectedNodes.comp */,
+				D249049A2CA74B1500DEA0F6 /* CalculateProjectedVertices.comp */,
+				D249049B2CA74B1500DEA0F6 /* CalculateVertices.comp */,
+				D249049C2CA74B1500DEA0F6 /* CalculateScaledDots.comp */,
+				D249049D2CA74B1500DEA0F6 /* CalculateModelNodeTransforms.comp */,
+				D249049E2CA74B1500DEA0F6 /* CalculateProjectedDots.comp */,
+			);
+			path = Compute;
+			sourceTree = "<group>";
+		};
+		D24904A22CA74B1500DEA0F6 /* Pipelines */ = {
+			isa = PBXGroup;
+			children = (
+				D24904A32CA74B1500DEA0F6 /* RenderPipelineGLFW.cpp */,
+				D24904A42CA74B1500DEA0F6 /* ComputePipelineGLFW.cpp */,
+				D24904A52CA74B1500DEA0F6 /* RenderPipelineGLFW.h */,
+				D24904A62CA74B1500DEA0F6 /* ComputePipelineGLFW.h */,
+			);
+			path = Pipelines;
+			sourceTree = "<group>";
+		};
+		D24904A92CA74B1500DEA0F6 /* glad */ = {
+			isa = PBXGroup;
+			children = (
+				D24904AA2CA74B1500DEA0F6 /* include */,
+				D24904AF2CA74B1500DEA0F6 /* src */,
+			);
+			path = glad;
+			sourceTree = "<group>";
+		};
+		D24904AA2CA74B1500DEA0F6 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				D24904AB2CA74B1500DEA0F6 /* KHR */,
+				D24904AD2CA74B1500DEA0F6 /* glad */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		D24904AB2CA74B1500DEA0F6 /* KHR */ = {
+			isa = PBXGroup;
+			children = (
+				D24904AC2CA74B1500DEA0F6 /* khrplatform.h */,
+			);
+			path = KHR;
+			sourceTree = "<group>";
+		};
+		D24904AD2CA74B1500DEA0F6 /* glad */ = {
+			isa = PBXGroup;
+			children = (
+				D24904AE2CA74B1500DEA0F6 /* glad.h */,
+			);
+			path = glad;
+			sourceTree = "<group>";
+		};
+		D24904AF2CA74B1500DEA0F6 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				D24904B02CA74B1500DEA0F6 /* glad.c */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		D24904B42CA7500E00DEA0F6 /* Lights */ = {
+			isa = PBXGroup;
+			children = (
+				D24904B52CA7500E00DEA0F6 /* PointLight.h */,
+				D24904B62CA7500E00DEA0F6 /* PointLight.cpp */,
+				D24904B72CA7500E00DEA0F6 /* Light.h */,
+				D24904B82CA7500E00DEA0F6 /* Light.cpp */,
+			);
+			path = Lights;
+			sourceTree = "<group>";
+		};
 		D2D840F92B9D0F43007224D3 /* imgui */ = {
 			isa = PBXGroup;
 			children = (
@@ -233,6 +405,7 @@
 		D2D841352B9D0F4F007224D3 /* core */ = {
 			isa = PBXGroup;
 			children = (
+				D24904B42CA7500E00DEA0F6 /* Lights */,
 				D2D841362B9D0F4F007224D3 /* UI */,
 				D2D841392B9D0F4F007224D3 /* Schemes */,
 				D2D8414F2B9D0F4F007224D3 /* Utils */,
@@ -324,6 +497,9 @@
 				D2D8415F2B9D0F4F007224D3 /* Rotator.cpp */,
 				D2092AD22BF6D8C4006F6DCC /* ForceField.h */,
 				D2092AD12BF6D8C4006F6DCC /* ForceField.cpp */,
+				D24904BB2CA7503700DEA0F6 /* Force.h */,
+				D24904BD2CA7503700DEA0F6 /* BeanForce.cpp */,
+				D24904BC2CA7503700DEA0F6 /* BeanForce.h */,
 			);
 			path = Modeling;
 			sourceTree = "<group>";
@@ -379,6 +555,7 @@
 				D2D840F92B9D0F43007224D3 /* imgui */,
 				D2D841352B9D0F4F007224D3 /* core */,
 				D2D841932B9D0F61007224D3 /* macOS */,
+				D24904892CA74B1500DEA0F6 /* windows */,
 				D2EAF92227914191002DE553 /* Frameworks */,
 			);
 			sourceTree = "<group>";
@@ -486,6 +663,7 @@
 				D2D841762B9D0F4F007224D3 /* EditSliceScheme.cpp in Sources */,
 				D2D841772B9D0F4F007224D3 /* SchemeController.cpp in Sources */,
 				D2D841292B9D0F44007224D3 /* imgui.cpp in Sources */,
+				D24904B92CA7500F00DEA0F6 /* PointLight.cpp in Sources */,
 				D2D841872B9D0F4F007224D3 /* Rotator.cpp in Sources */,
 				D2D841752B9D0F4F007224D3 /* UIElement.cpp in Sources */,
 				D2D8418F2B9D0F4F007224D3 /* ModelMoveAction.cpp in Sources */,
@@ -495,6 +673,7 @@
 				D2D841202B9D0F44007224D3 /* imgui_widgets.cpp in Sources */,
 				D2D8417D2B9D0F4F007224D3 /* EngineMetalSDL.mm in Sources */,
 				D2D841782B9D0F4F007224D3 /* Scheme.cpp in Sources */,
+				D24904BA2CA7500F00DEA0F6 /* Light.cpp in Sources */,
 				D2D841862B9D0F4F007224D3 /* Model.cpp in Sources */,
 				D2D841792B9D0F4F007224D3 /* EditNodeScheme.cpp in Sources */,
 				D2D8418D2B9D0F4F007224D3 /* EdgeAddVertexAction.cpp in Sources */,
@@ -505,6 +684,7 @@
 				D2D8418C2B9D0F4F007224D3 /* UserAction.cpp in Sources */,
 				D2D841812B9D0F4F007224D3 /* JoinSlices.cpp in Sources */,
 				D2D841342B9D0F44007224D3 /* imgui_draw.cpp in Sources */,
+				D24904BE2CA7503700DEA0F6 /* BeanForce.cpp in Sources */,
 				D29549682BF5779900FE1130 /* Vec.cpp in Sources */,
 				D2D841852B9D0F4F007224D3 /* JoinModels.cpp in Sources */,
 				D2D8418E2B9D0F4F007224D3 /* FaceAddVertexAction.cpp in Sources */,
@@ -608,6 +788,7 @@
 				LIBRARY_SEARCH_PATHS = /usr/local/include/SDL2;
 				MARKETING_VERSION = 0.3;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "-ld_classic";
 				PRODUCT_BUNDLE_IDENTIFIER = com.thomasliang.dragonfly;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -700,6 +881,7 @@
 				LIBRARY_SEARCH_PATHS = /usr/local/include/SDL2;
 				MARKETING_VERSION = 0.3;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "-ld_classic";
 				PRODUCT_BUNDLE_IDENTIFIER = com.thomasliang.dragonfly;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

@@ -57,11 +57,14 @@ void ComputePipelineMetalSDL::CreateBuffers() {
     // create camera buffer
     camera_buffer = [device newBufferWithBytes:scheme->GetCamera() length:(sizeof(Camera)) options:MTLResourceStorageModeShared];
     // create light buffer - NEED TO UPDATE TO ALLOW MULTIPLE LIGHTS
-    vec_float3 *light = new vec_float3();
-    light->x = 10;
-    light->y = 0;
-    light->z = 5;
-    scene_light_buffer = [device newBufferWithBytes:light length:sizeof(vec_float3) options:MTLResourceStorageModeManaged];
+    Basis b;
+    b.pos.x = 10;
+    b.pos.y = 0;
+    b.pos.z = 5;
+    
+    SimpleLight *light = new SimpleLight();
+    *light = PointLight().ToSimpleLight(b);
+    scene_light_buffer = [device newBufferWithBytes:light length:sizeof(SimpleLight) options:MTLResourceStorageModeManaged];
     delete light;
     
     
@@ -145,13 +148,13 @@ void ComputePipelineMetalSDL::ResetStaticBuffers() {
     // ---GENERAL BUFFERS---
     // add data to light buffer
     // NEEDS UPDATE
-    vec_float3 *light = new vec_float3();
-    light->x = 10;
-    light->y = 0;
-    light->z = 5;
-    *((vec_float3 *)scene_light_buffer.contents) = *light;
-    delete light;
-    [scene_light_buffer didModifyRange: NSMakeRange(0, sizeof(vec_float3))]; // alert gpu about what was modified
+    Basis b;
+    b.pos.x = 10;
+    b.pos.y = 0;
+    b.pos.z = 5;
+    SimpleLight lightcont = PointLight().ToSimpleLight(b);
+    *((SimpleLight *)scene_light_buffer.contents) = lightcont;
+    [scene_light_buffer didModifyRange: NSMakeRange(0, sizeof(SimpleLight))]; // alert gpu about what was modified
     
     
     // ---MODEL BUFFERS---
@@ -336,13 +339,16 @@ void ComputePipelineMetalSDL::Compute() {
         
         // if lighting is enabled calculate scene face lighting
         if (scheme->LightingEnabled()) {
+            uint32_t num_lights = 1;
+            
             [compute_encoder setComputePipelineState: compute_lighting_pipeline_state];
             // set buffers
             [compute_encoder setBuffer: compiled_face_buffer offset:0 atIndex:0];
             [compute_encoder setBuffer: scene_model_face_buffer offset:0 atIndex:1];
             [compute_encoder setBuffer: model_vertex_buffer offset:0 atIndex:2];
-            [compute_encoder setBuffer: scene_light_buffer offset:0 atIndex:3];
-            [compute_encoder setBuffer: compiled_buffer_key_indices_buffer offset:0 atIndex:4];
+            [compute_encoder setBytes: &num_lights length:sizeof(uint32_t) atIndex:3];
+            [compute_encoder setBuffer: scene_light_buffer offset:0 atIndex:4];
+            [compute_encoder setBuffer: compiled_buffer_key_indices_buffer offset:0 atIndex:5];
             // set thread size variables - per scene face
             gridsize = MTLSizeMake(num_scene_faces, 1, 1);
             numthreads = compute_projected_vertices_pipeline_state.maxTotalThreadsPerThreadgroup;

@@ -140,6 +140,14 @@ struct SliceAttributes {
     float height;
 };
 
+struct SimpleLight {
+    Basis b;
+    float max_intensity;
+    vec_float4 color;
+    vec_float3 distance_falloff;
+    vec_float3 angle_falloff;
+};
+
 // ---HELPER FUNCTIONS---
 // vec
 vec_float2 vec_make_float2(float x, float y) {
@@ -199,6 +207,15 @@ vec_float3 AddVectors(vec_float3 v1, vec_float3 v2) {
     return ret;
 }
 
+// subtract two 3D vectors
+vec_float3 SubtractVectors(vec_float3 v1, vec_float3 v2) {
+    vec_float3 ret;
+    ret.x = v1.x - v2.x;
+    ret.y = v1.y - v2.y;
+    ret.z = v1.z - v2.z;
+    return ret;
+}
+
 // calculate cross product of 3D triangle
 vec_float3 cross_product (vec_float3 p1, vec_float3 p2, vec_float3 p3) {
     vec_float3 u = vec_make_float3(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z);
@@ -214,6 +231,21 @@ vec_float3 cross_vectors(vec_float3 p1, vec_float3 p2) {
     cross.y = -(p1.x*p2.z - p1.z*p2.x);
     cross.z = p1.x*p2.y - p1.y*p2.x;
     return cross;
+}
+
+// calculate projection
+float projection (vec_float3 v1, vec_float3 v2) {
+    float dot = v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
+    float mag = sqrt(pow(v2.x, 2) + pow(v2.y, 2) + pow(v2.z, 2));
+    return dot / mag;
+}
+
+vec_float3 unit_vector(vec_float3 v) {
+    float mag = sqrt(pow(v.x, 2) + pow(v.y, 2) + pow(v.z, 2));
+    v.x /= mag;
+    v.y /= mag;
+    v.z /= mag;
+    return v;
 }
 
 // calculate average of three 3D points
@@ -363,6 +395,22 @@ vec_float3 TranslatePointToStandard(Basis b, vec_float3 point) {
     
     return ret;
 }
+
+// translate point from standard basis to given basis
+vec_float3 TranslatePointToBasis(Basis b, vec_float3 point) {
+    vec_float3 ret;
+    
+    vec_float3 tobasis;
+    tobasis.x = point.x - b.pos.x;
+    tobasis.y = point.y - b.pos.y;
+    tobasis.z = point.z - b.pos.z;
+    
+    ret.x = projection(tobasis, b.x);
+    ret.y = projection(tobasis, b.y);
+    ret.z = projection(tobasis, b.z);
+    
+    return ret;
+};
 
 // rotate point from given basis to standard basis (ignore basis translation offset)
 vec_float3 RotatePointToStandard(Basis b, vec_float3 point) {
@@ -655,8 +703,9 @@ kernel void CalculateFaceLighting(
    device Face *compiled_faces [[buffer(0)]],
    const constant Face *faces[[buffer(1)]],
    const constant Vertex *vertices [[buffer(2)]],
-   const constant Vertex *light[[buffer(3)]],
-   const constant CompiledBufferKeyIndices *key_indices[[buffer(4)]],
+   constant unsigned int& num_lights [[buffer(3)]],
+   const constant SimpleLight *lights[[buffer(4)]],
+   const constant CompiledBufferKeyIndices *key_indices[[buffer(5)]],
    unsigned int fid[[thread_position_in_grid]]
 ) {
     // get scene face and calculate normal
@@ -670,16 +719,30 @@ kernel void CalculateFaceLighting(
     
     // get angle between normal and light
     Vertex center = TriAvg(vertices[f.vertices[0]], vertices[f.vertices[1]], vertices[f.vertices[2]]);
-    vec_float3 vec_to = vec_make_float3(light->x - center.x, light->y - center.y, light->z - center.z);
-    float ang = abs(acos2(f_norm, vec_to));
-    // make darker the larger the angle - considering the shading multiplier
-    f.color.x /= ang * f.shading_multiplier;
-    f.color.y /= ang * f.shading_multiplier;
-    f.color.z /= ang * f.shading_multiplier;
     
-    // set face in compiled face buffer
-    unsigned long cfb_scene_face_idx = key_indices->compiled_face_scene_start+fid;
-    compiled_faces[cfb_scene_face_idx] = f;
+    for (unsigned int i = 0; i < num_lights; i++) {
+        // get light intensity at face point
+        vec_float3 light_basis_point = TranslatePointToBasis(lights[i].b, center);
+        float d = 1 / sqrt(pow(light_basis_point.x, 2) + pow(light_basis_point.y, 2) + pow(light_basis_point.z, 2));
+        float a = 1 / angle_between(light_basis_point, vec_make_float3(1, 0, 0));
+        float dmod = lights[i].distance_falloff.x * pow(d, 2) + lights[i].distance_falloff.y * d + lights[i].distance_falloff.z;
+        float amod = lights[i].angle_falloff.x * pow(a, 2) + lights[i].angle_falloff.y * a + lights[i].angle_falloff.z;
+        float intens = lights[i].max_intensity * dmod * amod;
+
+        // get angle between normal and light
+        vec_float3 rev_dir = unit_vector(SubtractVectors(lights[i].b.pos, center));
+        float ang = abs(angle_between(f_norm, rev_dir));
+        intens /= ang * f.shading_multiplier;
+
+        // get color
+        f.color.x *= intens * lights[i].color.x;
+        f.color.y *= intens * lights[i].color.y;
+        f.color.z *= intens * lights[i].color.z;
+        
+        // set face in compiled face buffer
+        unsigned int cfb_scene_face_idx = key_indices->compiled_face_scene_start+fid;
+        compiled_faces[cfb_scene_face_idx] = f;
+    }
 }
 
 // operate per slice
