@@ -69,6 +69,21 @@ protected:
     unsigned long num_ui_elements = 0;
     unsigned long num_ui_vertices = 0;
     unsigned long num_ui_faces = 0;
+
+    // ---BUFFER CAPACITIES---
+    unsigned long light_buffer_capacity = 0;
+    unsigned long scene_model_face_buffer_capacity = 0;
+    unsigned long model_node_buffer_capacity = 0; // for node and node model id buffers
+    unsigned long model_vertex_buffer_capacity = 0; // for vertex and nvlink buffers
+    unsigned long model_buffer_capacity = 0;
+    unsigned long slice_dot_buffer_capacity = 0; // for dot and dot slice id buffers
+    unsigned long slice_buffer_capacity = 0; // for slice attributes and transforms buffers
+    unsigned long ui_vertex_buffer_capacity = 0; // for ui vertex and vertex element id buffers
+    unsigned long ui_element_buffer_capacity = 0;
+
+    unsigned long compiled_vertex_buffer_capacity = 0;
+    unsigned long compiled_face_buffer_capacity = 0;
+    unsigned long compiled_edge_buffer_capacity = 0;
 public:
     virtual ~ComputePipeline();
     virtual void init() = 0;
@@ -79,6 +94,7 @@ public:
     // call on start, when scheme changes, or when counts change
     // does not set any values, only creates buffers and sets size
     virtual void CreateBuffers() = 0;
+    virtual void UpdateBufferCapacities() = 0;
     
     // call when static data changes
     virtual void ResetStaticBuffers() = 0;

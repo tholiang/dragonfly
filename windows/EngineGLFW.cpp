@@ -49,7 +49,8 @@ int EngineGLFW::SetPipelines() {
     compute_pipeline->init();
     compute_pipeline->SetScheme(scheme);
 
-    // compute_pipeline->CreateBuffers();
+    compute_pipeline->CreateBuffers();
+    compute_pipeline->UpdateBufferCapacities(); // TODO: redundant
 
     GLFWwindow *window = ((RenderPipelineGLFW *) render_pipeline)->get_window();
     glfwSetKeyCallback(window, key_callback);

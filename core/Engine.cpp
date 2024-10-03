@@ -53,7 +53,7 @@ void Engine::run() {
         }
         
         if (scheme->ShouldResetEmptyBuffers()) {
-            compute_pipeline->CreateBuffers();
+            compute_pipeline->UpdateBufferCapacities();
             scheme->SetResetEmptyBuffers(false);
         }
         if (scheme->ShouldResetStaticBuffers()) {
@@ -78,7 +78,6 @@ void Engine::run() {
         }
 
         scheme->Update();
-        
     }
 }
 

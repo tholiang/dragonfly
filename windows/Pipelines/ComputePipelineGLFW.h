@@ -114,6 +114,7 @@ public:
     // call on start, when scheme changes, or when counts change
     // does not set any values, only creates buffers and sets size
     void CreateBuffers();
+    void UpdateBufferCapacities();
     
     // call when static data changes
     void ResetStaticBuffers();

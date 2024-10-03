@@ -26,27 +26,27 @@ float flat_line(float x) {
 }
 
 Scene::Scene() {
-    // CreateNewModel();
+    CreateNewModel();
 
     // Model *m0 = GetModel(0);
-    BeanForce *bf = new BeanForce();
-    bf->AddGuideline(0, dec_line);
-    ForceField *leaf = new ForceField(bf, Basis());
-    BeanForce *bf2 = new BeanForce();
-    bf2->AddGuideline(M_PI, flat_line);
-    Basis b;
-    b.z = vec_make_float3(0,0,-1);
-    ForceField *leaf2 = new ForceField(bf2, b);
+    // BeanForce *bf = new BeanForce();
+    // bf->AddGuideline(0, dec_line);
+    // ForceField *leaf = new ForceField(bf, Basis());
+    // BeanForce *bf2 = new BeanForce();
+    // bf2->AddGuideline(M_PI, flat_line);
+    // Basis b;
+    // b.z = vec_make_float3(0,0,-1);
+    // ForceField *leaf2 = new ForceField(bf2, b);
 
-    ForceField *ff = new ForceField(FFType::AND, leaf, leaf2, Basis());
+    // ForceField *ff = new ForceField(FFType::AND, leaf, leaf2, Basis());
 
-    using std::placeholders::_1;
-    std::function<bool(vec_float3)> in_ff = std::bind(&ForceField::Contains, ff, _1);
-    Model *m = Wrap(0, 0, 0.5, 0.05, 0.4, false, in_ff);
-    ModelTransform new_uniform;
-    new_uniform.b = Basis();
-    new_uniform.rotate_origin = vec_make_float3(0, 0, 0);
-    AddModel(m, new_uniform);
+    // using std::placeholders::_1;
+    // std::function<bool(vec_float3)> in_ff = std::bind(&ForceField::Contains, ff, _1);
+    // Model *m = Wrap(0, 0, 0.5, 0.05, 0.4, false, in_ff);
+    // ModelTransform new_uniform;
+    // new_uniform.b = Basis();
+    // new_uniform.rotate_origin = vec_make_float3(0, 0, 0);
+    // AddModel(m, new_uniform);
 }
 
 Scene::~Scene() {
@@ -311,7 +311,6 @@ void Scene::MoveSliceTo(unsigned int sid, float x, float y, float z) {
 //}
 
 void Scene::CreateNewModel() {
-    std::cout<<"creating new model in scene"<<std::endl;
     Model *m = new Model();
     m->MakeCube();
     models.push_back(m);

@@ -100,8 +100,8 @@ void ComputePipelineGLFW::CreateBuffers() {
     
     // ---MODEL BUFFERS---
     // create model face buffer - separate from compiled to calculate face lighting
-    smfb_content = (FaceBuffer*) malloc(sizeof(int) + ((num_scene_faces+num_controls_faces)*sizeof(Face)));
-    smfb_content->size = num_scene_faces+num_controls_faces;
+    smfb_content = (FaceBuffer*) malloc(sizeof(int) + ((num_scene_faces)*sizeof(Face)));
+    smfb_content->size = num_scene_faces;
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, scene_model_face_buffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, (sizeof(int) + ((num_scene_faces+num_controls_faces)*sizeof(Face))), smfb_content, GL_STATIC_READ);
 
@@ -179,6 +179,141 @@ void ComputePipelineGLFW::CreateBuffers() {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, testssbo);
     glBufferData(GL_SHADER_STORAGE_BUFFER, data.size() * sizeof(int), &data[0], GL_DYNAMIC_READ);
 
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
+}
+
+
+void ComputePipelineGLFW::UpdateBufferCapacities() {
+    // ---COMPILED BUFFERS---
+    if (compiled_vertex_size() > compiled_vertex_buffer_capacity) {
+        compiled_vertex_buffer_capacity = compiled_vertex_size()*2;
+
+        if (compiled_vertex_content != NULL) { free(compiled_vertex_content); }
+        compiled_vertex_content = (vec_float3 *) malloc(compiled_vertex_buffer_capacity * sizeof(vec_float3));
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, compiled_vertex_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, compiled_vertex_buffer_capacity * sizeof(vec_float3), compiled_vertex_content, GL_DYNAMIC_READ);
+    }
+
+    if (compiled_face_size() > compiled_face_buffer_capacity) {
+        compiled_face_buffer_capacity = compiled_face_size()*2;
+        
+        if (compiled_face_content != NULL) { free(compiled_face_content); }
+        compiled_face_content = (Face *) malloc(compiled_face_buffer_capacity * sizeof(Face));
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, compiled_face_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, (compiled_face_buffer_capacity * sizeof(Face)), compiled_face_content, GL_DYNAMIC_READ);
+    }
+    
+    if (compiled_edge_size() > compiled_edge_buffer_capacity) {
+        compiled_edge_buffer_capacity = compiled_edge_size()*2;
+        
+        if (compiled_edge_content != NULL) { free(compiled_edge_content); }
+        compiled_edge_content = (vec_int2 *) malloc(compiled_edge_buffer_capacity * sizeof(vec_int2));
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, compiled_edge_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, (compiled_edge_buffer_capacity * sizeof(vec_int2)), compiled_edge_content, GL_STATIC_READ);
+    }
+    
+    // ---GENERAL BUFFERS---
+    
+    // ---MODEL BUFFERS---
+    if (num_scene_faces > scene_model_face_buffer_capacity) {
+        scene_model_face_buffer_capacity = num_scene_faces*2;
+        
+        if (smfb_content != NULL) { free(smfb_content); }
+        smfb_content = (FaceBuffer*) malloc(sizeof(int) + (scene_model_face_buffer_capacity*sizeof(Face)));
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, scene_model_face_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, (sizeof(int) + (scene_model_face_buffer_capacity*sizeof(Face))), smfb_content, GL_STATIC_READ);
+    }
+
+    if (num_scene_nodes+num_controls_nodes > model_node_buffer_capacity) {
+        model_node_buffer_capacity = (num_scene_nodes+num_controls_nodes)*2;
+        
+        if (model_node_content != NULL) { free(model_node_content); }
+        model_node_content = (NodeBuffer *) malloc(sizeof(int) + (model_node_buffer_capacity*sizeof(Node)));
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, model_node_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, (sizeof(int) + (model_node_buffer_capacity*sizeof(Node))), model_node_content, GL_DYNAMIC_READ);
+    
+        
+        if (node_model_id_content != NULL) { free(node_model_id_content); }
+        node_model_id_content = (uint32_t *) malloc(model_node_buffer_capacity*sizeof(uint32_t));
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, node_model_id_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, (model_node_buffer_capacity*sizeof(uint32_t)), node_model_id_content, GL_STATIC_READ);
+    }
+    
+    if (num_scene_vertices+num_controls_vertices > model_vertex_buffer_capacity) {
+        model_vertex_buffer_capacity = (num_scene_vertices+num_controls_vertices)*2;
+
+        if (nvlink_content != NULL) { free(nvlink_content); }
+        nvlink_content = (NodeVertexLink *) malloc((model_vertex_buffer_capacity*2) * sizeof(NodeVertexLink));
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, model_nvlink_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, ((model_vertex_buffer_capacity*2) * sizeof(NodeVertexLink)), nvlink_content, GL_STATIC_READ);
+    
+        if (vertex_content != NULL) { free(vertex_content); }
+        vertex_content = (VertexBuffer *) malloc(sizeof(int) + (model_vertex_buffer_capacity*sizeof(Vertex)));
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, model_vertex_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) + (model_vertex_buffer_capacity*sizeof(Vertex)), vertex_content, GL_DYNAMIC_READ);
+    
+    }
+
+    if (num_scene_models+num_controls_models > model_buffer_capacity) {
+        model_buffer_capacity = num_scene_models+num_controls_models;
+
+        if (model_transform_content != NULL) { free(model_transform_content); }
+        model_transform_content = (ModelTransform *) malloc(model_buffer_capacity*sizeof(ModelTransform));
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, model_transform_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, model_buffer_capacity*sizeof(ModelTransform), model_transform_content, GL_DYNAMIC_READ);
+    }
+
+    
+    // ---SLICE BUFFERS---
+    if (num_scene_dots > slice_dot_buffer_capacity) {
+        slice_dot_buffer_capacity = num_scene_dots*2;
+
+        if (dot_content != NULL) { free(dot_content); }
+        dot_content = (DotBuffer *) malloc(sizeof(int) + (slice_dot_buffer_capacity * sizeof(Dot)));
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, slice_dot_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, (slice_dot_buffer_capacity * sizeof(Dot)), dot_content, GL_STATIC_READ);
+    }
+    
+    if (num_scene_slices > slice_buffer_capacity) {
+        slice_buffer_capacity = num_scene_slices*2;
+
+        if (slice_attribute_content != NULL) { free(slice_attribute_content); }
+        slice_attribute_content = (SliceAttributesBuffer *) malloc(sizeof(int) + (slice_buffer_capacity * sizeof(SliceAttributes)));
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, slice_attributes_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, (sizeof(int) + (slice_buffer_capacity * sizeof(SliceAttributes))), slice_attribute_content, GL_STATIC_READ);
+        
+        if (slice_transform_content != NULL) { free(slice_transform_content); }
+        slice_transform_content = (ModelTransform *) malloc(slice_buffer_capacity*sizeof(ModelTransform));
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, slice_transform_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, (slice_buffer_capacity*sizeof(ModelTransform)), slice_transform_content, GL_DYNAMIC_READ);
+    }
+    
+    
+    // ---UI BUFFERS---
+    if (num_ui_vertices > ui_vertex_buffer_capacity) {
+        ui_vertex_buffer_capacity = num_ui_vertices*2;
+
+        if (ui_vertex_content != NULL) { free(ui_vertex_content); }
+        ui_vertex_content = (UIVertexBuffer *) malloc(sizeof(int) + (ui_vertex_buffer_capacity * sizeof(UIVertex)));
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ui_vertex_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, (sizeof(int) + (ui_vertex_buffer_capacity * sizeof(UIVertex))), ui_vertex_content, GL_STATIC_READ);
+
+        if (ui_element_id_content != NULL) { free(ui_element_id_content); }
+        ui_element_id_content = (uint32_t *) malloc(ui_vertex_buffer_capacity * sizeof(uint32_t));
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ui_vertex_element_id_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, (ui_vertex_buffer_capacity * sizeof(uint32_t)), ui_element_id_content, GL_STATIC_READ);
+    }
+    
+    if (num_ui_elements > ui_element_buffer_capacity) {
+        ui_element_buffer_capacity = num_ui_elements*2;
+
+        if (ui_element_transform_content != NULL) { free(ui_element_transform_content); }
+        ui_element_transform_content = (UIElementTransform *) malloc(ui_element_buffer_capacity * sizeof(UIElementTransform));
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ui_element_transform_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, (ui_element_buffer_capacity * sizeof(UIElementTransform)), ui_element_transform_content, GL_DYNAMIC_READ);
+    }
+    
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
 }
