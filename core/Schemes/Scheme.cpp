@@ -13,6 +13,9 @@ using namespace DragonflyUtils;
 Scheme::Scheme() {
     UI_start_.x = 0;
     UI_start_.y = 20;
+
+    should_reset_empty_buffers = true;
+    should_reset_static_buffers = true;
 }
 
 Scheme::~Scheme() {
@@ -222,6 +225,49 @@ void Scheme::MakeRect(int x, int y, int w, int h, int z, vec_float4 color) {
     should_reset_static_buffers = true;
 }
 
+void Scheme::MakeHollowBox(int x, int y, int w, int h, int z, int thickness, vec_float4 color) {
+    UIElement *elem = new UIElement();
+    elem->MakeVertex(0, 0, 0);
+    elem->MakeVertex(w, 0, 0);
+    elem->MakeVertex(0, thickness, 0);
+    elem->MakeVertex(w, thickness, 0);
+    elem->MakeFace(0, 1, 2, color);
+    elem->MakeFace(1, 2, 3, color);
+    
+    elem->MakeVertex(0, 0, 0);
+    elem->MakeVertex(thickness, 0, 0);
+    elem->MakeVertex(0, h, 0);
+    elem->MakeVertex(thickness, h, 0);
+    elem->MakeFace(4, 5, 6, color);
+    elem->MakeFace(5, 6, 7, color);
+    
+    elem->MakeVertex(0, h-thickness, 0);
+    elem->MakeVertex(w, h-thickness, 0);
+    elem->MakeVertex(0, h, 0);
+    elem->MakeVertex(w, h, 0);
+    elem->MakeFace(8, 9, 10, color);
+    elem->MakeFace(9, 10, 11, color);
+    
+    elem->MakeVertex(w-thickness, 0, 0);
+    elem->MakeVertex(w, 0, 0);
+    elem->MakeVertex(w-thickness, h, 0);
+    elem->MakeVertex(w, h, 0);
+    elem->MakeFace(12, 13, 14, color);
+    elem->MakeFace(13, 14, 15, color);
+    ui_elements_.push_back(elem);
+    
+    UIElementTransform uni;
+    uni.position = vec_make_int3(x, y, z);
+    uni.right = vec_make_float3(1, 0, 0);
+    uni.up = vec_make_float3(0, 1, 0);
+    ui_element_uniforms_.push_back(uni);
+    
+    CalculateNumUIVertices();
+    CalculateNumUIFaces();
+    should_reset_empty_buffers = true;
+    should_reset_static_buffers = true;
+}
+
 void Scheme::MakeIsoTriangle(int x, int y, int w, int h, int z, vec_float4 color) {
     UIElement *elem = new UIElement();
     elem->MakeVertex(0, 0, 0);
@@ -246,6 +292,19 @@ void Scheme::ChangeElementLocation(int eid, int x, int y) {
     UIElementTransform *uni = &ui_element_uniforms_[eid];
     uni->position.x = x;
     uni->position.y = y;
+}
+
+void Scheme::DeleteUIElement(int eid) {
+    if (eid >= ui_elements_.size()) { return; }
+
+    delete ui_elements_[eid];
+    ui_elements_.erase(ui_elements_.begin() + eid);
+    ui_element_uniforms_.erase(ui_element_uniforms_.begin() + eid);
+
+    CalculateNumUIVertices();
+    CalculateNumUIFaces();
+    should_reset_empty_buffers = true;
+    should_reset_static_buffers = true;
 }
 
 void Scheme::ChangeRectDim(int eid, int w, int h) {
@@ -1012,9 +1071,9 @@ void Scheme::SetUIFaceBuffer(Face *buf, unsigned long vertex_start) {
             Face face; // create new face - have to translate UIFace to normal Face
             face.color = uif->color; // copy color over
             // add current vertex start to original face vids (which are local to the model)
-            face.vertices[0] = face.vertices[0] + cur_vertex_start;
-            face.vertices[1] = face.vertices[1] + cur_vertex_start;
-            face.vertices[2] = face.vertices[2] + cur_vertex_start;
+            face.vertices[0] = uif->vertices[0] + cur_vertex_start;
+            face.vertices[1] = uif->vertices[1] + cur_vertex_start;
+            face.vertices[2] = uif->vertices[2] + cur_vertex_start;
             // lighting values don't matter - lighting only calculated for scene models
             
             buf[cur_fid++] = face;

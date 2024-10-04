@@ -192,10 +192,13 @@ protected:
     virtual void MainWindow(); // for imgui
     
     void MakeRect(int x, int y, int w, int h, int z, vec_float4 color);
+    void MakeHollowBox(int x, int y, int w, int h, int z, int thickness, vec_float4 color);
     void MakeIsoTriangle(int x, int y, int w, int h, int z, vec_float4 color);
     
     void ChangeElementLocation(int eid, int x, int y);
     void ChangeRectDim(int eid, int w, int h);
+
+    void DeleteUIElement(int eid);
     
     bool DidScreenSizeChange();
     

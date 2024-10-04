@@ -33,6 +33,7 @@ void main() {
 
     // calculate projected vertices and place into compiled buffer
     compiled_vertices[vid+key_indices.compiled_vertex_scene_start] = PointToPixel(vertices[vid], camera);
+    compiled_vertices[vid+key_indices.compiled_vertex_scene_start].z += 0.05;
 
     return;
 }

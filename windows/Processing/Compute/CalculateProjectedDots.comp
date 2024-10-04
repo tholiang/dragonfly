@@ -72,10 +72,10 @@ void main() {
     // set (4) dot square corners in cvb
     float screen_ratio = float(window_attr.height) / window_attr.width;
     unsigned int cvb_dot_corner_idx = key_indices.compiled_vertex_dot_square_start + did*4;
-    compiled_vertices[cvb_dot_corner_idx+0] = vector_make_float3(proj_dot.x-0.007, proj_dot.y-0.007 * screen_ratio, proj_dot.z-0.01);
-    compiled_vertices[cvb_dot_corner_idx+1] = vector_make_float3(proj_dot.x-0.007, proj_dot.y+0.007 * screen_ratio, proj_dot.z-0.01);
-    compiled_vertices[cvb_dot_corner_idx+2] = vector_make_float3(proj_dot.x+0.007, proj_dot.y-0.007 * screen_ratio, proj_dot.z-0.01);
-    compiled_vertices[cvb_dot_corner_idx+3] = vector_make_float3(proj_dot.x+0.007, proj_dot.y+0.007 * screen_ratio, proj_dot.z-0.01);
+    compiled_vertices[cvb_dot_corner_idx+0] = vector_make_float3(proj_dot.x-0.007, proj_dot.y-0.007 * screen_ratio, proj_dot.z+0.01);
+    compiled_vertices[cvb_dot_corner_idx+1] = vector_make_float3(proj_dot.x-0.007, proj_dot.y+0.007 * screen_ratio, proj_dot.z+0.01);
+    compiled_vertices[cvb_dot_corner_idx+2] = vector_make_float3(proj_dot.x+0.007, proj_dot.y-0.007 * screen_ratio, proj_dot.z+0.01);
+    compiled_vertices[cvb_dot_corner_idx+3] = vector_make_float3(proj_dot.x+0.007, proj_dot.y+0.007 * screen_ratio, proj_dot.z+0.01);
     
     // set (2) dot square faces in cfb
     unsigned int cfb_dot_square_idx = key_indices.compiled_face_dot_square_start + did*2;

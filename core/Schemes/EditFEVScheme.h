@@ -49,6 +49,8 @@ private:
 //    int selected_vertex = -1;
     int selected_model = -1;
     int selected_slice = -1;
+
+    std::vector<int> selected_vertex_boxes;
     
     int joinModelA = -1;
     int joinModelB = -1;
@@ -91,6 +93,8 @@ private:
     void MainWindow();
     
 public:
+    void Update();
+
     void HandleMouseMovement(float x, float y, float dx, float dy);
     
     void BuildUI();

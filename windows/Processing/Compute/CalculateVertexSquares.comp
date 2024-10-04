@@ -32,7 +32,8 @@ layout(std430, binding = 5) buffer bufferE
 void main() {
     uint vid = gl_GlobalInvocationID.x; // 1 Dimensional (right?)
 
-    if (vid >= num_vertices) {
+    // TODO: this check could be problematic
+    if (vid >= key_indices.compiled_vertex_control_start - key_indices.compiled_vertex_scene_start) {
         return;
     }
 
@@ -43,6 +44,7 @@ void main() {
     unsigned int square_vertex_start_index = key_indices.compiled_vertex_vertex_square_start+(vid*4);
     float h = float(window_attributes.height);
     float screen_ratio = h / window_attributes.width;
+    if (h == 0 || window_attributes.width == 0) { screen_ratio = 1; }
     
     // add to compiled vertices
     compiled_vertices[square_vertex_start_index+0] = vector_make_float3(currentVertex.x-0.007, currentVertex.y - 0.007/screen_ratio, currentVertex.z-0.01);

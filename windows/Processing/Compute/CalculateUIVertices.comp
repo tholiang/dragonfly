@@ -49,7 +49,7 @@ void main() {
     vector_float3 ret;
     ret.x = et.position.x;
     ret.y = et.position.y;
-    ret.z = 0.01+float(et.position.z + v.z)/100;
+    ret.z = float(et.position.z + v.z)/100;
     
     // transform to vertex location (account for rotated element with right and up vectors)
     ret.x += et.right.x * v.x + et.up.x * v.y;
@@ -61,5 +61,5 @@ void main() {
     
     // set in compiled vertex buffer
     unsigned int cvb_ui_start = key_indices.compiled_vertex_ui_start+vid;
-    compiled_vertices[vid] = ret;
+    compiled_vertices[cvb_ui_start] = ret;
 }

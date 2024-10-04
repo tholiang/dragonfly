@@ -28,7 +28,36 @@ EditFEVScheme::EditFEVScheme() {
 }
 
 EditFEVScheme::~EditFEVScheme() {
-    
+}
+
+void EditFEVScheme::Update() {
+    if (computed_compiled_vertices_ != NULL && computed_key_indices_ != NULL) {
+        int l = 0.02*window_width_;
+        if (selected_vertex_boxes.size() > selected_vertices.size()) {
+            for (int i = selected_vertex_boxes.size()-1; i >= selected_vertices.size() && i >= 0; i--) {
+                DeleteUIElement(selected_vertex_boxes[i]);
+                selected_vertex_boxes.erase(selected_vertex_boxes.begin() + i);
+            }
+        } else if (selected_vertex_boxes.size() < selected_vertices.size()) {
+            for (int i = selected_vertex_boxes.size(); i < selected_vertices.size(); i++) {
+                MakeHollowBox(0, 0, l, l, 10, 1, {1, 0.5, 0, 1});
+                // TODO: problematic if other ui elements get deleted
+                selected_vertex_boxes.push_back(ui_elements_.size()-1);
+            }
+        }
+
+        for (int i = 0; i < selected_vertices.size(); i++) {
+            uint32_t vid = selected_vertices[i];
+            Vertex v = computed_compiled_vertices_[computed_key_indices_->compiled_vertex_scene_start + vid];
+            int x = (int) (window_width_*v.x/2);
+            int y = (int) (window_height_*v.y/2);
+            
+            int eid = selected_vertex_boxes[i];
+            ChangeElementLocation(eid, x - l/2, y - l/2);
+        }
+    }
+
+    Scheme::Update();
 }
 
 void EditFEVScheme::CreateControlsModels() {
@@ -74,6 +103,12 @@ void EditFEVScheme::CreateControlsModels() {
     arrow_projections[5] = vec_make_float2(1,0);
     
     controls_models_.push_back(y_arrow);
+
+    CalculateNumControlsFaces();
+    CalculateNumControlsNodes();
+    CalculateNumControlsVertices();
+    should_reset_empty_buffers = true;
+    should_reset_static_buffers = true;
 }
 
 int EditFEVScheme::GetVertexModel(int vid) {

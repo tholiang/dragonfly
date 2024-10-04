@@ -24,7 +24,6 @@ EditNodeScheme::EditNodeScheme() {
 }
 
 EditNodeScheme::~EditNodeScheme() {
-    
 }
 
 void EditNodeScheme::GenerateCustomUI() {
@@ -215,6 +214,12 @@ void EditNodeScheme::CreateControlsModels() {
     rotator_projections[5] = vec_make_float2(1,0);
     
     controls_models_.push_back(y_rotator);
+
+    CalculateNumControlsFaces();
+    CalculateNumControlsNodes();
+    CalculateNumControlsVertices();
+    should_reset_empty_buffers = true;
+    should_reset_static_buffers = true;
 }
 
 void EditNodeScheme::HandleMouseMovement(float x, float y, float dx, float dy) {

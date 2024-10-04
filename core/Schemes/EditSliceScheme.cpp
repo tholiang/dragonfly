@@ -23,7 +23,6 @@ EditSliceScheme::EditSliceScheme() {
 }
 
 EditSliceScheme::~EditSliceScheme() {
-    
 }
 
 void EditSliceScheme::SetDrawing() {

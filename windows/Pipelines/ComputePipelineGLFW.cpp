@@ -159,7 +159,6 @@ void ComputePipelineGLFW::CreateBuffers() {
     // ---UI BUFFERS---
     // create ui vertex buffer
     ui_vertex_content = (UIVertexBuffer *) malloc(sizeof(int) + (num_ui_vertices * sizeof(UIVertex)));
-    ui_vertex_content->size = num_ui_vertices;
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ui_vertex_buffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, (sizeof(int) + (num_ui_vertices * sizeof(UIVertex))), ui_vertex_content, GL_STATIC_READ);
     
@@ -178,6 +177,9 @@ void ComputePipelineGLFW::CreateBuffers() {
 
 
 void ComputePipelineGLFW::UpdateBufferCapacities() {
+    ComputePipeline::SetScheme(scheme);
+    glNamedBufferSubData (compiled_buffer_key_indices_buffer, 0, sizeof(compiled_buffer_key_indices), &compiled_buffer_key_indices);
+
     // ---COMPILED BUFFERS---
     if (compiled_vertex_size() > compiled_vertex_buffer_capacity) {
         compiled_vertex_buffer_capacity = compiled_vertex_size()*2;
@@ -253,7 +255,6 @@ void ComputePipelineGLFW::UpdateBufferCapacities() {
         vertex_content = (VertexBuffer *) malloc(sizeof(int) + (model_vertex_buffer_capacity*sizeof(Vertex)));
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, model_vertex_buffer);
         glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) + (model_vertex_buffer_capacity*sizeof(Vertex)), vertex_content, GL_DYNAMIC_READ);
-    
     }
 
     if (num_scene_models+num_controls_models > model_buffer_capacity) {
@@ -351,6 +352,11 @@ void ComputePipelineGLFW::ResetStaticBuffers() {
     
     
     // ---MODEL BUFFERS---
+    // actual data set by gpu
+    glGetNamedBufferSubData (model_vertex_buffer, 0, sizeof(int), vertex_content);
+    vertex_content->size = num_scene_vertices+num_controls_vertices;
+    glNamedBufferSubData (model_vertex_buffer, 0, sizeof(int), vertex_content);
+
     // add data to scene model face buffer
     glGetNamedBufferSubData (scene_model_face_buffer, 0, sizeof(int) + (num_scene_faces*sizeof(Face)), smfb_content);
     smfb_content->size = num_scene_faces;
@@ -558,7 +564,19 @@ void ComputePipelineGLFW::Compute() {
             glDispatchCompute( std::ceil(((float) num_scene_slices)/128), 1, 1 );
         }
     }
-    
+
+    if (num_ui_vertices > 0) {
+        // make ui vertices
+        glUseProgram(compute_ui_vertices_shader->ID);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, compiled_vertex_buffer);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ui_vertex_buffer);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ui_vertex_element_id_buffer);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, ui_element_transform_buffer);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, window_attributes_buffer);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, compiled_buffer_key_indices_buffer);
+        glDispatchCompute( std::ceil(((float) num_ui_vertices)/128), 1, 1 );
+    }
+
     // Synchronize the managed buffers for scheme
     glMemoryBarrier(GL_ALL_BARRIER_BITS);
 }

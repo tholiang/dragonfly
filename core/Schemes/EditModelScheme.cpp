@@ -28,7 +28,6 @@ EditModelScheme::EditModelScheme() {
 }
 
 EditModelScheme::~EditModelScheme() {
-    
 }
 
 void EditModelScheme::Update() {
@@ -130,6 +129,12 @@ void EditModelScheme::CreateControlsModels() {
     rotator_projections[5] = vec_make_float2(1,0);
     
     controls_models_.push_back(y_rotator);
+
+    CalculateNumControlsFaces();
+    CalculateNumControlsNodes();
+    CalculateNumControlsVertices();
+    should_reset_empty_buffers = true;
+    should_reset_static_buffers = true;
 }
 
 void EditModelScheme::HandleMouseDown(vec_float2 loc, bool left) {
