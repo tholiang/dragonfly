@@ -103,7 +103,7 @@ struct Face {
     unsigned int vertices[3];
     vec_float4 color;
     
-    bool normal_reversed;
+    unsigned int normal_reversed;
     vec_float3 lighting_offset; // if there were a light source directly in front of the face, this is the rotation to get to its brightest orientation
     float shading_multiplier;
 };

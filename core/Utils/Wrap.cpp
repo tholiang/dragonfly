@@ -294,7 +294,7 @@ Model *DragonflyUtils::Wrap(float a_r, float l_r, float l_d, float step, float s
             vec_float3 face_norm = GetNormal(fv1, fv2, fv3); // default normal is unreversed
             
             if (in_model(TriAvg(fv1, fv2, fv3) + face_norm)) {
-                f->normal_reversed = true;
+                f->normal_reversed = 1;
             }
         }
     }

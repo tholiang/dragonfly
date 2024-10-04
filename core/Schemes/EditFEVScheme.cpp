@@ -1075,6 +1075,10 @@ void EditFEVScheme::FaceEditMenu() {
             should_reset_static_buffers = true;
         }
     }
+
+    ImGui::SetCursorPos(ImVec2(50, 240));
+    std::string normal_flip_str = "normals flipped: "+std::to_string(f->normal_reversed);
+    ImGui::Text(normal_flip_str.c_str());
 }
 
 void EditFEVScheme::SliceEditMenu() {

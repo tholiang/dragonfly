@@ -276,14 +276,14 @@ unsigned Model::MakeFace(unsigned v0, unsigned v1, unsigned v2, vec_float4 color
     f->vertices[1] = v1;
     f->vertices[2] = v2;
     f->color = color;
-    f->normal_reversed = false;
+    f->normal_reversed = 0;
     f->lighting_offset = {0,0,0};
     f->shading_multiplier = 0.6;
     faces.push_back(f);
     return faces.size()-1;
 }
 
-unsigned Model::MakeFaceWithLighting(unsigned v0, unsigned v1, unsigned v2, vec_float4 color, bool normal_reversed, vec_float3 lighting_offset, float shading_multiplier) {
+unsigned Model::MakeFaceWithLighting(unsigned v0, unsigned v1, unsigned v2, vec_float4 color, uint32_t normal_reversed, vec_float3 lighting_offset, float shading_multiplier) {
     Face *f = new Face();
     f->vertices[0] = v0;
     f->vertices[1] = v1;
@@ -1057,7 +1057,7 @@ void Model::FromFile(std::string path) {
             f->vertices[1] = v2;
             f->vertices[2] = v3;
             f->color = vec_make_float4(cx, cy, cz, cw);
-            f->normal_reversed = nr == 1;
+            f->normal_reversed = nr;
             f->shading_multiplier = sm;
             f->lighting_offset = vec_make_float3(lx, ly, lz);
             

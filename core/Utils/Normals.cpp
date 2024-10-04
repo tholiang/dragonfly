@@ -100,12 +100,12 @@ void DragonflyUtils::FindNormals(Model *m) {
             
             //std::cout<<acos2(normal, vector)<<std::endl;
             if (abs(acos2(normal, vector)) < M_PI_2) {
-                currface->normal_reversed = true;
+                currface->normal_reversed = 1;
                 normal.x *= -1;
                 normal.y *= -1;
                 normal.z *= -1;
             } else {
-                currface->normal_reversed = false;
+                currface->normal_reversed = 0;
             }
             
             vec_float3 vecend = vec_make_float3(center.x + normal.x, center.y + normal.y, center.z + normal.z);

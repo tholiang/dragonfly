@@ -32,8 +32,6 @@ private:
     ComputeShader *compute_slice_plates_shader = NULL;
     ComputeShader *compute_ui_vertices_shader = NULL;
 
-    ComputeShader *test_compute;
-
     // ---CPU BUFFER DATA---
     struct VertexBuffer { int size; Vertex data[1]; };
     struct FaceBuffer { int size; Face data[1]; };
@@ -102,10 +100,7 @@ private:
     GLuint compiled_face_buffer;
     GLuint compiled_edge_buffer;
 
-    GLuint testssbo;
-
     void DeleteContent();
-    void DeletePtr(void **ptr);
 public:
     ComputePipelineGLFW();
     ~ComputePipelineGLFW();

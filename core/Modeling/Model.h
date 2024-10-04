@@ -35,7 +35,7 @@ struct Face {
     uint32_t vertices[3];
     vec_float4 color;
     
-    bool normal_reversed = false;
+    uint32_t normal_reversed = 0;
     vec_float3 lighting_offset; // if there were a light source directly in front of the face, this is the rotation to get to its brightest orientation
     float shading_multiplier = 1;
 };
@@ -109,7 +109,7 @@ public:
     // to specified node
     unsigned MakeVertex(float x, float y, float z, unsigned nid);
     unsigned MakeFace(unsigned v0, unsigned v1, unsigned v2, vec_float4 color);
-    unsigned MakeFaceWithLighting(unsigned v0, unsigned v1, unsigned v2, vec_float4 color, bool normal_reversed, vec_float3 lighting_offset, float shading_multiplier);
+    unsigned MakeFaceWithLighting(unsigned v0, unsigned v1, unsigned v2, vec_float4 color, uint32_t normal_reversed, vec_float3 lighting_offset, float shading_multiplier);
     
     unsigned MakeNode(float x, float y, float z);
     void LinkNodeAndVertex(unsigned long vid, unsigned long nid);

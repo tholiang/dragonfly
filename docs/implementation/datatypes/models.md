@@ -53,7 +53,7 @@ faces are what is actually visible when a model is rendered. These are simply tr
 face = {
     list[index] vertices
     vec_float4 color
-    bool normal_reversed
+    uint32_t normal_reversed
     vec_float3 lighting_offset
     float shading_multiplier
 }

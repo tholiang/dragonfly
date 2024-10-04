@@ -34,14 +34,14 @@ layout(std430, binding = 5) buffer bufferE
 void main() {
     uint fid = gl_GlobalInvocationID.x; // 1 Dimensional (right?)
 
-    if (fid > num_faces) {
+    if (fid >= num_faces) {
         return;
     }
 
     // get scene face and calculate normal
     Face f = faces[fid];
     vector_float3 f_norm = cross_product(vertices[f.vertices[0]], vertices[f.vertices[1]], vertices[f.vertices[2]]);
-    if (f.normal_reversed) {
+    if (f.normal_reversed != 0) {
         f_norm.x *= -1;
         f_norm.y *= -1;
         f_norm.z *= -1;

@@ -8,7 +8,17 @@ ComputePipelineGLFW::ComputePipelineGLFW() {
 
 ComputePipelineGLFW::~ComputePipelineGLFW() {
     DeleteContent();
-    delete test_compute;
+
+    delete compute_transforms_shader;
+    delete compute_vertex_shader;
+    delete compute_projected_vertices_shader;
+    delete compute_vertex_squares_shader;
+    delete compute_scaled_dots_shader;
+    delete compute_projected_dots_shader;
+    delete compute_projected_nodes_shader;
+    delete compute_lighting_shader;
+    delete compute_slice_plates_shader;
+    delete compute_ui_vertices_shader;
 }
 
 void ComputePipelineGLFW::init() {
@@ -23,8 +33,6 @@ void ComputePipelineGLFW::init() {
     compute_lighting_shader = new ComputeShader("Processing/Compute/CalculateFaceLighting.comp", "Processing/util.glsl");
     compute_slice_plates_shader = new ComputeShader("Processing/Compute/CalculateSlicePlates.comp", "Processing/util.glsl");
     compute_ui_vertices_shader = new ComputeShader("Processing/Compute/CalculateUIVertices.comp", "Processing/util.glsl");
-    
-    test_compute = new ComputeShader("Processing/Compute/CalculateProjectedVertices.comp", "Processing/util.glsl");
 
     // generate buffer names
     glGenBuffers(1, &window_attributes_buffer);
@@ -49,8 +57,6 @@ void ComputePipelineGLFW::init() {
     glGenBuffers(1, &compiled_vertex_buffer);
     glGenBuffers(1, &compiled_face_buffer);
     glGenBuffers(1, &compiled_edge_buffer);
-
-    glGenBuffers(1, &testssbo);
 }
 
 void ComputePipelineGLFW::CreateBuffers() {
@@ -86,12 +92,8 @@ void ComputePipelineGLFW::CreateBuffers() {
     Camera *cam = scheme->GetCamera();
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, camera_buffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Camera), cam, GL_DYNAMIC_READ);
-    // create light buffer - NEED TO UPDATE TO ALLOW MULTIPLE LIGHTS
-    Basis b;
-    b.pos.x = 10;
-    b.pos.y = 0;
-    b.pos.z = 5;
 
+    // create light buffer
     scene_light_content = (LightBuffer *) malloc(sizeof(int) + sizeof(SimpleLight));
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, scene_light_buffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int) + sizeof(SimpleLight), scene_light_content, GL_STATIC_READ);
@@ -99,9 +101,8 @@ void ComputePipelineGLFW::CreateBuffers() {
     // ---MODEL BUFFERS---
     // create model face buffer - separate from compiled to calculate face lighting
     smfb_content = (FaceBuffer*) malloc(sizeof(int) + ((num_scene_faces)*sizeof(Face)));
-    smfb_content->size = num_scene_faces;
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, scene_model_face_buffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, (sizeof(int) + ((num_scene_faces+num_controls_faces)*sizeof(Face))), smfb_content, GL_STATIC_READ);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, (sizeof(int) + ((num_scene_faces)*sizeof(Face))), smfb_content, GL_STATIC_READ);
 
     // create model node buffer
     model_node_content = (NodeBuffer *) malloc(sizeof(int) + ((num_scene_nodes+num_controls_nodes)*sizeof(Node)));
@@ -171,12 +172,6 @@ void ComputePipelineGLFW::CreateBuffers() {
     ui_element_id_content = (uint32_t *) malloc(num_ui_vertices * sizeof(uint32_t));
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ui_vertex_element_id_buffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, (num_ui_vertices * sizeof(uint32_t)), ui_element_id_content, GL_STATIC_READ);
-
-    // MAKE BUFFERS
-    std::vector<int> data = { 10, 20, 30, 40, 50 };
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, testssbo);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, data.size() * sizeof(int), &data[0], GL_DYNAMIC_READ);
-
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
 }
@@ -357,7 +352,7 @@ void ComputePipelineGLFW::ResetStaticBuffers() {
     
     // ---MODEL BUFFERS---
     // add data to scene model face buffer
-    glGetNamedBufferSubData (scene_model_face_buffer, 0, num_scene_faces*sizeof(Face), smfb_content);
+    glGetNamedBufferSubData (scene_model_face_buffer, 0, sizeof(int) + (num_scene_faces*sizeof(Face)), smfb_content);
     smfb_content->size = num_scene_faces;
     Face *smfb_data = (Face *) (((char *) smfb_content)+sizeof(int));
     scheme->SetSceneFaceBuffer(smfb_data, compiled_vertex_scene_start()); // scene faces
@@ -377,7 +372,7 @@ void ComputePipelineGLFW::ResetStaticBuffers() {
 
     // ---SLICE BUFFERS---
     // add data to dot buffer
-    glGetNamedBufferSubData (slice_dot_buffer, 0, num_scene_dots*sizeof(Dot), dot_content);
+    glGetNamedBufferSubData (slice_dot_buffer, 0, sizeof(int) + num_scene_dots*sizeof(Dot), dot_content);
     dot_content->size = num_scene_dots;
     Dot *dot_data = (Dot *) (((char *) dot_content)+sizeof(int));
     scheme->SetSliceDotBuffer(dot_data); // dots
@@ -396,7 +391,7 @@ void ComputePipelineGLFW::ResetStaticBuffers() {
     
     // ---UI BUFFERS---
     // add data to ui vertex buffer
-    glGetNamedBufferSubData (ui_vertex_buffer, 0, num_ui_vertices*sizeof(UIVertex), ui_vertex_content);
+    glGetNamedBufferSubData (ui_vertex_buffer, 0, sizeof(int) + num_ui_vertices*sizeof(UIVertex), ui_vertex_content);
     ui_vertex_content->size = num_ui_vertices;
     UIVertex *uiv_data = (UIVertex *) (((char *) ui_vertex_content)+sizeof(int));
     scheme->SetUIVertexBuffer(uiv_data);

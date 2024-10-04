@@ -62,7 +62,6 @@ void ComputePipeline::SetScheme(Scheme *sch) {
     // set compiled buffer key indices
     compiled_buffer_key_indices.compiled_vertex_size = compiled_vertex_size();
     compiled_buffer_key_indices.compiled_vertex_scene_start = compiled_vertex_scene_start();
-    compiled_buffer_key_indices.compiled_vertex_scene_start = compiled_vertex_scene_start();
     compiled_buffer_key_indices.compiled_vertex_control_start = compiled_vertex_control_start();
     compiled_buffer_key_indices.compiled_vertex_dot_start = compiled_vertex_dot_start();
     compiled_buffer_key_indices.compiled_vertex_node_circle_start = compiled_vertex_node_circle_start();

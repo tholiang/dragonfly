@@ -30,15 +30,15 @@ Scene::Scene() {
     
     PointLight *pl = new PointLight();
     Basis lightb;
-    lightb.pos.x = -10;
-    lightb.pos.z = 10;
+    lightb.pos.x = -5;
+    lightb.pos.z = 5;
     pl->SetColor(vec_make_float4(1,0,0,1));
     AddLight(pl, lightb);
     
     PointLight *pl2 = new PointLight();
     Basis lightb2;
-    lightb2.pos.x = 10;
-    lightb2.pos.z = 10;
+    lightb2.pos.x = 5;
+    lightb2.pos.z = 5;
     pl2->SetColor(vec_make_float4(0,1,0,1));
     AddLight(pl2, lightb2);
 
