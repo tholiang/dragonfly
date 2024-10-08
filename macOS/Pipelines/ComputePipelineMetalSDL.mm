@@ -56,21 +56,15 @@ void ComputePipelineMetalSDL::CreateBuffers() {
     // ---GENERAL BUFFERS---
     // create camera buffer
     camera_buffer = [device newBufferWithBytes:scheme->GetCamera() length:(sizeof(Camera)) options:MTLResourceStorageModeShared];
-    // create light buffer - NEED TO UPDATE TO ALLOW MULTIPLE LIGHTS
-    Basis b;
-    b.pos.x = 10;
-    b.pos.y = 0;
-    b.pos.z = 5;
     
-    SimpleLight *light = new SimpleLight();
-    *light = PointLight().ToSimpleLight(b);
-    scene_light_buffer = [device newBufferWithBytes:light length:sizeof(SimpleLight) options:MTLResourceStorageModeManaged];
-    delete light;
+    // create light buffer
+    std::vector<SimpleLight> scene_lights(scheme->NumSceneLights());
+    scene_light_buffer = [device newBufferWithBytes:scene_lights.data() length:scene_lights.size()*sizeof(SimpleLight) options:MTLResourceStorageModeManaged];
     
     
     // ---MODEL BUFFERS---
     // create model face buffer - separate from compiled to calculate face lighting
-    std::vector<Face> model_faces(num_scene_faces+num_controls_faces);
+    std::vector<Face> model_faces(num_scene_faces);
     scene_model_face_buffer = [device newBufferWithBytes:model_faces.data() length:(model_faces.size() * sizeof(Face)) options:MTLResourceStorageModeManaged];
     
     // create model node buffer
@@ -126,8 +120,115 @@ void ComputePipelineMetalSDL::CreateBuffers() {
     ui_vertex_element_id_buffer = [device newBufferWithBytes:ui_element_ids.data() length:(ui_element_ids.size() * sizeof(uint32_t)) options:MTLResourceStorageModeManaged];
 }
 
+void ComputePipelineMetalSDL::UpdateBufferCapacities() {
+    ComputePipeline::SetScheme(scheme);
+    CompiledBufferKeyIndices *key_indices_contents = (CompiledBufferKeyIndices *) compiled_buffer_key_indices_buffer.contents;
+    *key_indices_contents = compiled_buffer_key_indices;
+    [compiled_buffer_key_indices_buffer didModifyRange: NSMakeRange(0, sizeof(CompiledBufferKeyIndices))];
+    
+    
+    // ---COMPILED BUFFERS---
+    if (compiled_vertex_size() > compiled_vertex_buffer_capacity) {
+        compiled_vertex_buffer_capacity = compiled_vertex_size()*2;
+        std::vector<Vertex> compiled_vertices(compiled_vertex_buffer_capacity);
+        compiled_vertex_buffer = [device newBufferWithBytes:compiled_vertices.data() length:(compiled_vertex_buffer_capacity * sizeof(Vertex)) options:MTLResourceStorageModeManaged];
+    }
+    if (compiled_face_size() > compiled_face_buffer_capacity) {
+        compiled_face_buffer_capacity = compiled_face_size()*2;
+        
+        std::vector<Face> compiled_faces(compiled_face_buffer_capacity);
+        compiled_face_buffer = [device newBufferWithBytes:compiled_faces.data() length:(compiled_face_buffer_capacity * sizeof(Face)) options:MTLResourceStorageModeManaged];
+    }
+    
+    if (compiled_edge_size() > compiled_edge_buffer_capacity) {
+        compiled_edge_buffer_capacity = compiled_edge_size()*2;
+        
+        std::vector<vec_int2> compiled_edges(compiled_edge_buffer_capacity);
+        compiled_edge_buffer = [device newBufferWithBytes:compiled_edges.data() length:(compiled_edge_buffer_capacity * sizeof(vec_int2)) options:MTLResourceStorageModeManaged];
+    }
+    
+    // ---GENERAL BUFFERS---
+    if (num_scene_lights > light_buffer_capacity) {
+        light_buffer_capacity = num_scene_lights*2;
+        
+        std::vector<SimpleLight> scene_lights(light_buffer_capacity);
+        scene_light_buffer = [device newBufferWithBytes:scene_lights.data() length:light_buffer_capacity*sizeof(SimpleLight) options:MTLResourceStorageModeManaged];
+    }
+    
+    // ---MODEL BUFFERS---
+    if (num_scene_faces > scene_model_face_buffer_capacity) {
+        scene_model_face_buffer_capacity = num_scene_faces*2;
+        
+        std::vector<Face> model_faces(scene_model_face_buffer_capacity);
+        scene_model_face_buffer = [device newBufferWithBytes:model_faces.data() length:(scene_model_face_buffer_capacity * sizeof(Face)) options:MTLResourceStorageModeManaged];
+    }
+    if (num_scene_nodes+num_controls_nodes > model_node_buffer_capacity) {
+        model_node_buffer_capacity = (num_scene_nodes+num_controls_nodes)*2;
+        
+        std::vector<Node> model_nodes(model_node_buffer_capacity);
+        model_node_buffer = [device newBufferWithBytes:model_nodes.data() length:(model_node_buffer_capacity * sizeof(Node)) options:MTLResourceStorageModeManaged];
+    
+        
+        std::vector<uint32_t> node_modelid(model_node_buffer_capacity);
+        node_model_id_buffer = [device newBufferWithBytes:node_modelid.data() length:(model_node_buffer_capacity * sizeof(uint32_t)) options:MTLResourceStorageModeManaged];
+    }
+    
+    if (num_scene_vertices+num_controls_vertices > model_vertex_buffer_capacity) {
+        model_vertex_buffer_capacity = (num_scene_vertices+num_controls_vertices)*2;
+        std::vector<NodeVertexLink> nvlinks(model_vertex_buffer_capacity*2);
+        model_nvlink_buffer = [device newBufferWithBytes:nvlinks.data() length:(model_vertex_buffer_capacity * 2 * sizeof(NodeVertexLink)) options:MTLResourceStorageModeManaged];
+    
+        std::vector<Vertex> model_vertices(model_vertex_buffer_capacity);
+        model_vertex_buffer = [device newBufferWithBytes:model_vertices.data() length:(model_vertex_buffer_capacity * sizeof(Vertex)) options:MTLResourceStorageModeManaged];
+    
+    }
+    if (num_scene_models+num_controls_models > model_buffer_capacity) {
+        model_buffer_capacity = num_scene_models+num_controls_models;
+        std::vector<ModelTransform> model_uniforms(model_buffer_capacity);
+        model_transform_buffer = [device newBufferWithBytes:model_uniforms.data() length:(model_buffer_capacity * sizeof(ModelTransform)) options:MTLResourceStorageModeManaged];
+    }
+    
+    // ---SLICE BUFFERS---
+    if (num_scene_dots > slice_dot_buffer_capacity) {
+        slice_dot_buffer_capacity = num_scene_dots*2;
+        std::vector<Dot> slice_dots(slice_dot_buffer_capacity);
+        slice_dot_buffer = [device newBufferWithBytes:slice_dots.data() length:(slice_dot_buffer_capacity * sizeof(Dot)) options:MTLResourceStorageModeManaged];
+    }
+    
+    if (num_scene_slices > slice_buffer_capacity) {
+        slice_buffer_capacity = num_scene_slices*2;
+        std::vector<SliceAttributes> slice_attributes(slice_buffer_capacity);
+        slice_attributes_buffer = [device newBufferWithBytes:slice_attributes.data() length:(slice_buffer_capacity * sizeof(SliceAttributes)) options:MTLResourceStorageModeManaged];
+        
+        std::vector<ModelTransform> slice_uniforms(slice_buffer_capacity);
+        slice_transform_buffer = [device newBufferWithBytes:slice_uniforms.data() length:(slice_buffer_capacity * sizeof(ModelTransform)) options:MTLResourceStorageModeManaged];
+    }
+    
+    
+    // ---UI BUFFERS---
+    if (num_ui_vertices > ui_vertex_buffer_capacity) {
+        ui_vertex_buffer_capacity = num_ui_vertices*2;
+        std::vector<UIVertex> ui_vertices(ui_vertex_buffer_capacity);
+        ui_vertex_buffer = [device newBufferWithBytes:ui_vertices.data() length:(ui_vertex_buffer_capacity * sizeof(UIVertex)) options:MTLResourceStorageModeManaged];
+        
+        
+        std::vector<uint32_t> ui_element_ids(ui_vertex_buffer_capacity);
+        ui_vertex_element_id_buffer = [device newBufferWithBytes:ui_element_ids.data() length:(ui_vertex_buffer_capacity * sizeof(uint32_t)) options:MTLResourceStorageModeManaged];
+    }
+    
+    if (num_ui_elements > ui_element_buffer_capacity) {
+        ui_element_buffer_capacity = num_ui_elements*2;
+        
+        std::vector<UIElementTransform> ui_element_transforms(ui_element_buffer_capacity);
+        ui_element_transform_buffer = [device newBufferWithBytes:ui_element_transforms.data() length:(ui_element_buffer_capacity * sizeof(UIElementTransform)) options:MTLResourceStorageModeManaged];
+    }
+}
+
 void ComputePipelineMetalSDL::ResetStaticBuffers() {
     // assume all counts are accurate
+    CompiledBufferKeyIndices *key_indices_contents = (CompiledBufferKeyIndices *) compiled_buffer_key_indices_buffer.contents;
+    *key_indices_contents = compiled_buffer_key_indices;
+    [compiled_buffer_key_indices_buffer didModifyRange: NSMakeRange(0, sizeof(CompiledBufferKeyIndices))];
     
     // ---COMPILED BUFFERS---
     // add data to compiled face buffer
@@ -147,14 +248,9 @@ void ComputePipelineMetalSDL::ResetStaticBuffers() {
     
     // ---GENERAL BUFFERS---
     // add data to light buffer
-    // NEEDS UPDATE
-    Basis b;
-    b.pos.x = 10;
-    b.pos.y = 0;
-    b.pos.z = 5;
-    SimpleLight lightcont = PointLight().ToSimpleLight(b);
-    *((SimpleLight *)scene_light_buffer.contents) = lightcont;
-    [scene_light_buffer didModifyRange: NSMakeRange(0, sizeof(SimpleLight))]; // alert gpu about what was modified
+    SimpleLight *scene_light_content = (SimpleLight *) scene_light_buffer.contents;
+    scheme->SetSceneLightBuffer(scene_light_content);
+    [scene_light_buffer didModifyRange: NSMakeRange(0, num_scene_lights * sizeof(SimpleLight))];
     
     
     // ---MODEL BUFFERS---
@@ -338,15 +434,13 @@ void ComputePipelineMetalSDL::Compute() {
         }
         
         // if lighting is enabled calculate scene face lighting
-        if (scheme->LightingEnabled()) {
-            uint32_t num_lights = 1;
-            
+        if (scheme->LightingEnabled() && num_scene_lights > 0) {
             [compute_encoder setComputePipelineState: compute_lighting_pipeline_state];
             // set buffers
             [compute_encoder setBuffer: compiled_face_buffer offset:0 atIndex:0];
             [compute_encoder setBuffer: scene_model_face_buffer offset:0 atIndex:1];
             [compute_encoder setBuffer: model_vertex_buffer offset:0 atIndex:2];
-            [compute_encoder setBytes: &num_lights length:sizeof(uint32_t) atIndex:3];
+            [compute_encoder setBytes: &num_scene_lights length:sizeof(uint32_t) atIndex:3];
             [compute_encoder setBuffer: scene_light_buffer offset:0 atIndex:4];
             [compute_encoder setBuffer: compiled_buffer_key_indices_buffer offset:0 atIndex:5];
             // set thread size variables - per scene face
@@ -447,42 +541,6 @@ void ComputePipelineMetalSDL::Compute() {
     
     [compute_command_buffer commit];
     [compute_command_buffer waitUntilCompleted];
-    
-    // TODO: DOESNT WORK FOR SOME REASON - CANT CHANGE BUFFERS AFTER GPU CHANGES BUFFERS
-    // Paint selections
-    /*
-    // paint selected vertex face squares orange in CPU
-    if (scheme->GetType() != SchemeType::EditSlice) {
-        std::vector<uint32_t> selected_vertices = scheme->GetSelectedVertices();
-        for (int i = 0; i < selected_vertices.size(); i++) {
-            int compiled_face_square_idx_start = compiled_buffer_key_indices.compiled_face_vertex_square_start+selected_vertices[i]*2;
-            compiled_faces[compiled_face_square_idx_start+0].color = vec_make_float4(1, 0.5, 0, 1);
-            compiled_faces[compiled_face_square_idx_start+1].color = vec_make_float4(1, 0.5, 0, 1);
-            [compiled_face_buffer didModifyRange:NSMakeRange(compiled_face_square_idx_start, 2)];
-        }
-    }
-    
-    // paint selected node orange in CPU
-    int selected_node = scheme->GetSelectedNode();
-    if (selected_node >= 0) {
-        int compiled_face_node_start = compiled_buffer_key_indices.compiled_face_node_circle_start+selected_node*8;
-        for (int i = 0; i < 8; i++) {
-            compiled_faces[compiled_face_node_start+i].color = vec_make_float4(1, 0.5, 0, 1);
-        }
-        [compiled_face_buffer didModifyRange:NSMakeRange(compiled_face_node_start, 8)];
-    }
-    
-    // paint selected dots orange in CPU
-    if (scheme->GetType() == SchemeType::EditSlice) {
-        std::vector<uint32_t> selected_dots = scheme->GetSelectedVertices();
-        for (int i = 0; i < selected_dots.size(); i++) {
-            int compiled_dot_square_idx_start = compiled_buffer_key_indices.compiled_face_dot_square_start+selected_dots[i]*2;
-            compiled_faces[compiled_dot_square_idx_start+0].color = vec_make_float4(1, 0.5, 0, 1);
-            compiled_faces[compiled_dot_square_idx_start+1].color = vec_make_float4(1, 0.5, 0, 1);
-            [compiled_face_buffer didModifyRange:NSMakeRange(compiled_dot_square_idx_start, 2)];
-        }
-    }
-     */
 }
 
 

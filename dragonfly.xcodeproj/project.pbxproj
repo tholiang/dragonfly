@@ -81,9 +81,6 @@
 		D2092AD22BF6D8C4006F6DCC /* ForceField.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ForceField.h; sourceTree = "<group>"; };
 		D2092AD42BF70D0F006F6DCC /* Wrap.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Wrap.cpp; sourceTree = "<group>"; };
 		D2092AD52BF70D0F006F6DCC /* Wrap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Wrap.h; sourceTree = "<group>"; };
-		D249048C2CA74B1500DEA0F6 /* test.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = test.frag; sourceTree = "<group>"; };
-		D249048D2CA74B1500DEA0F6 /* test.comp */ = {isa = PBXFileReference; lastKnownFileType = text; path = test.comp; sourceTree = "<group>"; };
-		D249048E2CA74B1500DEA0F6 /* test.vert */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = test.vert; sourceTree = "<group>"; };
 		D24904902CA74B1500DEA0F6 /* SuperDefaultVertexShader.vert */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = SuperDefaultVertexShader.vert; sourceTree = "<group>"; };
 		D24904912CA74B1500DEA0F6 /* FragmentShader.frag */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = FragmentShader.frag; sourceTree = "<group>"; };
 		D24904922CA74B1500DEA0F6 /* SuperDefaultEdgeShader.vert */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = SuperDefaultEdgeShader.vert; sourceTree = "<group>"; };
@@ -253,22 +250,11 @@
 		D249048A2CA74B1500DEA0F6 /* Processing */ = {
 			isa = PBXGroup;
 			children = (
-				D249048B2CA74B1500DEA0F6 /* Test */,
 				D249048F2CA74B1500DEA0F6 /* Render */,
 				D24904942CA74B1500DEA0F6 /* Compute */,
 				D249049F2CA74B1500DEA0F6 /* util.glsl */,
 			);
 			path = Processing;
-			sourceTree = "<group>";
-		};
-		D249048B2CA74B1500DEA0F6 /* Test */ = {
-			isa = PBXGroup;
-			children = (
-				D249048C2CA74B1500DEA0F6 /* test.frag */,
-				D249048D2CA74B1500DEA0F6 /* test.comp */,
-				D249048E2CA74B1500DEA0F6 /* test.vert */,
-			);
-			path = Test;
 			sourceTree = "<group>";
 		};
 		D249048F2CA74B1500DEA0F6 /* Render */ = {
@@ -452,8 +438,8 @@
 			isa = PBXGroup;
 			children = (
 				D2D8414E2B9D0F4F007224D3 /* ComputePipelineMetalSDL.h */,
-				D2D8414D2B9D0F4F007224D3 /* ComputePipelineMetalSDL.mm */,
 				D2D8414B2B9D0F4F007224D3 /* RenderPipelineMetalSDL.h */,
+				D2D8414D2B9D0F4F007224D3 /* ComputePipelineMetalSDL.mm */,
 				D2D8414C2B9D0F4F007224D3 /* RenderPipelineMetalSDL.mm */,
 			);
 			path = Pipelines;

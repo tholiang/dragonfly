@@ -11,13 +11,13 @@ EngineMetalSDL::EngineMetalSDL() {
 }
 
 EngineMetalSDL::~EngineMetalSDL() {
-    delete compute_pipeline;
-    delete render_pipeline;
-    
-    delete camera;
-    delete scene;
-    delete scheme;
-    delete scheme_controller;
+//    delete compute_pipeline;
+//    delete render_pipeline;
+//    
+//    delete camera;
+//    delete scene;
+//    delete scheme;
+//    delete scheme_controller;
 }
 
 int EngineMetalSDL::SetPipelines() {
@@ -34,6 +34,7 @@ int EngineMetalSDL::SetPipelines() {
     render_pipeline->SetSchemeController(scheme_controller);
     
     compute_pipeline->CreateBuffers();
+    compute_pipeline->UpdateBufferCapacities();
     compute_pipeline->ResetStaticBuffers();
     
     return 0;

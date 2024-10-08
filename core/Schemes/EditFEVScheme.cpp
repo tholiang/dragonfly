@@ -578,9 +578,9 @@ void EditFEVScheme::SetControlsBasis() {
         controls_basis_ = scene_->GetSliceUniforms(selected_slice)->b;
     } else {
         vec_float3 behind_camera;
-        behind_camera.x = camera_->pos.x - camera_->vector.x*10;
-        behind_camera.y = camera_->pos.y - camera_->vector.y*10;
-        behind_camera.z = camera_->pos.z - camera_->vector.z*10;
+        behind_camera.x = camera_->pos.x - camera_->vector.x*100;
+        behind_camera.y = camera_->pos.y - camera_->vector.y*100;
+        behind_camera.z = camera_->pos.z - camera_->vector.z*100;
         controls_basis_.pos = behind_camera;
     }
 }

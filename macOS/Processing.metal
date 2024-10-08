@@ -492,6 +492,7 @@ kernel void CalculateProjectedVertices(
 ) {
     // calculate projected vertices and place into compiled buffer
     compiled_vertices[vid+key_indices->compiled_vertex_scene_start] = PointToPixel(vertices[vid], camera);
+    compiled_vertices[vid+key_indices->compiled_vertex_scene_start].z += 0.05;
 }
 
 // calculate vertex squares from scene model projected vertices
@@ -632,10 +633,10 @@ kernel void CalculateProjectedDots(
     // set (4) dot square corners in cvb
     float screen_ratio = (float) window_attr->height / window_attr->width;
     unsigned long cvb_dot_corner_idx = key_indices->compiled_vertex_dot_square_start + did*4;
-    compiled_vertices[cvb_dot_corner_idx+0] = vec_make_float3(proj_dot.x-0.007, proj_dot.y-0.007 * screen_ratio, proj_dot.z-0.01);
-    compiled_vertices[cvb_dot_corner_idx+1] = vec_make_float3(proj_dot.x-0.007, proj_dot.y+0.007 * screen_ratio, proj_dot.z-0.01);
-    compiled_vertices[cvb_dot_corner_idx+2] = vec_make_float3(proj_dot.x+0.007, proj_dot.y-0.007 * screen_ratio, proj_dot.z-0.01);
-    compiled_vertices[cvb_dot_corner_idx+3] = vec_make_float3(proj_dot.x+0.007, proj_dot.y+0.007 * screen_ratio, proj_dot.z-0.01);
+    compiled_vertices[cvb_dot_corner_idx+0] = vec_make_float3(proj_dot.x-0.007, proj_dot.y-0.007 * screen_ratio, proj_dot.z+0.01);
+    compiled_vertices[cvb_dot_corner_idx+1] = vec_make_float3(proj_dot.x-0.007, proj_dot.y+0.007 * screen_ratio, proj_dot.z+0.01);
+    compiled_vertices[cvb_dot_corner_idx+2] = vec_make_float3(proj_dot.x+0.007, proj_dot.y-0.007 * screen_ratio, proj_dot.z+0.01);
+    compiled_vertices[cvb_dot_corner_idx+3] = vec_make_float3(proj_dot.x+0.007, proj_dot.y+0.007 * screen_ratio, proj_dot.z+0.01);
     
     // set (2) dot square faces in cfb
     unsigned long cfb_dot_square_idx = key_indices->compiled_face_dot_square_start + did*2;
@@ -685,7 +686,7 @@ kernel void CalculateProjectedNodes(
         float angle = i*pi/4;
         
         // calculate value (with trig) and add to cvb
-        compiled_vertices[cvb_node_circle_idx+1+i] = vec_make_float3(proj_node_center.x + radius * cos(angle), proj_node_center.y + (radius * sin(angle) / screen_ratio), proj_node_center.z+0.05);
+        compiled_vertices[cvb_node_circle_idx+1+i] = vec_make_float3(proj_node_center.x + radius * cos(angle), proj_node_center.y + (radius * sin(angle) / screen_ratio), proj_node_center.z+0.02);
         
         // add face to cfb
         Face f;
@@ -711,7 +712,7 @@ kernel void CalculateFaceLighting(
     // get scene face and calculate normal
     Face f = faces[fid];
     vec_float3 f_norm = cross_product(vertices[f.vertices[0]], vertices[f.vertices[1]], vertices[f.vertices[2]]);
-    if (f.normal_reversed) {
+    if (f.normal_reversed != 0) {
         f_norm.x *= -1;
         f_norm.y *= -1;
         f_norm.z *= -1;
@@ -720,6 +721,7 @@ kernel void CalculateFaceLighting(
     // get angle between normal and light
     Vertex center = TriAvg(vertices[f.vertices[0]], vertices[f.vertices[1]], vertices[f.vertices[2]]);
     
+    vec_float4 endcolor = vec_make_float4(0, 0, 0, f.color.w);
     for (unsigned int i = 0; i < num_lights; i++) {
         // get light intensity at face point
         vec_float3 light_basis_point = TranslatePointToBasis(lights[i].b, center);
@@ -731,18 +733,19 @@ kernel void CalculateFaceLighting(
 
         // get angle between normal and light
         vec_float3 rev_dir = unit_vector(SubtractVectors(lights[i].b.pos, center));
-        float ang = abs(angle_between(f_norm, rev_dir));
-        intens /= ang * f.shading_multiplier;
+        float ang = 1 - abs(angle_between(f_norm, rev_dir)) / pi;
+        intens *= ang * f.shading_multiplier;
 
         // get color
-        f.color.x *= intens * lights[i].color.x;
-        f.color.y *= intens * lights[i].color.y;
-        f.color.z *= intens * lights[i].color.z;
-        
-        // set face in compiled face buffer
-        unsigned int cfb_scene_face_idx = key_indices->compiled_face_scene_start+fid;
-        compiled_faces[cfb_scene_face_idx] = f;
+        endcolor.x += f.color.x * intens * lights[i].color.x;
+        endcolor.y += f.color.y * intens * lights[i].color.y;
+        endcolor.z += f.color.z * intens * lights[i].color.z;
     }
+    
+    // set face in compiled face buffer
+    f.color = endcolor;
+    unsigned int cfb_scene_face_idx = key_indices->compiled_face_scene_start+fid;
+    compiled_faces[cfb_scene_face_idx] = f;
 }
 
 // operate per slice
@@ -825,7 +828,7 @@ kernel void CalculateUIVertices (
     Vertex ret;
     ret.x = et.position.x;
     ret.y = et.position.y;
-    ret.z = 0.01+float(et.position.z + v.z)/100;
+    ret.z = float(et.position.z + v.z)/100;
     
     // transform to vertex location (account for rotated element with right and up vectors)
     ret.x += et.right.x * v.x + et.up.x * v.y;
@@ -837,7 +840,7 @@ kernel void CalculateUIVertices (
     
     // set in compiled vertex buffer
     unsigned long cvb_ui_start = key_indices->compiled_vertex_ui_start+vid;
-    compiled_vertices[vid] = ret;
+    compiled_vertices[cvb_ui_start] = ret;
 }
 
 // vertex shader with set color (white)
