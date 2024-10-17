@@ -28,6 +28,10 @@ SchemeType Scheme::GetType() {
     return type;
 }
 
+bool Scheme::IsMultiScheme() {
+    return false;
+}
+
 void Scheme::Update() {
     HandleCameraMovement();
     SetControlsBasis();

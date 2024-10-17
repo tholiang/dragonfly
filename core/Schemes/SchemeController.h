@@ -14,6 +14,7 @@
 #include "imfilebrowser.h"
 
 #include "Scheme.h"
+#include "MultiScheme.h"
 #include "EditModelScheme.h"
 #include "EditFEVScheme.h"
 #include "EditNodeScheme.h"
