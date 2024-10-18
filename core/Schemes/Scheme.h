@@ -228,7 +228,7 @@ public:
     Scheme(); // constructor
     virtual ~Scheme(); // destructor
     SchemeType GetType();
-    virtual bool IsMultiScheme();
+    virtual bool IsMultiScheme(); // TODO: this is disgusting
     virtual void Update(); // update function called every frame
     void SetController(SchemeController *sc);
     void SetCamera(Camera *camera);

@@ -51,40 +51,44 @@ protected:
     
     // ---SCHEME AND SCHEME COUNTS---
     Scheme *scheme;
-    unsigned long num_scene_models = 0;
-    unsigned long num_scene_vertices = 0;
-    unsigned long num_scene_faces = 0;
-    unsigned long num_scene_edges = 0;
-    unsigned long num_scene_nodes = 0;
-    unsigned long num_scene_lights = 0;
-    
-    unsigned long num_controls_models = 0;
-    unsigned long num_controls_vertices = 0;
-    unsigned long num_controls_nodes = 0;
-    unsigned long num_controls_faces = 0;
-    
-    unsigned long num_scene_slices = 0;
-    unsigned long num_scene_dots = 0;
-    unsigned long num_scene_lines = 0;
-    
-    unsigned long num_ui_elements = 0;
-    unsigned long num_ui_vertices = 0;
-    unsigned long num_ui_faces = 0;
 
-    // ---BUFFER CAPACITIES---
-    unsigned long light_buffer_capacity = 0;
-    unsigned long scene_model_face_buffer_capacity = 0;
-    unsigned long model_node_buffer_capacity = 0; // for node and node model id buffers
-    unsigned long model_vertex_buffer_capacity = 0; // for vertex and nvlink buffers
-    unsigned long model_buffer_capacity = 0;
-    unsigned long slice_dot_buffer_capacity = 0; // for dot and dot slice id buffers
-    unsigned long slice_buffer_capacity = 0; // for slice attributes and transforms buffers
-    unsigned long ui_vertex_buffer_capacity = 0; // for ui vertex and vertex element id buffers
-    unsigned long ui_element_buffer_capacity = 0;
+    struct SchemeCounts {
+        unsigned long num_scene_models = 0;
+        unsigned long num_scene_vertices = 0;
+        unsigned long num_scene_faces = 0;
+        unsigned long num_scene_edges = 0;
+        unsigned long num_scene_nodes = 0;
+        unsigned long num_scene_lights = 0;
+        
+        unsigned long num_controls_models = 0;
+        unsigned long num_controls_vertices = 0;
+        unsigned long num_controls_nodes = 0;
+        unsigned long num_controls_faces = 0;
+        
+        unsigned long num_scene_slices = 0;
+        unsigned long num_scene_dots = 0;
+        unsigned long num_scene_lines = 0;
+        
+        unsigned long num_ui_elements = 0;
+        unsigned long num_ui_vertices = 0;
+        unsigned long num_ui_faces = 0;
 
-    unsigned long compiled_vertex_buffer_capacity = 0;
-    unsigned long compiled_face_buffer_capacity = 0;
-    unsigned long compiled_edge_buffer_capacity = 0;
+        // ---BUFFER CAPACITIES---
+        unsigned long light_buffer_capacity = 0;
+        unsigned long scene_model_face_buffer_capacity = 0;
+        unsigned long model_node_buffer_capacity = 0; // for node and node model id buffers
+        unsigned long model_vertex_buffer_capacity = 0; // for vertex and nvlink buffers
+        unsigned long model_buffer_capacity = 0;
+        unsigned long slice_dot_buffer_capacity = 0; // for dot and dot slice id buffers
+        unsigned long slice_buffer_capacity = 0; // for slice attributes and transforms buffers
+        unsigned long ui_vertex_buffer_capacity = 0; // for ui vertex and vertex element id buffers
+        unsigned long ui_element_buffer_capacity = 0;
+
+        unsigned long compiled_vertex_buffer_capacity = 0;
+        unsigned long compiled_face_buffer_capacity = 0;
+        unsigned long compiled_edge_buffer_capacity = 0;
+    };
+    std::vector<SchemeCounts> scheme_counts;
 public:
     virtual ~ComputePipeline();
     virtual void init() = 0;
@@ -109,28 +113,28 @@ public:
     virtual void SendDataToScheme() = 0;
     
     // helper functions for compiled buffers
-    uint32_t compiled_vertex_size();
-    uint32_t compiled_vertex_scene_start();
-    uint32_t compiled_vertex_control_start();
-    uint32_t compiled_vertex_dot_start();
-    uint32_t compiled_vertex_node_circle_start();
-    uint32_t compiled_vertex_vertex_square_start();
-    uint32_t compiled_vertex_dot_square_start();
-    uint32_t compiled_vertex_slice_plate_start();
-    uint32_t compiled_vertex_ui_start();
+    uint32_t compiled_vertex_size(int idx);
+    uint32_t compiled_vertex_scene_start(int idx);
+    uint32_t compiled_vertex_control_start(int idx);
+    uint32_t compiled_vertex_dot_start(int idx);
+    uint32_t compiled_vertex_node_circle_start(int idx);
+    uint32_t compiled_vertex_vertex_square_start(int idx);
+    uint32_t compiled_vertex_dot_square_start(int idx);
+    uint32_t compiled_vertex_slice_plate_start(int idx);
+    uint32_t compiled_vertex_ui_start(int idx);
     
-    uint32_t compiled_face_size();
-    uint32_t compiled_face_scene_start();
-    uint32_t compiled_face_control_start();
-    uint32_t compiled_face_node_circle_start();
-    uint32_t compiled_face_vertex_square_start();
-    uint32_t compiled_face_dot_square_start();
-    uint32_t compiled_face_slice_plate_start();
-    uint32_t compiled_face_ui_start();
+    uint32_t compiled_face_size(int idx);
+    uint32_t compiled_face_scene_start(int idx);
+    uint32_t compiled_face_control_start(int idx);
+    uint32_t compiled_face_node_circle_start(int idx);
+    uint32_t compiled_face_vertex_square_start(int idx);
+    uint32_t compiled_face_dot_square_start(int idx);
+    uint32_t compiled_face_slice_plate_start(int idx);
+    uint32_t compiled_face_ui_start(int idx);
     
-    uint32_t compiled_edge_size();
-    uint32_t compiled_edge_scene_start();
-    uint32_t compiled_edge_line_start();
+    uint32_t compiled_edge_size(int idx);
+    uint32_t compiled_edge_scene_start(int idx);
+    uint32_t compiled_edge_line_start(int idx);
 };
 
 #endif /* ComputePipeline_h */
