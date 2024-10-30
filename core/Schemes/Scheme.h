@@ -87,30 +87,12 @@ struct Camera {
     vec_float2 FOV;
 };
 
-class Scheme {
+class Panel {
 protected:
-    // ---GENERAL SCHEME VARIABLES---
-    SchemeType type;
+    // ---GENERAL PANEL VARIABLES---
     Camera *camera_;
-    Scene *scene_;
-    SchemeController *controller_;
     ShouldRender should_render; // what the renderer should show (node circles, vertex squares, etc.)
     bool lighting_enabled = false;
-    
-    // ---DISPLAY DATA---
-    float fps = 0;
-    WindowAttributes window_attributes;
-    int prev_width = 1080; // for changes in window size
-    int prev_height = 700;
-    int window_width_ = 1080;
-    int window_height_ = 700;
-    float aspect_ratio_ = 1080/700;
-    float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f}; // background color
-    
-    // ---DISPLAY FLAGS---
-    bool should_reset_empty_buffers = true;  // whether the compute pipeline should reset empty buffers (usually when something is created or deleted)
-    bool should_reset_static_buffers = true; // whether the compute pipeline should reset static buffers (usually when a static buffer item is moved - like a vertex)
-    
     
     // ---CONTROLS MODELS---
     // actual model data for controls models (arrows, etc)
@@ -125,32 +107,8 @@ protected:
     std::vector<UIElement *> ui_elements_;
     std::vector<UIElementTransform> ui_element_uniforms_;
     vec_int2 UI_start_; // beginning of the scheme UI - after menu bar
-    
-    
-    // ---INPUT DATA---
-    bool input_enabled = true;
-    vec_float2 click_loc_; // last click location
-    vec_float2 mouse_loc_; // current mouse location
-    float x_sens_ = 0.1;
-    float y_sens_ = 0.1;
-    bool left_mouse_down_ = false;
-    bool right_mouse_down_ = false;
-    KeyPresses keypresses_; // contains data on whether certain keys are currently being pressed
-    std::vector<uint32_t> selected_vertices; // list of selected vertex indices
-    int selected_node_ = -1;
-    
-    // action variables - for undo
-    UserAction *current_action = NULL;
-    std::deque<UserAction *> past_actions;
-    
-    
-    // ---COUNTS OF VARIOUS SCHEME DATA---
-    // for creating empty buffers in compute pipeline - calculate with CalculateNum____() and get with Num______()
-    unsigned long scene_vertex_length_ = 0;
-    unsigned long scene_face_length_ = 0;
-    unsigned long scene_node_length_ = 0;
-    unsigned long scene_dot_length_ = 0;
-    unsigned long scene_line_length_ = 0;
+
+    // ---COUNTS DATA---
     unsigned long controls_vertex_length_ = 0;
     unsigned long controls_face_length_ = 0;
     unsigned long controls_node_length_ = 0;
@@ -165,17 +123,9 @@ protected:
     Vertex * computed_model_vertices_ = NULL;
     Node * computed_model_nodes_ = NULL;
     
-    
-    
     // handle linear transforms of camera from key presses
     virtual void HandleCameraMovement();
-    
-    // undo last action
-    void Undo();
-    
-    // ---CLICK HANDLERS---
-    // check if a click is on a valid scene selection area
-    virtual bool ClickOnScene(vec_float2 loc);
+
     // handle clicks - pure virtual, completely handled by child classes
     virtual void HandleSelection(vec_float2 loc) = 0;
     // check if click collides with control model
@@ -199,17 +149,7 @@ protected:
     void ChangeRectDim(int eid, int w, int h);
 
     void DeleteUIElement(int eid);
-    
-    bool DidScreenSizeChange();
-    
-    // ---COUNTERS---
-    // call when something is created or deleted
-    void CalculateCounts(); // calls all following functions
-    void CalculateNumSceneVertices();
-    void CalculateNumSceneFaces();
-    void CalculateNumSceneNodes();
-    virtual void CalculateNumSceneDots();
-    virtual void CalculateNumSceneLines();
+
     void CalculateNumControlsVertices();
     void CalculateNumControlsFaces();
     void CalculateNumControlsNodes();
@@ -223,6 +163,99 @@ protected:
     int GetCompiledVertexIdx(int model_idx, int vertex_idx); // take in idx of model vertex and model idx and return idx in compiled array
     int GetCompiledFaceIdx(int model_idx, int face_idx); // take in idx of model face and model idx and return idx in compiled array
     int GetArrayNodeIdx(int model_idx, int node_idx); // take in idx of model node and model idx and return idx in compiled array
+public:
+    Panel();
+    virtual ~Panel();
+
+    virtual void Update(); // update function called every frame
+
+    // ---PANEL SETTINGS---
+    void EnableInput(bool enabled);
+    bool IsInputEnabled();
+    void EnableLighting(bool enabled);
+
+    // ---RENDERING---
+    virtual void BuildUI() = 0;
+};
+
+class Scheme {
+protected:
+    // ---GENERAL SCHEME VARIABLES---
+    SchemeType type;
+    Scene *scene_;
+    SchemeController *controller_;
+    std::vector<Panel> panels_;
+    std::vector<vec_int4> panel_boxes_;
+    
+    // ---DISPLAY DATA---
+    float fps = 0;
+    WindowAttributes window_attributes;
+    int prev_width = 1080; // for changes in window size
+    int prev_height = 700;
+    int window_width_ = 1080;
+    int window_height_ = 700;
+    float aspect_ratio_ = 1080/700;
+    float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f}; // background color
+    
+    // ---DISPLAY FLAGS---
+    bool should_reset_empty_buffers = true;  // whether the compute pipeline should reset empty buffers (usually when something is created or deleted)
+    bool should_reset_static_buffers = true; // whether the compute pipeline should reset static buffers (usually when a static buffer item is moved - like a vertex)
+    
+    // ---INPUT DATA---
+    bool input_enabled = true;
+    vec_float2 click_loc_; // last click location
+    vec_float2 mouse_loc_; // current mouse location
+    float x_sens_ = 0.1;
+    float y_sens_ = 0.1;
+    bool left_mouse_down_ = false;
+    bool right_mouse_down_ = false;
+    KeyPresses keypresses_; // contains data on whether certain keys are currently being pressed
+    std::vector<uint32_t> selected_vertices; // list of selected vertex indices
+    int selected_node_ = -1;
+    
+    // action variables - for undo
+    UserAction *current_action = NULL;
+    std::deque<UserAction *> past_actions;
+    
+    // ---COUNTS OF VARIOUS SCHEME DATA---
+    // for creating empty buffers in compute pipeline - calculate with CalculateNum____() and get with Num______()
+    unsigned long scene_vertex_length_ = 0;
+    unsigned long scene_face_length_ = 0;
+    unsigned long scene_node_length_ = 0;
+    unsigned long scene_dot_length_ = 0;
+    unsigned long scene_line_length_ = 0;
+    
+    // undo last action
+    void Undo();
+    
+    // ---CLICK HANDLERS---
+    // check if a click is on a valid scene selection area
+    virtual bool ClickOnScene(vec_float2 loc);
+    virtual void DirectClickToPanel(vec_float2 loc);
+    
+    bool DidScreenSizeChange();
+    
+    // ---COUNTERS---
+    // call when something is created or deleted
+    void CalculateCounts(); // calls all following functions + panel counters
+    void CalculateNumSceneVertices();
+    void CalculateNumSceneFaces();
+    void CalculateNumSceneNodes();
+    virtual void CalculateNumSceneDots();
+    virtual void CalculateNumSceneLines();
+
+    
+    
+    void SetControlFaceBuffer(Face *buf, unsigned long vertex_start); // start of control vertices in cvb
+    void SetControlNodeBuffer(Node *buf);
+    void SetControlNodeModelIDBuffer(uint32_t *buf, unsigned long model_start); // start of control models in node model id buffer
+    void SetControlNodeVertexLinkBuffer(NodeVertexLink *buf, unsigned long node_start); // start of control nodes in node buffer
+    void SetControlModelTransformBuffer(ModelTransform *buf);
+    
+    void SetUIFaceBuffer(Face *buf, unsigned long vertex_start); // start of ui vertices in cvb
+    void SetUIVertexBuffer(UIVertex *buf);
+    void SetUIElementIDBuffer(uint32_t *buf);
+    void SetUITransformBuffer(UIElementTransform *buf);
 public:
     // ---GENERAL SCHEME FUNCTIONS---
     Scheme(); // constructor
