@@ -10,6 +10,146 @@
 
 using namespace DragonflyUtils;
 
+Panel::Panel() {
+
+}
+
+Panel::~Panel() {
+
+}
+
+Panel::Update() {
+
+}
+
+Panel::EnableInput(bool enabled) {
+
+}
+
+Panel::IsInputEnabled() {
+
+}
+
+Panel::EnableLighting(bool enabled) {
+
+}
+
+void Panel::MakeRect(int x, int y, int w, int h, int z, vec_float4 color) {
+    UIElement *elem = new UIElement();
+    elem->MakeVertex(0, 0, 0);
+    elem->MakeVertex(w, 0, 0);
+    elem->MakeVertex(0, h, 0);
+    elem->MakeVertex(w, h, 0);
+    elem->MakeFace(0, 1, 2, color);
+    elem->MakeFace(1, 2, 3, color);
+    ui_elements_.push_back(elem);
+    
+    UIElementTransform uni;
+    uni.position = vec_make_int3(x, y, z);
+    uni.right = vec_make_float3(1, 0, 0);
+    uni.up = vec_make_float3(0, 1, 0);
+    ui_element_uniforms_.push_back(uni);
+    
+    CalculateNumUIVertices();
+    CalculateNumUIFaces();
+    should_reset_empty_buffers = true;
+    should_reset_static_buffers = true;
+}
+
+void Panel::MakeHollowBox(int x, int y, int w, int h, int z, int thickness, vec_float4 color) {
+    UIElement *elem = new UIElement();
+    elem->MakeVertex(0, 0, 0);
+    elem->MakeVertex(w, 0, 0);
+    elem->MakeVertex(0, thickness, 0);
+    elem->MakeVertex(w, thickness, 0);
+    elem->MakeFace(0, 1, 2, color);
+    elem->MakeFace(1, 2, 3, color);
+    
+    elem->MakeVertex(0, 0, 0);
+    elem->MakeVertex(thickness, 0, 0);
+    elem->MakeVertex(0, h, 0);
+    elem->MakeVertex(thickness, h, 0);
+    elem->MakeFace(4, 5, 6, color);
+    elem->MakeFace(5, 6, 7, color);
+    
+    elem->MakeVertex(0, h-thickness, 0);
+    elem->MakeVertex(w, h-thickness, 0);
+    elem->MakeVertex(0, h, 0);
+    elem->MakeVertex(w, h, 0);
+    elem->MakeFace(8, 9, 10, color);
+    elem->MakeFace(9, 10, 11, color);
+    
+    elem->MakeVertex(w-thickness, 0, 0);
+    elem->MakeVertex(w, 0, 0);
+    elem->MakeVertex(w-thickness, h, 0);
+    elem->MakeVertex(w, h, 0);
+    elem->MakeFace(12, 13, 14, color);
+    elem->MakeFace(13, 14, 15, color);
+    ui_elements_.push_back(elem);
+    
+    UIElementTransform uni;
+    uni.position = vec_make_int3(x, y, z);
+    uni.right = vec_make_float3(1, 0, 0);
+    uni.up = vec_make_float3(0, 1, 0);
+    ui_element_uniforms_.push_back(uni);
+    
+    CalculateNumUIVertices();
+    CalculateNumUIFaces();
+    should_reset_empty_buffers = true;
+    should_reset_static_buffers = true;
+}
+
+void Panel::MakeIsoTriangle(int x, int y, int w, int h, int z, vec_float4 color) {
+    UIElement *elem = new UIElement();
+    elem->MakeVertex(0, 0, 0);
+    elem->MakeVertex(w, 0, 0);
+    elem->MakeVertex(w/2, h, 0);
+    elem->MakeFace(0, 1, 2, color);
+    ui_elements_.push_back(elem);
+    
+    UIElementTransform uni;
+    uni.position = vec_make_int3(x, y, z);
+    uni.right = vec_make_float3(1, 0, 0);
+    uni.up = vec_make_float3(0, 1, 0);
+    ui_element_uniforms_.push_back(uni);
+    
+    CalculateNumUIVertices();
+    CalculateNumUIFaces();
+    should_reset_empty_buffers = true;
+    should_reset_static_buffers = true;
+}
+
+void Panel::ChangeElementLocation(int eid, int x, int y) {
+    UIElementTransform *uni = &ui_element_uniforms_[eid];
+    uni->position.x = x;
+    uni->position.y = y;
+}
+
+void Panel::DeleteUIElement(int eid) {
+    if (eid >= ui_elements_.size()) { return; }
+
+    delete ui_elements_[eid];
+    ui_elements_.erase(ui_elements_.begin() + eid);
+    ui_element_uniforms_.erase(ui_element_uniforms_.begin() + eid);
+
+    CalculateNumUIVertices();
+    CalculateNumUIFaces();
+    should_reset_empty_buffers = true;
+    should_reset_static_buffers = true;
+}
+
+void Panel::ChangeRectDim(int eid, int w, int h) {
+    UIElement *elem = ui_elements_[eid];
+    UIVertex *v2 = elem->GetVertex(1);
+    v2->x = w;
+    UIVertex *v3 = elem->GetVertex(2);
+    v3->y = h;
+    UIVertex *v4 = elem->GetVertex(3);
+    v4->x = w;
+    v4->y = h;
+}
+
+
 Scheme::Scheme() {
     UI_start_.x = 0;
     UI_start_.y = 20;
@@ -201,121 +341,6 @@ void Scheme::SetBufferContents(CompiledBufferKeyIndices *cki, Vertex *ccv, Face 
     computed_compiled_faces_ = ccf;
     computed_model_vertices_ = cmv;
     computed_model_nodes_ = cmn;
-}
-
-void Scheme::MakeRect(int x, int y, int w, int h, int z, vec_float4 color) {
-    UIElement *elem = new UIElement();
-    elem->MakeVertex(0, 0, 0);
-    elem->MakeVertex(w, 0, 0);
-    elem->MakeVertex(0, h, 0);
-    elem->MakeVertex(w, h, 0);
-    elem->MakeFace(0, 1, 2, color);
-    elem->MakeFace(1, 2, 3, color);
-    ui_elements_.push_back(elem);
-    
-    UIElementTransform uni;
-    uni.position = vec_make_int3(x, y, z);
-    uni.right = vec_make_float3(1, 0, 0);
-    uni.up = vec_make_float3(0, 1, 0);
-    ui_element_uniforms_.push_back(uni);
-    
-    CalculateNumUIVertices();
-    CalculateNumUIFaces();
-    should_reset_empty_buffers = true;
-    should_reset_static_buffers = true;
-}
-
-void Scheme::MakeHollowBox(int x, int y, int w, int h, int z, int thickness, vec_float4 color) {
-    UIElement *elem = new UIElement();
-    elem->MakeVertex(0, 0, 0);
-    elem->MakeVertex(w, 0, 0);
-    elem->MakeVertex(0, thickness, 0);
-    elem->MakeVertex(w, thickness, 0);
-    elem->MakeFace(0, 1, 2, color);
-    elem->MakeFace(1, 2, 3, color);
-    
-    elem->MakeVertex(0, 0, 0);
-    elem->MakeVertex(thickness, 0, 0);
-    elem->MakeVertex(0, h, 0);
-    elem->MakeVertex(thickness, h, 0);
-    elem->MakeFace(4, 5, 6, color);
-    elem->MakeFace(5, 6, 7, color);
-    
-    elem->MakeVertex(0, h-thickness, 0);
-    elem->MakeVertex(w, h-thickness, 0);
-    elem->MakeVertex(0, h, 0);
-    elem->MakeVertex(w, h, 0);
-    elem->MakeFace(8, 9, 10, color);
-    elem->MakeFace(9, 10, 11, color);
-    
-    elem->MakeVertex(w-thickness, 0, 0);
-    elem->MakeVertex(w, 0, 0);
-    elem->MakeVertex(w-thickness, h, 0);
-    elem->MakeVertex(w, h, 0);
-    elem->MakeFace(12, 13, 14, color);
-    elem->MakeFace(13, 14, 15, color);
-    ui_elements_.push_back(elem);
-    
-    UIElementTransform uni;
-    uni.position = vec_make_int3(x, y, z);
-    uni.right = vec_make_float3(1, 0, 0);
-    uni.up = vec_make_float3(0, 1, 0);
-    ui_element_uniforms_.push_back(uni);
-    
-    CalculateNumUIVertices();
-    CalculateNumUIFaces();
-    should_reset_empty_buffers = true;
-    should_reset_static_buffers = true;
-}
-
-void Scheme::MakeIsoTriangle(int x, int y, int w, int h, int z, vec_float4 color) {
-    UIElement *elem = new UIElement();
-    elem->MakeVertex(0, 0, 0);
-    elem->MakeVertex(w, 0, 0);
-    elem->MakeVertex(w/2, h, 0);
-    elem->MakeFace(0, 1, 2, color);
-    ui_elements_.push_back(elem);
-    
-    UIElementTransform uni;
-    uni.position = vec_make_int3(x, y, z);
-    uni.right = vec_make_float3(1, 0, 0);
-    uni.up = vec_make_float3(0, 1, 0);
-    ui_element_uniforms_.push_back(uni);
-    
-    CalculateNumUIVertices();
-    CalculateNumUIFaces();
-    should_reset_empty_buffers = true;
-    should_reset_static_buffers = true;
-}
-
-void Scheme::ChangeElementLocation(int eid, int x, int y) {
-    UIElementTransform *uni = &ui_element_uniforms_[eid];
-    uni->position.x = x;
-    uni->position.y = y;
-}
-
-void Scheme::DeleteUIElement(int eid) {
-    if (eid >= ui_elements_.size()) { return; }
-
-    delete ui_elements_[eid];
-    ui_elements_.erase(ui_elements_.begin() + eid);
-    ui_element_uniforms_.erase(ui_element_uniforms_.begin() + eid);
-
-    CalculateNumUIVertices();
-    CalculateNumUIFaces();
-    should_reset_empty_buffers = true;
-    should_reset_static_buffers = true;
-}
-
-void Scheme::ChangeRectDim(int eid, int w, int h) {
-    UIElement *elem = ui_elements_[eid];
-    UIVertex *v2 = elem->GetVertex(1);
-    v2->x = w;
-    UIVertex *v3 = elem->GetVertex(2);
-    v3->y = h;
-    UIVertex *v4 = elem->GetVertex(3);
-    v4->x = w;
-    v4->y = h;
 }
 
 void Scheme::EnableInput(bool enabled) {

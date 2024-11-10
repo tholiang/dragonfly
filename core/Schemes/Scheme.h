@@ -165,7 +165,12 @@ protected:
     int GetArrayNodeIdx(int model_idx, int node_idx); // take in idx of model node and model idx and return idx in compiled array
 public:
     Panel();
+    Panel(Camera *c);
     virtual ~Panel();
+
+    // input NULL if camera should be generated
+    void SetCamera(Camera *c);
+    Camera *GetCamera();
 
     virtual void Update(); // update function called every frame
 

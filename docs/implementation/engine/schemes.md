@@ -1,5 +1,7 @@
 # Schemes
 
+a scheme is, in essence, a mechanism to edit a scene
+
 scheme handle much of the input and rendering flow between the datatypes and kernel pipelines - facilitating the user-data relationship
 
 schemes reference a single scene that is being edited. all access and changes made to the scene are done through schemes, so that scenes are sheltered from direct change
