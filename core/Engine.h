@@ -31,6 +31,9 @@ using namespace Vec;
 #include "Schemes/EditFEVScheme.h"
 #include "Schemes/EditNodeScheme.h"
 
+#include "Panels/Window.h"
+#include "Panels/Panel.h"
+
 #include "Pipelines/ComputePipeline.h"
 #include "Pipelines/RenderPipeline.h"
 
@@ -58,9 +61,10 @@ protected:
     float fps = 0;
     
     // scheme and scene
-    Camera *camera;
-    SchemeController *scheme_controller;
-    Scheme *scheme;
+    // Camera *camera;
+    // SchemeController *scheme_controller;
+    // Scheme *scheme;
+    Window *window;
     Scene *scene;
     
     virtual int SetPipelines() = 0; // varies for graphics implementations

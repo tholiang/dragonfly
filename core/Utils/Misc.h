@@ -11,6 +11,13 @@
 using namespace Vec;
 
 namespace DragonflyUtils {
+struct Camera {
+    vec_float3 pos;
+    vec_float3 vector;
+    vec_float3 up_vector;
+    vec_float2 FOV;
+};
+
 struct Keys {
     bool w = false;
     bool a = false;

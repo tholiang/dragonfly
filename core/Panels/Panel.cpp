@@ -1,6 +1,6 @@
 #include "Panel.h"
 
-Panel::Panel() {
+Panel::Panel(vec_float4 borders, Scene *scene) : borders_(borders), scene_(scene) {
 
 }
 
@@ -10,13 +10,19 @@ Panel::~Panel() {
 
 void Panel::Update() {
     HandleInput();
-    PrepareOutBuffers();
+}
+
+void Panel::SetScene(Scene *s) {
+    scene_ = s;
 }
 
 vec_float4 Panel::GetBorders() { return borders_; }
 PanelType Panel::GetType() { return type_; }
 PanelElements Panel::GetElements() { return elements_; }
-PanelOutBuffers Panel::GetOutBuffers() { return out_buffers_; }
+PanelOutBuffers Panel::GetOutBuffers() { 
+    PrepareOutBuffers();
+    return out_buffers_;
+}
 PanelWantedBuffers Panel::GetWantedBuffers() { return wanted_buffers_; }
 void Panel::SetPanelInBuffers(PanelInBuffers b) { in_buffers_ = b; }
 

@@ -80,13 +80,6 @@ struct ShouldRender {
     bool slices = false;
 };
 
-struct Camera {
-    vec_float3 pos;
-    vec_float3 vector;
-    vec_float3 up_vector;
-    vec_float2 FOV;
-};
-
 class Scheme {
 protected:
     // ---GENERAL SCHEME VARIABLES---

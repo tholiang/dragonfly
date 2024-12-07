@@ -20,12 +20,16 @@ using namespace Vec;
 
 // each subclass should have a type - for easier casting
 enum PanelType {
-
+    View
 };
 
 // what to render - faces, vertices, ui...
 struct PanelElements {
-
+    bool faces = false;
+    bool edges = false;
+    bool vertices = false;
+    bool controls = false;
+    bool ui = false; // not including imgui
 };
 
 // all possible buffers to send to the gpu pipeline
@@ -60,7 +64,11 @@ struct PanelOutBuffers {
 
 // what buffers are wanted from the gpu pipeline
 struct PanelWantedBuffers {
-
+    bool computed_key_indices = false;
+    bool computed_compiled_vertices = false;
+    bool computed_compiled_faces = false;
+    bool computed_model_vertices = false;
+    bool computed_model_nodes = false;
 };
 
 // all possible buffers to take in from the gpu pipeline
@@ -77,7 +85,7 @@ protected:
     // data
     Scene *scene_;
 
-    vec_float4 borders_; // panel rectangle relative to window ([-1, 1], [-1, 1])
+    vec_float4 borders_; // panel rectangle relative to window (center, size)
     PanelType type_;
     PanelElements elements_;
     PanelOutBuffers out_buffers_;
@@ -96,9 +104,13 @@ protected:
     virtual void HandleInput() = 0;
     virtual void PrepareOutBuffers() = 0;
 public:
-    Panel();
+    Panel() = 0;
+    // child classes should initialize type and wanted buffers here
+    Panel(vec_float4 borders, Scene *scene);
     ~Panel();
     virtual void Update();
+
+    void SetScene(Scene *s);
 
     vec_float4 GetBorders();
     PanelType GetType();
@@ -117,4 +129,4 @@ public:
     bool ShouldResetStaticBuffers();
 };
 
-#endif // Panel_h
+#endif /* Panel_h */
