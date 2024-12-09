@@ -9,3 +9,5 @@ rendering
 - the window also contains a conglomeration of all the panel buffers - formatted for the compute/renderer
 - the idea is that nothing sees the panels except the window
 - compute just copies the window buffers directly into gpu buffers - and renders as before
+- create general buffer data classes and buffer classes (per rendering backend)
+- contain buffers in arrays and #define indices for specific buffers

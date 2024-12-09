@@ -10,6 +10,7 @@
 
 #include <iostream>
 
+#include "../Utils/Constants.h"
 #include "../Utils/Buffers.h"
 #include "../Utils/Misc.h"
 #include "../Utils/Vec.h"
@@ -32,54 +33,6 @@ struct PanelElements {
     bool ui = false; // not including imgui
 };
 
-// all possible buffers to send to the gpu pipeline
-struct PanelOutBuffers {
-    Buffer *camera = NULL;
-
-    Buffer *scene_lights = NULL;
-
-    Buffer *scene_faces = NULL;
-    Buffer *scene_edges = NULL;
-    Buffer *scene_nodes = NULL;
-    Buffer *scene_node_model_ids = NULL;
-    Buffer *scene_node_vertex_links = NULL;
-    Buffer *scene_model_transforms = NULL;
-
-    Buffer *scene_slice_dots = NULL;
-    Buffer *scene_slice_lines = NULL;
-    Buffer *scene_slice_attributes = NULL;
-    Buffer *scene_slice_transforms = NULL;
-    
-    Buffer *control_faces = NULL;
-    Buffer *control_nodes = NULL;
-    Buffer *control_node_model_ids = NULL;
-    Buffer *control_node_vertex_links = NULL;
-    Buffer *control_model_transforms = NULL;
-
-    Buffer *ui_faces = NULL;
-    Buffer *ui_vertices = NULL;
-    Buffer *ui_element_ids = NULL;
-    Buffer *ui_transforms = NULL;
-};
-
-// what buffers are wanted from the gpu pipeline
-struct PanelWantedBuffers {
-    bool computed_key_indices = false;
-    bool computed_compiled_vertices = false;
-    bool computed_compiled_faces = false;
-    bool computed_model_vertices = false;
-    bool computed_model_nodes = false;
-};
-
-// all possible buffers to take in from the gpu pipeline
-struct PanelInBuffers {
-    Buffer *computed_key_indices = NULL;
-    Buffer *computed_compiled_vertices = NULL;
-    Buffer *computed_compiled_faces = NULL;
-    Buffer *computed_model_vertices = NULL;
-    Buffer *computed_model_nodes = NULL;
-};
-
 class Panel {
 protected:
     // data
@@ -88,9 +41,14 @@ protected:
     vec_float4 borders_; // panel rectangle relative to window (center, size)
     PanelType type_;
     PanelElements elements_;
-    PanelOutBuffers out_buffers_;
-    PanelWantedBuffers wanted_buffers_;
-    PanelInBuffers in_buffers_;
+    // which out buffers have been modified
+    bool dirty_buffers_[PNL_NUM_OUTBUFS];
+    // all possible buffers to send to the gpu pipeline
+    Buffer *out_buffers_[PNL_NUM_OUTBUFS];
+    // what buffers are wanted from the gpu pipeline
+    bool wanted_buffers_[PNL_NUM_INBUFS];
+    // all possible buffers to take in from the gpu pipeline
+    Buffer *in_buffers_[PNL_NUM_INBUFS];
 
     // input
     Mouse mouse_;
@@ -104,7 +62,7 @@ protected:
     virtual void HandleInput() = 0;
     virtual void PrepareOutBuffers() = 0;
 public:
-    Panel() = 0;
+    Panel() = delete;
     // child classes should initialize type and wanted buffers here
     Panel(vec_float4 borders, Scene *scene);
     ~Panel();
@@ -115,18 +73,13 @@ public:
     vec_float4 GetBorders();
     PanelType GetType();
     PanelElements GetElements();
-    PanelOutBuffers GetOutBuffers();
-    PanelWantedBuffers GetWantedBuffers();
-    void SetPanelInBuffers(PanelInBuffers b);
+    
+    bool IsBufferDirty(unsigned int buf);
+    Buffer **GetOutBuffers();
+    bool IsBufferWanted(unsigned int buf);
+    void SetPanelInBuffers(Buffer **b);
 
     void SetInputData(Mouse m, Keys k);
-
-    // TODO: remove the need for these
-    void SetResetEmptyBuffers(bool set);
-    void SetResetStaticBuffers(bool set);
-    
-    bool ShouldResetEmptyBuffers();
-    bool ShouldResetStaticBuffers();
 };
 
 #endif /* Panel_h */

@@ -15,6 +15,11 @@
 		D28B7D852793B4AC00C0E47F /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D28B7D842793B4AC00C0E47F /* SDL2.framework */; };
 		D28B7D862793B4AC00C0E47F /* SDL2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D28B7D842793B4AC00C0E47F /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D29549682BF5779900FE1130 /* Vec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D29549662BF5779900FE1130 /* Vec.cpp */; };
+		D2A0D42E2D065FBD00FEE0D9 /* todo.md in Resources */ = {isa = PBXBuildFile; fileRef = D2A0D42D2D065FBD00FEE0D9 /* todo.md */; };
+		D2A0D4302D065FE000FEE0D9 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = D2A0D42F2D065FE000FEE0D9 /* README.md */; };
+		D2A0D4372D06604D00FEE0D9 /* Window.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D4322D06604D00FEE0D9 /* Window.cpp */; };
+		D2A0D4382D06604D00FEE0D9 /* ViewPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D4332D06604D00FEE0D9 /* ViewPanel.cpp */; };
+		D2C6865C2CF3CE750056A760 /* Panel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C6865A2CF3CE750056A760 /* Panel.cpp */; };
 		D2D841202B9D0F44007224D3 /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2D840FD2B9D0F43007224D3 /* imgui_widgets.cpp */; };
 		D2D841212B9D0F44007224D3 /* imgui_impl_metal.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2D841052B9D0F43007224D3 /* imgui_impl_metal.mm */; };
 		D2D841262B9D0F44007224D3 /* imgui_impl_sdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2D8410C2B9D0F43007224D3 /* imgui_impl_sdl.cpp */; };
@@ -120,6 +125,19 @@
 		D28B7D842793B4AC00C0E47F /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
 		D29549662BF5779900FE1130 /* Vec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Vec.cpp; sourceTree = "<group>"; };
 		D29549672BF5779900FE1130 /* Vec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Vec.h; sourceTree = "<group>"; };
+		D2A0D42D2D065FBD00FEE0D9 /* todo.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = todo.md; sourceTree = "<group>"; };
+		D2A0D42F2D065FE000FEE0D9 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		D2A0D4312D06604D00FEE0D9 /* ControlsPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ControlsPanel.h; sourceTree = "<group>"; };
+		D2A0D4322D06604D00FEE0D9 /* Window.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Window.cpp; sourceTree = "<group>"; };
+		D2A0D4332D06604D00FEE0D9 /* ViewPanel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ViewPanel.cpp; sourceTree = "<group>"; };
+		D2A0D4342D06604D00FEE0D9 /* UIPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UIPanel.h; sourceTree = "<group>"; };
+		D2A0D4352D06604D00FEE0D9 /* Window.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Window.h; sourceTree = "<group>"; };
+		D2A0D4362D06604D00FEE0D9 /* ViewPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewPanel.h; sourceTree = "<group>"; };
+		D2A0D4392D0660DF00FEE0D9 /* Misc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Misc.h; sourceTree = "<group>"; };
+		D2A0D43A2D0660DF00FEE0D9 /* Buffers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Buffers.h; sourceTree = "<group>"; };
+		D2A0D43B2D0663E000FEE0D9 /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
+		D2C6865A2CF3CE750056A760 /* Panel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Panel.cpp; sourceTree = "<group>"; };
+		D2C6865B2CF3CE750056A760 /* Panel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Panel.h; sourceTree = "<group>"; };
 		D2D840FA2B9D0F43007224D3 /* imgui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imgui.h; sourceTree = "<group>"; };
 		D2D840FB2B9D0F43007224D3 /* imstb_textedit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imstb_textedit.h; sourceTree = "<group>"; };
 		D2D840FC2B9D0F43007224D3 /* imconfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imconfig.h; sourceTree = "<group>"; };
@@ -349,6 +367,21 @@
 			path = Lights;
 			sourceTree = "<group>";
 		};
+		D2C686592CF3CE750056A760 /* Panels */ = {
+			isa = PBXGroup;
+			children = (
+				D2A0D4352D06604D00FEE0D9 /* Window.h */,
+				D2A0D4322D06604D00FEE0D9 /* Window.cpp */,
+				D2C6865B2CF3CE750056A760 /* Panel.h */,
+				D2C6865A2CF3CE750056A760 /* Panel.cpp */,
+				D2A0D4312D06604D00FEE0D9 /* ControlsPanel.h */,
+				D2A0D4342D06604D00FEE0D9 /* UIPanel.h */,
+				D2A0D4332D06604D00FEE0D9 /* ViewPanel.cpp */,
+				D2A0D4362D06604D00FEE0D9 /* ViewPanel.h */,
+			);
+			path = Panels;
+			sourceTree = "<group>";
+		};
 		D2D840F92B9D0F43007224D3 /* imgui */ = {
 			isa = PBXGroup;
 			children = (
@@ -393,6 +426,7 @@
 			children = (
 				D24904B42CA7500E00DEA0F6 /* Lights */,
 				D2D841362B9D0F4F007224D3 /* UI */,
+				D2C686592CF3CE750056A760 /* Panels */,
 				D2D841392B9D0F4F007224D3 /* Schemes */,
 				D2D8414F2B9D0F4F007224D3 /* Utils */,
 				D2D841682B9D0F4F007224D3 /* UserActions */,
@@ -438,8 +472,8 @@
 			isa = PBXGroup;
 			children = (
 				D2D8414E2B9D0F4F007224D3 /* ComputePipelineMetalSDL.h */,
-				D2D8414B2B9D0F4F007224D3 /* RenderPipelineMetalSDL.h */,
 				D2D8414D2B9D0F4F007224D3 /* ComputePipelineMetalSDL.mm */,
+				D2D8414B2B9D0F4F007224D3 /* RenderPipelineMetalSDL.h */,
 				D2D8414C2B9D0F4F007224D3 /* RenderPipelineMetalSDL.mm */,
 			);
 			path = Pipelines;
@@ -448,6 +482,9 @@
 		D2D8414F2B9D0F4F007224D3 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				D2A0D43B2D0663E000FEE0D9 /* Constants.h */,
+				D2A0D43A2D0660DF00FEE0D9 /* Buffers.h */,
+				D2A0D4392D0660DF00FEE0D9 /* Misc.h */,
 				D2D841512B9D0F4F007224D3 /* Utils.h */,
 				D2D841532B9D0F4F007224D3 /* Utils.cpp */,
 				D29549672BF5779900FE1130 /* Vec.h */,
@@ -543,6 +580,8 @@
 				D2D841932B9D0F61007224D3 /* macOS */,
 				D24904892CA74B1500DEA0F6 /* windows */,
 				D2EAF92227914191002DE553 /* Frameworks */,
+				D2A0D42D2D065FBD00FEE0D9 /* todo.md */,
+				D2A0D42F2D065FE000FEE0D9 /* README.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -623,10 +662,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D2A0D4302D065FE000FEE0D9 /* README.md in Resources */,
 				D2D841312B9D0F44007224D3 /* LICENSE.txt in Resources */,
 				D2D841272B9D0F44007224D3 /* .editorconfig in Resources */,
 				D2D841912B9D0F4F007224D3 /* Info.plist in Resources */,
 				D2D8419E2B9D0F61007224D3 /* Assets.xcassets in Resources */,
+				D2A0D42E2D065FBD00FEE0D9 /* todo.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -639,6 +680,7 @@
 			files = (
 				D2D841A12B9D0F61007224D3 /* AppDelegate.m in Sources */,
 				D2D8418B2B9D0F4F007224D3 /* main.mm in Sources */,
+				D2A0D4372D06604D00FEE0D9 /* Window.cpp in Sources */,
 				D2D841322B9D0F44007224D3 /* imgui_tables.cpp in Sources */,
 				D2D841842B9D0F4F007224D3 /* Project2D.cpp in Sources */,
 				D2D841B12B9D2108007224D3 /* RenderPipeline.cpp in Sources */,
@@ -663,6 +705,7 @@
 				D2D841862B9D0F4F007224D3 /* Model.cpp in Sources */,
 				D2D841792B9D0F4F007224D3 /* EditNodeScheme.cpp in Sources */,
 				D2D8418D2B9D0F4F007224D3 /* EdgeAddVertexAction.cpp in Sources */,
+				D2C6865C2CF3CE750056A760 /* Panel.cpp in Sources */,
 				D2D841212B9D0F44007224D3 /* imgui_impl_metal.mm in Sources */,
 				D2D841AF2B9D1F2B007224D3 /* ComputePipeline.cpp in Sources */,
 				D2D841882B9D0F4F007224D3 /* Slice.cpp in Sources */,
@@ -676,6 +719,7 @@
 				D2D8418E2B9D0F4F007224D3 /* FaceAddVertexAction.cpp in Sources */,
 				D2D8417E2B9D0F4F007224D3 /* RenderPipelineMetalSDL.mm in Sources */,
 				D2D841832B9D0F4F007224D3 /* Basis.cpp in Sources */,
+				D2A0D4382D06604D00FEE0D9 /* ViewPanel.cpp in Sources */,
 				D2D8417A2B9D0F4F007224D3 /* EditScheme.cpp in Sources */,
 				D2D841902B9D0F4F007224D3 /* VertexMoveAction.cpp in Sources */,
 				D2D841892B9D0F4F007224D3 /* Scene.cpp in Sources */,

@@ -1,7 +1,14 @@
 #include "Panel.h"
 
 Panel::Panel(vec_float4 borders, Scene *scene) : borders_(borders), scene_(scene) {
-
+    for (int i = 0; i < PNL_NUM_OUTBUFS; i++) {
+        dirty_buffers_[i] = true;
+        out_buffers_[i] = NULL;
+    }
+    for (int i = 0; i < PNL_NUM_INBUFS; i++) {
+        wanted_buffers_[i] = false;
+        in_buffers_[i] = NULL;
+    }
 }
 
 Panel::~Panel() {
@@ -19,12 +26,17 @@ void Panel::SetScene(Scene *s) {
 vec_float4 Panel::GetBorders() { return borders_; }
 PanelType Panel::GetType() { return type_; }
 PanelElements Panel::GetElements() { return elements_; }
-PanelOutBuffers Panel::GetOutBuffers() { 
+bool Panel::IsBufferDirty(unsigned int buf) { return dirty_buffers_[buf]; }
+Buffer **Panel::GetOutBuffers() {
     PrepareOutBuffers();
     return out_buffers_;
 }
-PanelWantedBuffers Panel::GetWantedBuffers() { return wanted_buffers_; }
-void Panel::SetPanelInBuffers(PanelInBuffers b) { in_buffers_ = b; }
+bool Panel::IsBufferWanted(unsigned int buf) { return wanted_buffers_[buf]; }
+void Panel::SetPanelInBuffers(Buffer **b) {
+    for (int i = 0; i < PNL_NUM_INBUFS; i++) {
+        in_buffers_[i] = b[i];
+    }
+}
 
 void Panel::SetInputData(Mouse m, Keys k) {
     keys_ = k;
@@ -36,9 +48,3 @@ void Panel::SetInputData(Mouse m, Keys k) {
     mouse_.movement.x *= borders_.z;
     mouse_.movement.y *= borders_.w;
 }
-
-void Panel::SetResetEmptyBuffers(bool set) { should_reset_empty_buffers = set; }
-void Panel::SetResetStaticBuffers(bool set) { should_reset_static_buffers = set; }
-
-bool Panel::ShouldResetEmptyBuffers() { return should_reset_empty_buffers; }
-bool Panel::ShouldResetStaticBuffers() { return should_reset_static_buffers; }
