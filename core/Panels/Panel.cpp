@@ -27,9 +27,13 @@ vec_float4 Panel::GetBorders() { return borders_; }
 PanelType Panel::GetType() { return type_; }
 PanelElements Panel::GetElements() { return elements_; }
 bool Panel::IsBufferDirty(unsigned int buf) { return dirty_buffers_[buf]; }
+void Panel::CleanBuffer(unsigned int buf) { dirty_buffers_[buf] = false; }
 Buffer **Panel::GetOutBuffers() {
     PrepareOutBuffers();
     return out_buffers_;
+}
+Buffer *Panel::GetOutBuffer(unsigned int buf) {
+    
 }
 bool Panel::IsBufferWanted(unsigned int buf) { return wanted_buffers_[buf]; }
 void Panel::SetPanelInBuffers(Buffer **b) {

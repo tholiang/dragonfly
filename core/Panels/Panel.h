@@ -54,12 +54,8 @@ protected:
     Mouse mouse_;
     Keys keys_;
 
-    // flags
-    // TODO: remove the need for these
-    bool should_reset_empty_buffers = true;  // whether the compute pipeline should reset empty buffers (usually when something is created or deleted)
-    bool should_reset_static_buffers = true; // whether the compute pipeline should reset static buffers (usually when a static buffer item is moved - like a vertex)
-
     virtual void HandleInput() = 0;
+    // should only write data if needed
     virtual void PrepareOutBuffers() = 0;
 public:
     Panel() = delete;
@@ -75,6 +71,7 @@ public:
     PanelElements GetElements();
     
     bool IsBufferDirty(unsigned int buf);
+    void CleanBuffer(unsigned int buf);
     Buffer **GetOutBuffers();
     bool IsBufferWanted(unsigned int buf);
     void SetPanelInBuffers(Buffer **b);

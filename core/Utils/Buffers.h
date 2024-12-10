@@ -6,13 +6,29 @@
 #include <cmath>
 
 #include "Utils.h"
+#include "Constants.h"
 #include "Vec.h"
 
 namespace DragonflyUtils {
 struct Buffer {
+    unsigned long capacity = 0;
     unsigned long size = 0; // in bytes
-    void *data = NULL;
+    // include all the data here - malloc (bad c++ practice whatever)
+    // all data elements should be of the same type (and size)
 };
+
+// return a pointer to an element in a Buffer object, given an index and the size of each element in the buffer
+void *GetBufferElement(Buffer *buf, unsigned long idx, unsigned int obj_size) {
+    assert(idx < buf->size);
+
+    void *data = ((void *) buf) + 2*sizeof(unsigned long);
+    return data + (idx * obj_size);
+}
+
+// get total size of a buffer object (including attributes)
+unsigned long TotalBufferSize(Buffer *buf) {
+    return sizeof(Buffer) + buf->capacity;
+}
 
 struct CompiledBufferKeyIndices {
     uint32_t compiled_vertex_size = 0;
@@ -39,6 +55,10 @@ struct CompiledBufferKeyIndices {
     uint32_t compiled_edge_line_start = 0;
 };
 
+struct PanelInfoBuffer {
+    vec_float4 borders;
+    unsigned long buffer_starts[PNL_NUM_OUTBUFS]; // byte start
+};
 
 }
 
