@@ -14,23 +14,33 @@ private:
 
     vec_float2 TranslatePixel(vec_float2 p);
 
-    // BUFFERS
-    // Buffer of array of PanelBufferInfo objects
+    /* ---BUFFERS--- */
+    // buffer of array of PanelInfoBuffer objects
     Buffer *panel_info_buffer_ = NULL;
+
+    /* out buffers */
     // dirtiness per compiled panel buffer - can be made more effecient later
     bool dirty_compiled_panel_buffers_[PNL_NUM_OUTBUFS];
     // array of compiled buffers across all panels
     unsigned long compiled_panel_buffer_capacities_[PNL_NUM_OUTBUFS];
     void *compiled_panel_buffers_[PNL_NUM_OUTBUFS]; // [[Buffer, Buffer, Buffer], [Buffer, Buffer, Buffer], ...]
 
+    /* in buffers */
+    unsigned long compute_buffer_capacities_[CPT_NUM_OUTBUFS];
+    void *compute_buffers_[CPT_NUM_OUTBUFS]; // similar format as compiled_panel_buffers_
+
     // call per-frame
-    // update panel_info_buffer_
-    // combine all (dirty) panel buffers into panel_buffers_ and also update dirty_buffers_
-    void CompilePanelBuffers();
+    // - update panel_info_buffer_
+    // for out buffers - combine all (dirty) panel buffers into panel_buffers_ and also update dirty_buffers_
+    // for in buffers - allocate correctly sized compiled buffers for in buffers across panels
+    void PrepareBuffers();
 public:
     Window() = 0;
     Window(vec_int2 size);
     ~Window();
+
+    // call at the start of every frame (before any gpu stuff)
+    void Update();
 
     void UpdateSize(vec_int2 size);
 

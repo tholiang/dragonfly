@@ -11,3 +11,12 @@ rendering
 - compute just copies the window buffers directly into gpu buffers - and renders as before
 - create general buffer data classes and buffer classes (per rendering backend)
 - contain buffers in arrays and #define indices for specific buffers
+- window also handles compiled buffers
+
+
+TODO:
+- write PrepareCompiledBufferKeyIndices function in Panel
+- write PrepareInBuffers function in Panel (this one just allocates and sets capacities)
+- add data flow from window -> compute
+- then compute -> render and compute -> window and window -> panel
+- flesh out ViewPanel and test

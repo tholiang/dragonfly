@@ -57,7 +57,9 @@ struct CompiledBufferKeyIndices {
 
 struct PanelInfoBuffer {
     vec_float4 borders;
-    unsigned long buffer_starts[PNL_NUM_OUTBUFS]; // byte start
+    unsigned long panel_buffer_starts[PNL_NUM_OUTBUFS]; // byte start
+    unsigned long compute_buffer_starts[CPT_NUM_OUTBUFS]; // byte start
+    CompiledBufferKeyIndices compiled_key_indices;
 };
 
 }

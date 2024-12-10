@@ -41,4 +41,13 @@ const unsigned long PNL_COMPCOMPFACE_INBUF_IDX = 2;
 const unsigned long PNL_COMPMODELVERTEX_INBUF_IDX = 3;
 const unsigned long PNL_COMPMODELNODE_INBUF_IDX = 4;
 
+
+// compute buffer consts
+const unsigned long CPT_NUM_OUTBUFS = 4;
+
+const unsigned long CPT_COMPCOMPVERTEX_OUTBUF_IDX = 1;
+const unsigned long CPT_COMPCOMPFACE_OUTBUF_IDX = 2;
+const unsigned long CPT_COMPMODELVERTEX_OUTBUF_IDX = 3;
+const unsigned long CPT_COMPMODELNODE_OUTBUF_IDX = 4;
+
 #endif /* Constants_h */

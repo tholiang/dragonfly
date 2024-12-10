@@ -26,9 +26,11 @@ enum PanelType {
 
 // what to render - faces, vertices, ui...
 struct PanelElements {
-    bool faces = false;
+    bool scene = false;
+    bool faces = false; // * if faces, edges, vertices, or slices are true, then scene must also be true
     bool edges = false;
     bool vertices = false;
+    bool slices = false;
     bool controls = false;
     bool ui = false; // not including imgui
 };
@@ -45,6 +47,7 @@ protected:
     bool dirty_buffers_[PNL_NUM_OUTBUFS];
     // all possible buffers to send to the gpu pipeline
     Buffer *out_buffers_[PNL_NUM_OUTBUFS];
+    CompiledBufferKeyIndices key_indices_;
     // what buffers are wanted from the gpu pipeline
     bool wanted_buffers_[PNL_NUM_INBUFS];
     // all possible buffers to take in from the gpu pipeline
@@ -57,6 +60,9 @@ protected:
     virtual void HandleInput() = 0;
     // should only write data if needed
     virtual void PrepareOutBuffers() = 0;
+    virtual void PrepareCompiledBufferKeyIndices();
+    // resize/reallocate if needed
+    virtual void PrepareInBuffers();
 public:
     Panel() = delete;
     // child classes should initialize type and wanted buffers here
@@ -73,8 +79,9 @@ public:
     bool IsBufferDirty(unsigned int buf);
     void CleanBuffer(unsigned int buf);
     Buffer **GetOutBuffers();
+    CompiledBufferKeyIndices GetCompiledBufferKeyIndices();
     bool IsBufferWanted(unsigned int buf);
-    void SetPanelInBuffers(Buffer **b);
+    Buffer ** GetInBuffers(bool realloc);
 
     void SetInputData(Mouse m, Keys k);
 };

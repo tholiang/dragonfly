@@ -32,14 +32,14 @@ Buffer **Panel::GetOutBuffers() {
     PrepareOutBuffers();
     return out_buffers_;
 }
-Buffer *Panel::GetOutBuffer(unsigned int buf) {
-    
+CompiledBufferKeyIndices Panel::GetCompiledBufferKeyIndices() {
+    PrepareCompiledBufferKeyIndices();
+    return key_indices_;
 }
 bool Panel::IsBufferWanted(unsigned int buf) { return wanted_buffers_[buf]; }
-void Panel::SetPanelInBuffers(Buffer **b) {
-    for (int i = 0; i < PNL_NUM_INBUFS; i++) {
-        in_buffers_[i] = b[i];
-    }
+Buffer **Panel::GetInBuffers(bool realloc) {
+    if (realloc) { PrepareInBuffers(); }
+    return in_buffers_;
 }
 
 void Panel::SetInputData(Mouse m, Keys k) {
