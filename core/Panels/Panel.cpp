@@ -52,3 +52,11 @@ void Panel::SetInputData(Mouse m, Keys k) {
     mouse_.movement.x *= borders_.z;
     mouse_.movement.y *= borders_.w;
 }
+
+void Panel::PrepareInBuffers() {
+    
+}
+
+void Panel::PrepareCompiledBufferKeyIndices() {
+
+}

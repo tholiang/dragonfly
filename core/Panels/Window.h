@@ -58,6 +58,7 @@ public:
     bool IsCompiledPanelBufferDirty(unsigned long buf);
     void CleanCompiledPanelBuffer(unsigned long buf);
     void **GetCompiledPanelBuffers();
+    void **GetComputeBuffers();
 };
 
 #endif /* Window_h */

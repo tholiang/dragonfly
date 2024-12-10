@@ -212,3 +212,7 @@ void Window::CleanCompiledPanelBuffer(unsigned long buf) {
 void **Window::GetCompiledPanelBuffers() {
     return compiled_panel_buffers_;
 }
+
+void **Window::GetComputeBuffers() {
+    return compute_buffers_;
+}
