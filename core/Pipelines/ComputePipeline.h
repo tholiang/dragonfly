@@ -18,56 +18,18 @@ using namespace DragonflyUtils;
 #include "Utils/Vec.h"
 using namespace Vec;
 
-#include "../Schemes/Scheme.h"
+#include "../Panels/Window.h"
 #include "RenderPipeline.h"
 
 class ComputePipeline {
 protected:
-    // data for gpu
-    CompiledBufferKeyIndices compiled_buffer_key_indices;
-    
-    // ---SCHEME AND SCHEME COUNTS---
-    Scheme *scheme;
-    unsigned long num_scene_models = 0;
-    unsigned long num_scene_vertices = 0;
-    unsigned long num_scene_faces = 0;
-    unsigned long num_scene_edges = 0;
-    unsigned long num_scene_nodes = 0;
-    unsigned long num_scene_lights = 0;
-    
-    unsigned long num_controls_models = 0;
-    unsigned long num_controls_vertices = 0;
-    unsigned long num_controls_nodes = 0;
-    unsigned long num_controls_faces = 0;
-    
-    unsigned long num_scene_slices = 0;
-    unsigned long num_scene_dots = 0;
-    unsigned long num_scene_lines = 0;
-    
-    unsigned long num_ui_elements = 0;
-    unsigned long num_ui_vertices = 0;
-    unsigned long num_ui_faces = 0;
-
-    // ---BUFFER CAPACITIES---
-    unsigned long light_buffer_capacity = 0;
-    unsigned long scene_model_face_buffer_capacity = 0;
-    unsigned long model_node_buffer_capacity = 0; // for node and node model id buffers
-    unsigned long model_vertex_buffer_capacity = 0; // for vertex and nvlink buffers
-    unsigned long model_buffer_capacity = 0;
-    unsigned long slice_dot_buffer_capacity = 0; // for dot and dot slice id buffers
-    unsigned long slice_buffer_capacity = 0; // for slice attributes and transforms buffers
-    unsigned long ui_vertex_buffer_capacity = 0; // for ui vertex and vertex element id buffers
-    unsigned long ui_element_buffer_capacity = 0;
-
-    unsigned long compiled_vertex_buffer_capacity = 0;
-    unsigned long compiled_face_buffer_capacity = 0;
-    unsigned long compiled_edge_buffer_capacity = 0;
+    Window *window_;
 public:
     virtual ~ComputePipeline();
     virtual void init() = 0;
 
-    // set scheme and counts
-    void SetScheme(Scheme *sch);
+    // set window
+    void SetWindow(Window *w);
     
     // call on start, when scheme changes, or when counts change
     // does not set any values, only creates buffers and sets size

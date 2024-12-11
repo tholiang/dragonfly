@@ -14,6 +14,7 @@
 #include "../Utils/Buffers.h"
 #include "../Utils/Misc.h"
 #include "../Utils/Vec.h"
+#include "../Utils/SceneUtils.h"
 #include "../Modeling/Scene.h"
 
 using namespace DragonflyUtils;
@@ -27,9 +28,10 @@ enum PanelType {
 // what to render - faces, vertices, ui...
 struct PanelElements {
     bool scene = false;
-    bool faces = false; // * if faces, edges, vertices, or slices are true, then scene must also be true
+    bool faces = false; // * if faces, edges, vertices, nodes, or slices are true, then scene must also be true
     bool edges = false;
     bool vertices = false;
+    bool nodes = false;
     bool slices = false;
     bool controls = false;
     bool ui = false; // not including imgui
@@ -47,7 +49,7 @@ protected:
     bool dirty_buffers_[PNL_NUM_OUTBUFS];
     // all possible buffers to send to the gpu pipeline
     Buffer *out_buffers_[PNL_NUM_OUTBUFS];
-    CompiledBufferKeyIndices key_indices_;
+    CompiledBufferKeyIndices compiled_buffer_key_indices_;
     // what buffers are wanted from the gpu pipeline
     bool wanted_buffers_[PNL_NUM_INBUFS];
     // all possible buffers to take in from the gpu pipeline
@@ -60,6 +62,7 @@ protected:
     virtual void HandleInput() = 0;
     // should only write data if needed
     virtual void PrepareOutBuffers() = 0;
+    // populate compiled_buffer_key_indices_
     virtual void PrepareCompiledBufferKeyIndices();
     // resize/reallocate if needed
     virtual void PrepareInBuffers();

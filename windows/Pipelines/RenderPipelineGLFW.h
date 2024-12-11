@@ -28,7 +28,6 @@ private:
     GLFWwindow* window;
     
     // ---SHADER OBJECTS FOR GPU RENDERER---
-    Shader *test_shader;
     Shader *face_shader;
     Shader *edge_shader;
 

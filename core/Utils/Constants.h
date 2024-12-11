@@ -8,6 +8,7 @@
 #ifndef Constants_h
 #define Constants_h
 
+/* BUFFERS */
 // panel buffer consts
 const unsigned long PNL_NUM_OUTBUFS = 20;
 
@@ -35,9 +36,9 @@ const unsigned long PNL_UITRANS_OUTBUF_IDX = 19;
 
 const unsigned long PNL_NUM_INBUFS = 5;
 
-const unsigned long PNL_COMPKEYIDX_INBUF_IDX = 0;
-const unsigned long PNL_COMPCOMPVERTEX_INBUF_IDX = 1;
-const unsigned long PNL_COMPCOMPFACE_INBUF_IDX = 2;
+const unsigned long PNL_COMPCOMPVERTEX_INBUF_IDX = 0;
+const unsigned long PNL_COMPCOMPFACE_INBUF_IDX = 1;
+const unsigned long PNL_COMPCOMPEDGE_INBUF_IDX = 2;
 const unsigned long PNL_COMPMODELVERTEX_INBUF_IDX = 3;
 const unsigned long PNL_COMPMODELNODE_INBUF_IDX = 4;
 
@@ -49,5 +50,14 @@ const unsigned long CPT_COMPCOMPVERTEX_OUTBUF_IDX = 1;
 const unsigned long CPT_COMPCOMPFACE_OUTBUF_IDX = 2;
 const unsigned long CPT_COMPMODELVERTEX_OUTBUF_IDX = 3;
 const unsigned long CPT_COMPMODELNODE_OUTBUF_IDX = 4;
+
+
+/* RENDERING */
+const unsigned int NUM_VERTEX_SQUARE_VERTICES = 4;
+const unsigned int NUM_NODE_CIRLCE_VERTICES = 9;
+const unsigned int NUM_SLICE_PLATE_VERTICES = 4;
+const unsigned int NUM_VERTEX_SQUARE_FACES = 2;
+const unsigned int NUM_NODE_CIRLCE_FACES = 8;
+const unsigned int NUM_SLICE_PLATE_FACES = 2;
 
 #endif /* Constants_h */

@@ -15,8 +15,6 @@ rendering
 
 
 TODO:
-- write PrepareCompiledBufferKeyIndices function in Panel
-- write PrepareInBuffers function in Panel (this one just allocates and sets capacities)
 - add data flow from window -> compute
 - then compute -> render and compute -> window and window -> panel
 - flesh out ViewPanel and test
