@@ -1,8 +1,9 @@
 #include "Window.h"
 
-Window::Window(vec_int2 size) : size_(size) {
+Window::Window(WindowAttributes attr) : attr_(attr) {
     for (int i = 0; i < PNL_NUM_OUTBUFS; i++) {
         dirty_compiled_panel_buffers_[i] = false;
+        compiled_panel_buffer_sizes_[i] = 0;
         compiled_panel_buffer_capacities_[i] = 0;
         compiled_panel_buffers_[i] = NULL;
     }
@@ -22,48 +23,52 @@ void Window::Update() {
 }
 
 vec_float2 Window::TranslatePixel(vec_float2 p) {
-    p.x = (p.x / size_.x)*2 - 1;
-    p.y = -((p.y / size_.y)*2 - 1);
+    p.x = (p.x / attr_.screen_width)*2 - 1;
+    p.y = -((p.y / attr_.screen_height)*2 - 1);
     return p;
 }
 
-void Window::UpdateSize(vec_int2 size) {
-    size_ = size;
+void Window::UpdateAttributes(WindowAttributes attr) {
+    attr_ = attr;
+}
+
+WindowAttributes Window::GetAttributes() {
+    return attr_;
 }
 
 void Window::HandleKeyPresses(int key, bool down) {
     switch (key) {
         case 119:
-            keys_.w = keydown;
+            keys_.w = down;
             break;
         case 97:
-            keys_.a = keydown;
+            keys_.a = down;
             break;
         case 115:
-            keys_.s = keydown;
+            keys_.s = down;
             break;
         case 100:
-            keys_.d = keydown;
+            keys_.d = down;
             break;
         case 32:
-            keys_.space = keydown;
+            keys_.space = down;
             break;
         case 122:
             // z
             // TODO
-            // if (keys_.command && keydown) Undo();
+            // if (keys_.command && down) Undo();
             break;
         case 1073742049:
-            keys_.shift = keydown;
+            keys_.shift = down;
             break;
         case 1073742048:
-            keys_.control = keydown;
+            keys_.control = down;
             break;
         case 1073742054:
-            keys_.option = keydown;
+            keys_.option = down;
             break;
         case 1073742055:
-            keys_.command = keydown;
+            keys_.command = down;
             break;
         default:
             break;
@@ -79,14 +84,14 @@ void Window::HandleMouseClick(vec_float2 loc, bool left, bool down) {
 }
 
 void Window::HandleMouseMovement(float x, float y, float dx, float dy) {
-    mouse_.location.x = x / size_.x;
-    mouse_.location.y = y / size_.y;
-    mouse_.movement.x = dx / size_.x;
-    mouse_.movement.y = dy / size_.y;
+    mouse_.location.x = x / attr_.screen_width;
+    mouse_.location.y = y / attr_.screen_height;
+    mouse_.movement.x = dx / attr_.screen_width;
+    mouse_.movement.y = dy / attr_.screen_height;
 }
 
 void Window::MakeViewWindow(Scene *scene) {
-    Panel view_panel = ViewPanel(vec_make_float4(0, 0, 1, 1), scene);
+    ViewPanel view_panel = ViewPanel(vec_make_float4(0, 0, 1, 1), scene);
     panels_.push_back(view_panel);
 }
 
@@ -100,15 +105,16 @@ std::vector<Panel> *Window::GetPanels() {
 
 Panel *Window::GetPanel(unsigned int i) {
     assert(i < panels_.size());
-    return &panels[i];
+    return &panels_[i];
 }
 
 void Window::PrepareBuffers() {
     // if the number of panels have changed, regenerate everything
-    bool regen_all = panel_info_buffer_ == NULL || panel_info_buffer_->size() != panels_.size();
+    bool regen_all = panel_info_buffer_ == NULL || panel_info_buffer_->size != panels_.size();
     if (regen_all) {
         if (panel_info_buffer_ != NULL) { free(panel_info_buffer_); }
         panel_info_buffer_ = (Buffer *) calloc(sizeof(Buffer) + (panels_.size() * sizeof(PanelInfoBuffer)), 1);
+        dirty_panel_info_buffer_ = true;
     }
 
     // set some info buffer stuff
@@ -126,6 +132,7 @@ void Window::PrepareBuffers() {
     
     // compile the panel out buffers
     for (int i = 0; i < PNL_NUM_OUTBUFS; i++) {
+        unsigned long total_size = 0;
         unsigned long total_capacity = 0;
         bool reorg = false;
         for (int j = 0; j < panels_.size(); j++) {
@@ -136,14 +143,16 @@ void Window::PrepareBuffers() {
                 reorg = true;
             }
 
+            total_size += panel_out_buffers[j][i]->size;
             total_capacity += TotalBufferSize(panel_out_buffers[j][i]);
         }
+        compiled_panel_buffer_sizes_[i] = total_size;
 
         // regenerate compiled buffer if needed
         bool regen = regen_all || total_capacity != compiled_panel_buffer_capacities_[i];
         if (regen) {
             if (compiled_panel_buffers_[i] != NULL) { free(compiled_panel_buffers_[i]); }
-            compiled_panel_buffers_[i] = malloc(total_capacity);
+            compiled_panel_buffers_[i] = (char *) malloc(total_capacity);
             compiled_panel_buffer_capacities_[i] = total_capacity;
         }
 
@@ -152,7 +161,7 @@ void Window::PrepareBuffers() {
             PanelInfoBuffer *info_buf = (PanelInfoBuffer *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelInfoBuffer));
             if (reorg || regen || panels_[j].IsBufferDirty(i)) {
                 void *panel_buffer_start = compiled_panel_buffers_[i]+info_buf->panel_buffer_starts[i];
-                Buffer *panel_out_buffer = panel_out_buffers[j][i]
+                Buffer *panel_out_buffer = panel_out_buffers[j][i];
                 memcpy(panel_buffer_start, (void *) panel_out_buffer, TotalBufferSize(panel_out_buffer));
 
                 panels_[j].CleanBuffer(i);
@@ -165,7 +174,7 @@ void Window::PrepareBuffers() {
     /* COMPUTE BUFFERS */
     // get (unset) in buffers for panel
     std::vector<Buffer **> panel_in_buffers;
-    for (int j = 0; j < panels_.size(); i++) { panel_in_buffers.push_back(panels_[j].GetInBuffers(true)) }
+    for (int j = 0; j < panels_.size(); j++) { panel_in_buffers.push_back(panels_[j].GetInBuffers(true)); }
 
     // compile the compute (out) buffers
     for (int i = 0; i < CPT_NUM_OUTBUFS; i++) {
@@ -179,8 +188,8 @@ void Window::PrepareBuffers() {
 
         // regenerate compiled buffer if needed
         if (regen_all || total_capacity != compute_buffer_capacities_[i]) {
-            if (compute_buffer_capacities_[i] != NULL) { free(compute_buffer_capacities_[i]); }
-            compute_buffer_capacities_[i] = malloc(total_capacity);
+            if (compute_buffers_[i] != NULL) { free(compute_buffers_[i]); }
+            compute_buffers_[i] = (char *) malloc(total_capacity);
             compute_buffer_capacities_[i] = total_capacity;
         }
 
@@ -193,6 +202,14 @@ void Window::PrepareBuffers() {
             *compute_panel_buffer = *panel_in_buffer;
         }
     }
+}
+
+bool Window::IsPanelInfoBufferDirty() {
+    return dirty_panel_info_buffer_;
+}
+
+void Window::CleanPanelInfoBuffer() {
+    dirty_panel_info_buffer_ = false;
 }
 
 Buffer *Window::GetPanelInfoBuffer() {
@@ -209,10 +226,22 @@ void Window::CleanCompiledPanelBuffer(unsigned long buf) {
     dirty_compiled_panel_buffers_[buf] = false;
 }
 
-void **Window::GetCompiledPanelBuffers() {
+unsigned long *Window::GetCompiledPanelBufferSizes() {
+    return compiled_panel_buffer_sizes_;
+}
+
+unsigned long *Window::GetCompiledPanelBufferCapacities() {
+    return compiled_panel_buffer_capacities_;
+}
+
+char **Window::GetCompiledPanelBuffers() {
     return compiled_panel_buffers_;
 }
 
-void **Window::GetComputeBuffers() {
+unsigned long *Window::GetComputeBufferCapacities() {
+    return compute_buffer_capacities_;
+}
+
+char **Window::GetComputeBuffers() {
     return compute_buffers_;
 }

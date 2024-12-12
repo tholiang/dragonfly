@@ -11,11 +11,3 @@
 RenderPipeline::~RenderPipeline() {
     
 }
-
-void RenderPipeline::SetScheme(Scheme *sch) {
-    scheme = sch;
-}
-
-void RenderPipeline::SetSchemeController(SchemeController *sctr) {
-    scheme_controller = sctr;
-}

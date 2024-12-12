@@ -51,9 +51,9 @@ protected:
     Buffer *out_buffers_[PNL_NUM_OUTBUFS];
     CompiledBufferKeyIndices compiled_buffer_key_indices_;
     // what buffers are wanted from the gpu pipeline
-    bool wanted_buffers_[PNL_NUM_INBUFS];
+    bool wanted_buffers_[CPT_NUM_OUTBUFS];
     // all possible buffers to take in from the gpu pipeline
-    Buffer *in_buffers_[PNL_NUM_INBUFS];
+    Buffer *in_buffers_[CPT_NUM_OUTBUFS];
 
     // input
     Mouse mouse_;

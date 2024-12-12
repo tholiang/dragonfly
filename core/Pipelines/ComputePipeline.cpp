@@ -13,228 +13,132 @@ ComputePipeline::~ComputePipeline() {
     
 }
 
-void ComputePipeline::SetScheme(Scheme *sch) {
-    scheme = sch;
+void ComputePipeline::SetBuffers(Window *w) {
+    /* general buffers */
+    WindowAttributes window_attr = w->GetAttributes();
+    SetWindowAttributeBuffer(window_attr);
     
-    
-    if (scheme->GetType() == SchemeType::EditSlice) {
-        num_scene_models = 0;
-        num_scene_vertices = 0;
-        num_scene_faces = 0;
-        num_scene_edges = 0;
-        num_scene_nodes = 0;
-        num_scene_lights = 0;
-        
-        num_scene_slices = 1;
-        num_scene_dots = scheme->NumSceneDots();
-        num_scene_lines = scheme->NumSceneLines();
-        
-        num_controls_models = 0;
-        num_controls_vertices = 0;
-        num_controls_faces = 0;
-        num_controls_nodes = 0;
-        
-        num_ui_elements = 0;
-        num_ui_vertices = 0;
-        num_ui_faces = 0;
-    } else {
-        num_scene_models = scheme->GetScene()->NumModels();
-        num_scene_vertices = scheme->NumSceneVertices();
-        num_scene_faces = scheme->NumSceneFaces();
-        num_scene_edges = num_scene_faces*3;
-        num_scene_nodes = scheme->NumSceneNodes();
-        num_scene_lights = scheme->NumSceneLights();
-        
-        num_scene_slices = scheme->GetScene()->NumSlices();
-        num_scene_dots = scheme->NumSceneDots();
-        num_scene_lines = scheme->NumSceneLines();
-        
-        num_controls_models = scheme->NumControlsModels();
-        num_controls_vertices = scheme->NumControlsVertices();
-        num_controls_faces = scheme->NumControlsFaces();
-        num_controls_nodes = scheme->NumControlsNodes();
-        
-        num_ui_elements = scheme->NumUIElements();
-        num_ui_vertices = scheme->NumUIVertices();
-        num_ui_faces = scheme->NumUIFaces();
+    if (w->IsPanelInfoBufferDirty()) {
+        SetPanelInfoBuffer(w->GetPanelInfoBuffer());
+        w->CleanPanelInfoBuffer();
     }
     
-    // set compiled buffer key indices
-    compiled_buffer_key_indices.compiled_vertex_size = compiled_vertex_size();
-    compiled_buffer_key_indices.compiled_vertex_scene_start = compiled_vertex_scene_start();
-    compiled_buffer_key_indices.compiled_vertex_control_start = compiled_vertex_control_start();
-    compiled_buffer_key_indices.compiled_vertex_dot_start = compiled_vertex_dot_start();
-    compiled_buffer_key_indices.compiled_vertex_node_circle_start = compiled_vertex_node_circle_start();
-    compiled_buffer_key_indices.compiled_vertex_vertex_square_start = compiled_vertex_vertex_square_start();
-    compiled_buffer_key_indices.compiled_vertex_dot_square_start = compiled_vertex_dot_square_start();
-    compiled_buffer_key_indices.compiled_vertex_slice_plate_start = compiled_vertex_slice_plate_start();
-    compiled_buffer_key_indices.compiled_vertex_ui_start = compiled_vertex_ui_start();
     
-    compiled_buffer_key_indices.compiled_face_size = compiled_face_size();
-    compiled_buffer_key_indices.compiled_face_scene_start = compiled_face_scene_start();
-    compiled_buffer_key_indices.compiled_face_control_start = compiled_face_control_start();
-    compiled_buffer_key_indices.compiled_face_node_circle_start = compiled_face_node_circle_start();
-    compiled_buffer_key_indices.compiled_face_vertex_square_start = compiled_face_vertex_square_start();
-    compiled_buffer_key_indices.compiled_face_dot_square_start = compiled_face_dot_square_start();
-    compiled_buffer_key_indices.compiled_face_slice_plate_start = compiled_face_slice_plate_start();
-    compiled_buffer_key_indices.compiled_face_ui_start = compiled_face_ui_start();
+    /* compiled panel buffers */
+    unsigned long *window_buf_caps = w->GetCompiledPanelBufferCapacities();
+    char **window_bufs = w->GetCompiledPanelBuffers();
     
-    compiled_buffer_key_indices.compiled_edge_size = compiled_edge_size();
-    compiled_buffer_key_indices.compiled_edge_scene_start = compiled_edge_scene_start();
-    compiled_buffer_key_indices.compiled_edge_line_start = compiled_edge_line_start();
+    for (int i = 0; i < PNL_NUM_OUTBUFS; i++) {
+        if (!w->IsCompiledPanelBufferDirty(i)) { continue; }
+        
+        if (gpu_compiled_panel_buffer_capacities[i] != window_buf_caps[i]) {
+            gpu_compiled_panel_buffer_capacities[i] = window_buf_caps[i];
+            ResizePanelBuffer(i);
+        }
+        
+        ModifyPanelBuffer(i, window_bufs[i], 0, gpu_compiled_panel_buffer_capacities[i]);
+        w->CleanCompiledPanelBuffer(i);
+    }
+    
+    
+    /* compute (output) buffers */
+    unsigned long *compute_buf_caps = w->GetComputeBufferCapacities();
+    char **compute_bufs = w->GetComputeBuffers();
+    
+    for (int i = 0; i < CPT_NUM_OUTBUFS; i++) {
+        if (gpu_compute_buffer_capacities[i] != compute_buf_caps[i]) {
+            gpu_compute_buffer_capacities[i] = compute_buf_caps[i];
+            ResizeComputeBuffer(i);
+        }
+    }
 }
 
-uint32_t ComputePipeline::compiled_vertex_size() {
-    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_dots + num_scene_dots*4;
+void ComputePipeline::Compute(Window *w) {
+    BeginCompute();
     
-    uint32_t size = 0;
-    size += num_scene_vertices;
-    size += num_controls_vertices;
-    size += num_scene_dots;
-    if (scheme->ShouldRenderNodes()) size += num_scene_nodes * 9; // 8 triangles per node
-    if (scheme->ShouldRenderVertices()) size += num_scene_vertices * 4;
-    size += num_scene_dots * 4; // always render dot squares
-    if (scheme->GetType() != SchemeType::EditSlice) size += num_scene_slices * 4;
-    size += num_ui_vertices;
-    return size;
-}
-
-uint32_t ComputePipeline::compiled_vertex_scene_start() {
-    if (scheme->GetType() == SchemeType::EditSlice) return 0;
+    /* call kernels */
+    unsigned long *window_buf_sizes = w->GetCompiledPanelBufferSizes();
     
-    uint32_t size = 0;
-    return size;
-}
-uint32_t ComputePipeline::compiled_vertex_control_start() {
-    if (scheme->GetType() == SchemeType::EditSlice) return 0;
+    /* model rendering kernels */
+    // calculate nodes (scene and control) in world space from model space
+    unsigned long num_nodes = window_buf_sizes[PNL_NODE_OUTBUF_IDX];
+    RunKernel(
+        CPT_TRANSFORMS_KRN_IDX,
+        num_nodes,
+        {},
+        { PNL_NODE_OUTBUF_IDX, PNL_NODEMODELID_OUTBUF_IDX, PNL_MODELTRANS_OUTBUF_IDX }
+    );
     
-    uint32_t size = compiled_vertex_scene_start();
-    size += num_scene_vertices;
-    return size;
-}
-uint32_t ComputePipeline::compiled_vertex_dot_start() {
-    if (scheme->GetType() == SchemeType::EditSlice) return 0;
+    // calculate vertices (scene and control) in world space from node-ish space
+    unsigned long num_vertices = window_buf_sizes[PNL_NODEVERTEXLNK_OUTBUF_IDX] / 2;
+    RunKernel(
+        CPT_VERTEX_KRN_IDX,
+        num_vertices,
+        { CPT_COMPMODELVERTEX_OUTBUF_IDX },
+        { PNL_NODEVERTEXLNK_OUTBUF_IDX, PNL_NODE_OUTBUF_IDX }
+    );
     
-    uint32_t size = compiled_vertex_control_start();
-    size += num_controls_vertices;
-    return size;
-}
-uint32_t ComputePipeline::compiled_vertex_node_circle_start() {
-    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_dots;
+    // calculate projected vertices from world space vertices
+    RunKernel(
+        CPT_PROJ_VERTEX_KRN_IDX,
+        num_vertices,
+        { CPT_COMPCOMPVERTEX_OUTBUF_IDX, CPT_COMPMODELVERTEX_OUTBUF_IDX },
+        { PNL_CAMERA_OUTBUF_IDX }
+    );
     
-    uint32_t size = compiled_vertex_dot_start();
-    size += num_scene_dots;
-    return size;
-}
-uint32_t ComputePipeline::compiled_vertex_vertex_square_start() {
-    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_dots;
+    // calculate vertex squares from projected vertices if needed
+    // TODO: should_render
+    RunKernel(
+        CPT_VERTEX_SQR_KRN_IDX,
+        num_vertices,
+        { CPT_COMPCOMPVERTEX_OUTBUF_IDX, CPT_COMPCOMPFACE_OUTBUF_IDX },
+        {}
+    );
     
-    uint32_t size = compiled_vertex_node_circle_start();
-    if (scheme->ShouldRenderNodes()) size += num_scene_nodes * 9;
-    return size;
-}
-uint32_t ComputePipeline::compiled_vertex_dot_square_start() {
-    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_dots;
+    // calculate projected scene nodes if needed
+    // TODO: should_render
+    RunKernel(
+        CPT_PROJ_NODE_KRN_IDX,
+        num_nodes,
+        { CPT_COMPCOMPVERTEX_OUTBUF_IDX, CPT_COMPMODELVERTEX_OUTBUF_IDX },
+        { PNL_NODE_OUTBUF_IDX, PNL_CAMERA_OUTBUF_IDX }
+    );
     
-    uint32_t size = compiled_vertex_vertex_square_start();
-    if (scheme->ShouldRenderVertices()) size += num_scene_vertices * 4;
-    return size;
-}
-uint32_t ComputePipeline::compiled_vertex_slice_plate_start() {
-    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_dots + num_scene_dots*4;
+    // if lighting is enabled calculate scene face lighting
+    // TODO: lighting
     
-    uint32_t size = compiled_vertex_dot_square_start();
-    size += num_scene_dots * 4;
-    return size;
-}
-uint32_t ComputePipeline::compiled_vertex_ui_start() {
-    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_dots + num_scene_dots*4;
     
-    uint32_t size = compiled_vertex_slice_plate_start();
-    if (scheme->GetType() != SchemeType::EditSlice) size += num_scene_slices * 4;
-    return size;
-}
-
-uint32_t ComputePipeline::compiled_face_size() {
-    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_dots*2;
+    /* slice rendering kernels */
+    // TODO: edit slice "scheme"
     
-    uint32_t size = 0;
-    if (scheme->ShouldRenderFaces()) size += num_scene_faces;
-    size += num_controls_faces;
-    if (scheme->ShouldRenderNodes()) size += num_scene_nodes * 8;
-    if (scheme->ShouldRenderVertices()) size += num_scene_vertices*2;
-    size += num_scene_dots*2;
-    size += num_scene_slices*2;
-    size += num_ui_faces;
-    return size;
-}
-uint32_t ComputePipeline::compiled_face_scene_start() {
-    if (scheme->GetType() == SchemeType::EditSlice) return 0;
+    // project dots
+    unsigned long num_dots = window_buf_sizes[PNL_SLICEDOT_OUTBUF_IDX];
+    RunKernel(
+        CPT_PROJ_DOT_KRN_IDX,
+        num_dots,
+        { CPT_COMPCOMPVERTEX_OUTBUF_IDX, CPT_COMPCOMPFACE_OUTBUF_IDX },
+        { PNL_SLICEDOT_OUTBUF_IDX, PNL_SLICETRANS_OUTBUF_IDX, PNL_CAMERA_OUTBUF_IDX, PNL_DOTSLICEID_OUTBUF_IDX }
+    );
     
-    uint32_t size = 0;
-    return size;
-}
-uint32_t ComputePipeline::compiled_face_control_start() {
-    if (scheme->GetType() == SchemeType::EditSlice) return 0;
+    // make slice plates
+    unsigned long num_slices = window_buf_sizes[PNL_SLICETRANS_OUTBUF_IDX];
+    RunKernel(
+        CPT_SLICE_PLATE_KRN_IDX,
+        num_slices,
+        { CPT_COMPCOMPVERTEX_OUTBUF_IDX, CPT_COMPCOMPFACE_OUTBUF_IDX },
+        { PNL_SLICETRANS_OUTBUF_IDX, PNL_SLICEATTR_OUTBUF_IDX, PNL_CAMERA_OUTBUF_IDX }
+    );
     
-    uint32_t size = compiled_face_scene_start();
-    if (scheme->ShouldRenderFaces()) size += num_scene_faces;
-    return size;
-}
-uint32_t ComputePipeline::compiled_face_node_circle_start() {
-    if (scheme->GetType() == SchemeType::EditSlice) return 0;
     
-    uint32_t size = compiled_face_control_start();
-    size += num_controls_faces;
-    return size;
-}
-uint32_t ComputePipeline::compiled_face_vertex_square_start() {
-    if (scheme->GetType() == SchemeType::EditSlice) return 0;
+    /* ui rendering kernels */
+    // "project" ui vertices
+    unsigned long num_ui_vertices = window_buf_sizes[PNL_UIVERTEX_OUTBUF_IDX];
+    RunKernel(
+        CPT_UI_VERTEX_KRN_IDX,
+        num_ui_vertices,
+        { CPT_COMPCOMPVERTEX_OUTBUF_IDX },
+        { PNL_UIVERTEX_OUTBUF_IDX, PNL_UIELEMID_OUTBUF_IDX, PNL_UITRANS_OUTBUF_IDX }
+    );
     
-    uint32_t size = compiled_face_node_circle_start();
-    if (scheme->ShouldRenderNodes()) size += num_scene_nodes * 8;
-    return size;
-}
-uint32_t ComputePipeline::compiled_face_dot_square_start() {
-    if (scheme->GetType() == SchemeType::EditSlice) return 0;
-    
-    uint32_t size = compiled_face_vertex_square_start();
-    if (scheme->ShouldRenderVertices()) size += num_scene_vertices*2;
-    return size;
-}
-uint32_t ComputePipeline::compiled_face_slice_plate_start() {
-    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_dots*2;
-    
-    uint32_t size = compiled_face_dot_square_start();
-    size += num_scene_dots*2;
-    return size;
-}
-uint32_t ComputePipeline::compiled_face_ui_start() {
-    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_dots*2;
-    
-    uint32_t size = compiled_face_slice_plate_start();
-    size += num_scene_slices*2;
-    return size;
-}
-
-uint32_t ComputePipeline::compiled_edge_size() {
-    if (scheme->GetType() == SchemeType::EditSlice) return num_scene_lines;
-    
-    uint32_t size = 0;
-    if (scheme->ShouldRenderEdges()) size += num_scene_edges;
-    size += num_scene_lines;
-    return size;
-}
-uint32_t ComputePipeline::compiled_edge_scene_start() {
-    if (scheme->GetType() == SchemeType::EditSlice) return 0;
-    
-    uint32_t size = 0;
-    return size;
-}
-uint32_t ComputePipeline::compiled_edge_line_start() {
-    if (scheme->GetType() == SchemeType::EditSlice) return 0;
-    
-    uint32_t size = 0;
-    if (scheme->ShouldRenderEdges()) size += num_scene_edges;
-    return size;
+    EndCompute();
 }

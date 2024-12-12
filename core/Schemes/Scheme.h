@@ -55,11 +55,6 @@ struct UIElementTransform {
     vec_float3 right;
 };
 
-struct WindowAttributes {
-    int screen_width;
-    int screen_height;
-};
-
 struct KeyPresses {
     bool w = false;
     bool a = false;

@@ -12,7 +12,9 @@
 #include <vector>
 #include <string>
 #include <stdint.h>
+using std::vector;
 
+#include "Utils/Constants.h"
 #include "Utils/Buffers.h"
 using namespace DragonflyUtils;
 #include "Utils/Vec.h"
@@ -23,53 +25,42 @@ using namespace Vec;
 
 class ComputePipeline {
 protected:
-    Window *window_;
+    // child classes should contain an array of kernels
+    
+    // capacities of gpu buffers
+    unsigned long gpu_compiled_panel_buffer_capacities[PNL_NUM_OUTBUFS];
+    unsigned long gpu_compute_buffer_capacities[CPT_NUM_OUTBUFS];
+    
+    /* Buffers */
+    virtual void SetWindowAttributeBuffer(WindowAttributes w) = 0;
+    virtual void SetPanelInfoBuffer(Buffer *) = 0;
+    virtual void ResizePanelBuffer(unsigned long buf) = 0; // to gpu_compiled_panel_buffer_capacities
+    virtual void ModifyPanelBuffer(unsigned long buf, char *data, unsigned long start, unsigned long len) = 0;
+    virtual void ResizeComputeBuffer(unsigned long buf) = 0; // to gpu_compute_buffer_capacities
+    
+    /* Kernels */
+    /*
+     run a specified gpu kernel with N threads
+     order buffers as:
+     1. window attributes (always)
+     2. panel info buffer (always)
+     3. specified compute buffers
+     4. specified compiled panel buffers
+    */
+    virtual void RunKernel(unsigned long kernel, unsigned long N, vector<unsigned long> compute_bufs, vector<unsigned long> panel_bufs) = 0;
+    virtual void BeginCompute() = 0;
+    virtual void EndCompute() = 0;
 public:
     virtual ~ComputePipeline();
     virtual void init() = 0;
 
-    // set window
-    void SetWindow(Window *w);
-    
-    // call on start, when scheme changes, or when counts change
-    // does not set any values, only creates buffers and sets size
-    virtual void CreateBuffers() = 0;
-    virtual void UpdateBufferCapacities() = 0;
-    
-    // call when static data changes
-    virtual void ResetStaticBuffers() = 0;
-    
-    // call every frame
-    virtual void ResetDynamicBuffers() = 0;
+    // get buffers from window
+    void SetBuffers(Window *w);
     
     // pipeline
-    virtual void Compute() = 0;
+    void Compute(Window *w);
     virtual void SendDataToRenderer(RenderPipeline *renderer) = 0;
-    virtual void SendDataToScheme() = 0;
-    
-    // helper functions for compiled buffers
-    uint32_t compiled_vertex_size();
-    uint32_t compiled_vertex_scene_start();
-    uint32_t compiled_vertex_control_start();
-    uint32_t compiled_vertex_dot_start();
-    uint32_t compiled_vertex_node_circle_start();
-    uint32_t compiled_vertex_vertex_square_start();
-    uint32_t compiled_vertex_dot_square_start();
-    uint32_t compiled_vertex_slice_plate_start();
-    uint32_t compiled_vertex_ui_start();
-    
-    uint32_t compiled_face_size();
-    uint32_t compiled_face_scene_start();
-    uint32_t compiled_face_control_start();
-    uint32_t compiled_face_node_circle_start();
-    uint32_t compiled_face_vertex_square_start();
-    uint32_t compiled_face_dot_square_start();
-    uint32_t compiled_face_slice_plate_start();
-    uint32_t compiled_face_ui_start();
-    
-    uint32_t compiled_edge_size();
-    uint32_t compiled_edge_scene_start();
-    uint32_t compiled_edge_line_start();
+    virtual void SendDataToWindow(Window *w) = 0;
 };
 
 #endif /* ComputePipeline_h */

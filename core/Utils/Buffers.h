@@ -21,7 +21,7 @@ struct Buffer {
 void *GetBufferElement(Buffer *buf, unsigned long idx, unsigned int obj_size) {
     assert(idx < buf->size);
 
-    void *data = ((void *) buf) + 2*sizeof(unsigned long);
+    char *data = ((char *) buf) + 2*sizeof(unsigned long);
     return data + (idx * obj_size);
 }
 

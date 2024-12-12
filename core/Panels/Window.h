@@ -4,9 +4,14 @@
 #include "Panel.h"
 #include "ViewPanel.h"
 
+struct WindowAttributes {
+    int screen_width;
+    int screen_height;
+};
+
 class Window {
 private:
-    vec_int2 size_;
+    WindowAttributes attr_;
     std::vector<Panel> panels_;
 
     Mouse mouse_;
@@ -16,18 +21,20 @@ private:
 
     /* ---BUFFERS--- */
     // buffer of array of PanelInfoBuffer objects
+    bool dirty_panel_info_buffer_ = false;
     Buffer *panel_info_buffer_ = NULL;
 
     /* out buffers */
+    // compiled buffers across all panels
     // dirtiness per compiled panel buffer - can be made more effecient later
     bool dirty_compiled_panel_buffers_[PNL_NUM_OUTBUFS];
-    // array of compiled buffers across all panels
-    unsigned long compiled_panel_buffer_capacities_[PNL_NUM_OUTBUFS];
-    void *compiled_panel_buffers_[PNL_NUM_OUTBUFS]; // [[Buffer, Buffer, Buffer], [Buffer, Buffer, Buffer], ...]
+    unsigned long compiled_panel_buffer_sizes_[PNL_NUM_OUTBUFS]; // actual total number of elements in each compiled buffer
+    unsigned long compiled_panel_buffer_capacities_[PNL_NUM_OUTBUFS]; // in-memory size (in bytes) of each compiled buffer
+    char *compiled_panel_buffers_[PNL_NUM_OUTBUFS]; // [[Buffer, Buffer, Buffer], [Buffer, Buffer, Buffer], ...]
 
     /* in buffers */
     unsigned long compute_buffer_capacities_[CPT_NUM_OUTBUFS];
-    void *compute_buffers_[CPT_NUM_OUTBUFS]; // similar format as compiled_panel_buffers_
+    char *compute_buffers_[CPT_NUM_OUTBUFS]; // similar format as compiled_panel_buffers_
 
     // call per-frame
     // - update panel_info_buffer_
@@ -35,14 +42,15 @@ private:
     // for in buffers - allocate correctly sized compiled buffers for in buffers across panels
     void PrepareBuffers();
 public:
-    Window() = 0;
-    Window(vec_int2 size);
+    Window() = delete;
+    Window(WindowAttributes attr);
     ~Window();
 
     // call at the start of every frame (before any gpu stuff)
     void Update();
 
-    void UpdateSize(vec_int2 size);
+    void UpdateAttributes(WindowAttributes attr);
+    WindowAttributes GetAttributes();
 
     void HandleKeyPresses(int key, bool down);
     void HandleMouseClick(vec_float2 loc, bool left, bool down);
@@ -53,12 +61,17 @@ public:
     unsigned int NumPanels();
     std::vector<Panel> *GetPanels();
     Panel *GetPanel(unsigned int i);
-
+    
+    bool IsPanelInfoBufferDirty();
+    void CleanPanelInfoBuffer();
     Buffer *GetPanelInfoBuffer();
     bool IsCompiledPanelBufferDirty(unsigned long buf);
     void CleanCompiledPanelBuffer(unsigned long buf);
-    void **GetCompiledPanelBuffers();
-    void **GetComputeBuffers();
+    unsigned long *GetCompiledPanelBufferSizes();
+    unsigned long *GetCompiledPanelBufferCapacities();
+    char **GetCompiledPanelBuffers();
+    unsigned long *GetComputeBufferCapacities();
+    char **GetComputeBuffers();
 };
 
 #endif /* Window_h */

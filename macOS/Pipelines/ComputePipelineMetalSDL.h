@@ -79,21 +79,13 @@ public:
     ~ComputePipelineMetalSDL();
     void init();
     
-    // call on start, when scheme changes, or when counts change
-    // does not set any values, only creates buffers and sets size
-    void CreateBuffers();
-    void UpdateBufferCapacities();
-    
-    // call when static data changes
-    void ResetStaticBuffers();
-    
-    // call every frame
-    void ResetDynamicBuffers();
+    // get buffers from window
+    void SetBuffers(Window *w);
     
     // pipeline
     void Compute();
     void SendDataToRenderer(RenderPipeline *renderer);
-    void SendDataToScheme();
+    void SendDataToWindow(Window *w);
 };
 
 #endif /* ComputePipelineMetalSDL_h */

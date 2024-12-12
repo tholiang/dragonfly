@@ -14,23 +14,12 @@ Engine::~Engine() {
     delete compute_pipeline;
     delete render_pipeline;
     
-    // delete camera;
     delete scene;
     delete window;
-    // delete scheme;
-    // delete scheme_controller;
 }
 
 int Engine::init() {
     srand(time(NULL));
-    
-    // scheme = new EditFEVScheme();
-    // scene = new Scene();
-    // scheme->SetCamera(camera);
-    // scheme->SetScene(scene);
-    
-    // scheme_controller = new SchemeController(scheme);
-    // scheme->SetController(scheme_controller);
     
     window = new Window(vec_make_int2(window_width, window_height));
     window->MakeViewWindow(scene);
@@ -50,46 +39,14 @@ void Engine::run() {
             break;
         }
         
-        for (int i = 0; i < window->NumPanels(); i++) {
-            Panel *panel = window->GetPanel(i);
-            if (panel->ShouldResetEmptyBuffers()) {
-                // compute_pipeline->UpdateBufferCapacities();
-                panel->SetResetEmptyBuffers(false);
-            }
-            if (panel->ShouldResetStaticBuffers()) {
-                // compute_pipeline->ResetStaticBuffers();
-                panel->SetResetStaticBuffers(false);
-            }
-            // compute_pipeline->ResetDynamicBuffers();
-            
-        }
-
-        // if (scheme->ShouldResetEmptyBuffers()) {
-        //     compute_pipeline->UpdateBufferCapacities();
-        //     scheme->SetResetEmptyBuffers(false);
-        // }
-        // if (scheme->ShouldResetStaticBuffers()) {
-        //     compute_pipeline->ResetStaticBuffers();
-        //     scheme->SetResetStaticBuffers(false);
-        // }
-        // compute_pipeline->ResetDynamicBuffers();
-
-        // compute_pipeline->Compute();
+        window->Update();
         
-        // compute_pipeline->SendDataToScheme();
-        // compute_pipeline->SendDataToRenderer(render_pipeline);
+        compute_pipeline->SetBuffers(window);
+        compute_pipeline->Compute(window);
+        compute_pipeline->SendDataToRenderer(render_pipeline);
+        compute_pipeline->SendDataToWindow(window);
         
-        // render_pipeline->Render();
-        // scheme = scheme_controller->GetScheme();
-        // compute_pipeline->SetScheme(scheme);
-        // render_pipeline->SetScheme(scheme);
-        
-        // if (scheme == NULL) {
-        //     std::cout<<"where tf is the scheme"<<std::endl;
-        //     break;
-        // }
-
-        // scheme->Update();
+        render_pipeline->Render();
     }
 }
 

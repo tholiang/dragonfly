@@ -28,15 +28,10 @@ protected:
     // render variables
     unsigned long num_faces = 0;
     unsigned long num_edges = 0;
-    
-    Scheme *scheme;
-    SchemeController *scheme_controller;
 public:
     virtual ~RenderPipeline();
     
     virtual int init() = 0;
-    void SetScheme(Scheme *sch);
-    void SetSchemeController(SchemeController *sctr);
     
     virtual void SetPipeline() = 0;
     

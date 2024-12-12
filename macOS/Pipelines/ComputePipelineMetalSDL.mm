@@ -31,11 +31,16 @@ void ComputePipelineMetalSDL::init() {
     compute_ui_vertices_pipeline_state = [device newComputePipelineStateWithFunction:[library newFunctionWithName:@"CalculateUIVertices"] error:nil];
 }
 
-void ComputePipelineMetalSDL::CreateBuffers() {
-    ComputePipeline::SetScheme(scheme);
+void ComputePipelineMetalSDL::SetBuffers(Window *w) {
+    WindowAttributes window_attr = w->GetAttributes();
+    unsigned long *window_buf_caps = w->GetCompiledPanelBufferCapacities();
+    char **window_bufs = w->GetCompiledPanelBuffers();
+    unsigned long *compute_buf_caps = w->GetComputeBufferCapacities();
+    char **compute_bufs = w->GetComputeBuffers();
+    
     
     // ---COMPUTE DATA BUFFERS---
-    window_attributes_buffer = [device newBufferWithBytes:scheme->GetWindowAttributes() length:(sizeof(WindowAttributes)) options:MTLResourceStorageModeShared];
+    window_attributes_buffer = [device newBufferWithBytes:&window_attr length:(sizeof(window_attr)) options:MTLResourceStorageModeShared];
     compiled_buffer_key_indices_buffer = [device newBufferWithBytes:&compiled_buffer_key_indices length:(sizeof(CompiledBufferKeyIndices)) options:MTLResourceStorageModeManaged];
     
     

@@ -5,7 +5,7 @@ Panel::Panel(vec_float4 borders, Scene *scene) : borders_(borders), scene_(scene
         dirty_buffers_[i] = true;
         out_buffers_[i] = NULL;
     }
-    for (int i = 0; i < PNL_NUM_INBUFS; i++) {
+    for (int i = 0; i < CPT_NUM_OUTBUFS; i++) {
         wanted_buffers_[i] = false;
         in_buffers_[i] = NULL;
     }
@@ -57,14 +57,13 @@ void Panel::PrepareInBuffers() {
     PrepareCompiledBufferKeyIndices(); // maybe shouldn't call this every time
 
     // resize in buffers if needed
-    unsigned long inbuf_sizes[PNL_NUM_INBUFS];
-    inbuf_sizes[PNL_COMPCOMPVERTEX_INBUF_IDX] = sizeof(Vertex) * (compiled_buffer_key_indices_.compiled_vertex_size);
-    inbuf_sizes[PNL_COMPCOMPFACE_INBUF_IDX] = sizeof(Face) * (compiled_buffer_key_indices_.compiled_face_size);
-    inbuf_sizes[PNL_COMPCOMPEDGE_INBUF_IDX] = sizeof(vec_int2) * (compiled_buffer_key_indices_.compiled_edge_size);
-    inbuf_sizes[PNL_COMPMODELVERTEX_INBUF_IDX] = sizeof(Vertex) * NumSceneVertices(scene_); // TODO: + controls vertices
-    inbuf_sizes[PNL_COMPMODELNODE_INBUF_IDX] = sizeof(Vertex) * NumSCeneNodes(scene_);
+    unsigned long inbuf_sizes[CPT_NUM_OUTBUFS];
+    inbuf_sizes[CPT_COMPCOMPVERTEX_OUTBUF_IDX] = sizeof(Vertex) * (compiled_buffer_key_indices_.compiled_vertex_size);
+    inbuf_sizes[CPT_COMPCOMPFACE_OUTBUF_IDX] = sizeof(Face) * (compiled_buffer_key_indices_.compiled_face_size);
+    inbuf_sizes[CPT_COMPMODELVERTEX_OUTBUF_IDX] = sizeof(Vertex) * NumSceneVertices(scene_); // TODO: + controls vertices
+    inbuf_sizes[CPT_COMPMODELNODE_OUTBUF_IDX] = sizeof(Vertex) * NumSceneNodes(scene_);
 
-    for (int i = 0; i < PNL_NUM_INBUFS; i++) {
+    for (int i = 0; i < CPT_NUM_OUTBUFS; i++) {
         if (wanted_buffers_[i] && (in_buffers_[i] != NULL && in_buffers_[i]->capacity <= inbuf_sizes[i])) {
             if (in_buffers_[i] != NULL) { free(in_buffers_); }
             unsigned long new_cap = inbuf_sizes[i] * 2;

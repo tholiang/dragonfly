@@ -19,6 +19,7 @@
 		D2A0D4302D065FE000FEE0D9 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = D2A0D42F2D065FE000FEE0D9 /* README.md */; };
 		D2A0D4372D06604D00FEE0D9 /* Window.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D4322D06604D00FEE0D9 /* Window.cpp */; };
 		D2A0D4382D06604D00FEE0D9 /* ViewPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D4332D06604D00FEE0D9 /* ViewPanel.cpp */; };
+		D2A0D43E2D0A013300FEE0D9 /* SceneUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D43C2D0A013300FEE0D9 /* SceneUtils.cpp */; };
 		D2C6865C2CF3CE750056A760 /* Panel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C6865A2CF3CE750056A760 /* Panel.cpp */; };
 		D2D841202B9D0F44007224D3 /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2D840FD2B9D0F43007224D3 /* imgui_widgets.cpp */; };
 		D2D841212B9D0F44007224D3 /* imgui_impl_metal.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2D841052B9D0F43007224D3 /* imgui_impl_metal.mm */; };
@@ -136,6 +137,8 @@
 		D2A0D4392D0660DF00FEE0D9 /* Misc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Misc.h; sourceTree = "<group>"; };
 		D2A0D43A2D0660DF00FEE0D9 /* Buffers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Buffers.h; sourceTree = "<group>"; };
 		D2A0D43B2D0663E000FEE0D9 /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
+		D2A0D43C2D0A013300FEE0D9 /* SceneUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SceneUtils.cpp; sourceTree = "<group>"; };
+		D2A0D43D2D0A013300FEE0D9 /* SceneUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SceneUtils.h; sourceTree = "<group>"; };
 		D2C6865A2CF3CE750056A760 /* Panel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Panel.cpp; sourceTree = "<group>"; };
 		D2C6865B2CF3CE750056A760 /* Panel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Panel.h; sourceTree = "<group>"; };
 		D2D840FA2B9D0F43007224D3 /* imgui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imgui.h; sourceTree = "<group>"; };
@@ -374,10 +377,10 @@
 				D2A0D4322D06604D00FEE0D9 /* Window.cpp */,
 				D2C6865B2CF3CE750056A760 /* Panel.h */,
 				D2C6865A2CF3CE750056A760 /* Panel.cpp */,
-				D2A0D4312D06604D00FEE0D9 /* ControlsPanel.h */,
 				D2A0D4342D06604D00FEE0D9 /* UIPanel.h */,
 				D2A0D4332D06604D00FEE0D9 /* ViewPanel.cpp */,
 				D2A0D4362D06604D00FEE0D9 /* ViewPanel.h */,
+				D2A0D4312D06604D00FEE0D9 /* ControlsPanel.h */,
 			);
 			path = Panels;
 			sourceTree = "<group>";
@@ -501,6 +504,8 @@
 				D2D8415A2B9D0F4F007224D3 /* Project2D.cpp */,
 				D2092AD52BF70D0F006F6DCC /* Wrap.h */,
 				D2092AD42BF70D0F006F6DCC /* Wrap.cpp */,
+				D2A0D43C2D0A013300FEE0D9 /* SceneUtils.cpp */,
+				D2A0D43D2D0A013300FEE0D9 /* SceneUtils.h */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -703,6 +708,7 @@
 				D2D841782B9D0F4F007224D3 /* Scheme.cpp in Sources */,
 				D24904BA2CA7500F00DEA0F6 /* Light.cpp in Sources */,
 				D2D841862B9D0F4F007224D3 /* Model.cpp in Sources */,
+				D2A0D43E2D0A013300FEE0D9 /* SceneUtils.cpp in Sources */,
 				D2D841792B9D0F4F007224D3 /* EditNodeScheme.cpp in Sources */,
 				D2D8418D2B9D0F4F007224D3 /* EdgeAddVertexAction.cpp in Sources */,
 				D2C6865C2CF3CE750056A760 /* Panel.cpp in Sources */,
