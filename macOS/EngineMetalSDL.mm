@@ -11,31 +11,17 @@ EngineMetalSDL::EngineMetalSDL() {
 }
 
 EngineMetalSDL::~EngineMetalSDL() {
-//    delete compute_pipeline;
-//    delete render_pipeline;
-//    
-//    delete camera;
-//    delete scene;
-//    delete scheme;
-//    delete scheme_controller;
 }
 
 int EngineMetalSDL::SetPipelines() {
     compute_pipeline = new ComputePipelineMetalSDL();
     compute_pipeline->init();
-    compute_pipeline->SetScheme(scheme);
     
     render_pipeline = new RenderPipelineMetalSDL();
     window_id = render_pipeline->init();
     if (window_id < 0) {
         return 1;
     }
-    render_pipeline->SetScheme(scheme);
-    render_pipeline->SetSchemeController(scheme_controller);
-    
-    compute_pipeline->CreateBuffers();
-    compute_pipeline->UpdateBufferCapacities();
-    compute_pipeline->ResetStaticBuffers();
     
     return 0;
 }
@@ -58,7 +44,7 @@ int EngineMetalSDL::HandleInputEvents() {
 }
 
 void EngineMetalSDL::HandleSDLKeyboardEvents(SDL_Event event) {
-    if (scheme->IsInputEnabled()) {
+//    if (window->IsInputEnabled()) {
         if (event.type == SDL_KEYDOWN) {
             SDL_Keysym keysym = event.key.keysym;
             Engine::HandleKeyboardEvents(keysym.sym, true);
@@ -66,11 +52,11 @@ void EngineMetalSDL::HandleSDLKeyboardEvents(SDL_Event event) {
             SDL_Keysym keysym = event.key.keysym;
             Engine::HandleKeyboardEvents(keysym.sym, false);
         }
-    }
+//    }
 }
 
 void EngineMetalSDL::HandleSDLMouseEvents(SDL_Event event) {
-    if (scheme->IsInputEnabled()) {
+//    if (scheme->IsInputEnabled()) {
         int x;
         int y;
         SDL_GetMouseState(&x, &y);
@@ -107,5 +93,5 @@ void EngineMetalSDL::HandleSDLMouseEvents(SDL_Event event) {
         if (event.type == SDL_MOUSEMOTION) {
             Engine::HandleMouseMovement(x, y, event.motion.xrel, event.motion.yrel);
         }
-    }
+//    }
 }

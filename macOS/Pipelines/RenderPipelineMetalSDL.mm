@@ -82,13 +82,9 @@ int RenderPipelineMetalSDL::init () {
     return SDL_GetWindowID(window);
 }
 
-void RenderPipelineMetalSDL::SetBuffers(id<MTLBuffer> vb, id<MTLBuffer> fb, id<MTLBuffer> eb, unsigned long nf, unsigned long ne) {
-    vertex_buffer = vb;
-    face_buffer = fb;
-    edge_buffer = eb;
-    
-    num_faces = nf;
-    num_edges = ne;
+void RenderPipelineMetalSDL::SetBuffer(unsigned long idx, id <MTLBuffer> buf, unsigned long cap) {
+    compute_buffers[idx] = buf;
+    compute_buffer_capacities[idx] = cap;
 }
 
 void RenderPipelineMetalSDL::SetPipeline () {
@@ -148,28 +144,29 @@ void RenderPipelineMetalSDL::Render() {
     // if there are faces to render, render
     if (num_faces > 0) {
         [render_encoder setRenderPipelineState:default_face_render_pipeline_state];
-        [render_encoder setVertexBuffer:vertex_buffer offset:0 atIndex:0];
-        [render_encoder setVertexBuffer:face_buffer offset:0 atIndex:1];
-        [render_encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:num_faces*3];
+        [render_encoder setVertexBuffer:compute_buffers[CPT_COMPCOMPVERTEX_OUTBUF_IDX] offset:0 atIndex:0];
+        [render_encoder setVertexBuffer:compute_buffers[CPT_COMPCOMPFACE_OUTBUF_IDX] offset:0 atIndex:1];
+        [render_encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:compute_buffer_capacities[CPT_COMPCOMPFACE_OUTBUF_IDX]*3]; // TODO: might be wrong
     }
     
+    // TODO: edges
     // if there are edges to render, render
-    if (num_edges > 0) {
-        [render_encoder setRenderPipelineState:default_edge_render_pipeline_state];
-        [render_encoder setVertexBuffer:vertex_buffer offset:0 atIndex:0];
-        [render_encoder setVertexBuffer:edge_buffer offset:0 atIndex:1];
-        [render_encoder drawPrimitives:MTLPrimitiveTypeLine vertexStart:0 vertexCount:num_edges*2];
-    }
+//    if (num_edges > 0) {
+//        [render_encoder setRenderPipelineState:default_edge_render_pipeline_state];
+//        [render_encoder setVertexBuffer:compute_buffers[CPT_COMPCOMPVERTEX_OUTBUF_IDX] offset:0 atIndex:0];
+//        [render_encoder setVertexBuffer:compute_buffers[CPT_] offset:0 atIndex:1];
+//        [render_encoder drawPrimitives:MTLPrimitiveTypeLine vertexStart:0 vertexCount:num_edges*2];
+//    }
     
     // Start the Dear ImGui frame
     ImGui_ImplMetal_NewFrame(render_pass_descriptor);
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
     
-    scheme_controller->BuildUI();
-    
-    scheme = scheme_controller->GetScheme();
-    scheme->BuildUI();
+//    scheme_controller->BuildUI();
+//
+//    scheme = scheme_controller->GetScheme();
+//    scheme->BuildUI();
     
     ImGui::Render();
     ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), render_command_buffer, render_encoder); // ImGui changes the encoders pipeline here to use its shaders and buffers

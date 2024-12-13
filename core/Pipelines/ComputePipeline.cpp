@@ -19,7 +19,13 @@ void ComputePipeline::SetBuffers(Window *w) {
     SetWindowAttributeBuffer(window_attr);
     
     if (w->IsPanelInfoBufferDirty()) {
-        SetPanelInfoBuffer(w->GetPanelInfoBuffer());
+        Buffer *panel_info_buffer = w->GetPanelInfoBuffer();
+        if (gpu_panel_info_buffer_capacity != TotalBufferSize(panel_info_buffer)) {
+            gpu_panel_info_buffer_capacity = TotalBufferSize(panel_info_buffer);
+            ResizePanelInfoBuffer();
+        }
+        
+        ModifyPanelInfoBuffer(w->GetPanelInfoBuffer());
         w->CleanPanelInfoBuffer();
     }
     

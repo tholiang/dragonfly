@@ -25,18 +25,25 @@ using namespace Vec;
 
 class ComputePipeline {
 protected:
+    enum BufferStorageMode {
+        Shared,
+        Managed
+    };
+    
     // child classes should contain an array of kernels
     
-    // capacities of gpu buffers
+    // capacities of gpu buffers - in bytes!!
+    unsigned long gpu_panel_info_buffer_capacity = 0;
     unsigned long gpu_compiled_panel_buffer_capacities[PNL_NUM_OUTBUFS];
     unsigned long gpu_compute_buffer_capacities[CPT_NUM_OUTBUFS];
     
     /* Buffers */
     virtual void SetWindowAttributeBuffer(WindowAttributes w) = 0;
-    virtual void SetPanelInfoBuffer(Buffer *) = 0;
-    virtual void ResizePanelBuffer(unsigned long buf) = 0; // to gpu_compiled_panel_buffer_capacities
+    virtual void ResizePanelInfoBuffer();
+    virtual void ModifyPanelInfoBuffer(Buffer *data) = 0;
+    virtual void ResizePanelBuffer(unsigned long buf, BufferStorageMode storage_mode) = 0; // to gpu_compiled_panel_buffer_capacities
     virtual void ModifyPanelBuffer(unsigned long buf, char *data, unsigned long start, unsigned long len) = 0;
-    virtual void ResizeComputeBuffer(unsigned long buf) = 0; // to gpu_compute_buffer_capacities
+    virtual void ResizeComputeBuffer(unsigned long buf, BufferStorageMode storage_mode) = 0; // to gpu_compute_buffer_capacities
     
     /* Kernels */
     /*

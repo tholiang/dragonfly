@@ -12,6 +12,7 @@
 #include <vector>
 #include <string>
 
+#include "Utils/Constants.h"
 #include "Utils/Vec.h"
 using namespace Vec;
 
@@ -49,14 +50,13 @@ private:
     id <MTLTexture> depth_texture;
     
     // ---BUFFERS FOR SCENE RENDER---
-    id <MTLBuffer> vertex_buffer;
-    id <MTLBuffer> face_buffer;
-    id <MTLBuffer> edge_buffer;
+    unsigned long compute_buffer_capacities[CPT_NUM_OUTBUFS];
+    id <MTLBuffer> compute_buffers[CPT_NUM_OUTBUFS];
 public:
     ~RenderPipelineMetalSDL();
     
     int init();
-    void SetBuffers(id<MTLBuffer> vb, id<MTLBuffer> fb, id<MTLBuffer> eb, unsigned long nf, unsigned long ne);
+    void SetBuffer(unsigned long idx, id <MTLBuffer> buf, unsigned long cap);
     
     void SetPipeline();
     
