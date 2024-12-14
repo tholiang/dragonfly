@@ -15,6 +15,7 @@ rendering
 
 
 TODO:
-- add data flow from window -> compute
+- remove per-panel padding from compute outbufs
+- move BufferHeaders from combined panel data to PanelInfoBuffers, combined data should just be contiguous and of a single type
 - then compute -> render and compute -> window and window -> panel
 - flesh out ViewPanel and test

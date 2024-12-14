@@ -49,12 +49,12 @@ protected:
     /*
      run a specified gpu kernel with N threads
      order buffers as:
-     1. window attributes (always)
+     1. window attributes (if specified)
      2. panel info buffer (always)
      3. specified compute buffers
      4. specified compiled panel buffers
     */
-    virtual void RunKernel(unsigned long kernel, unsigned long N, vector<unsigned long> compute_bufs, vector<unsigned long> panel_bufs) = 0;
+    virtual void RunKernel(unsigned long kernel, unsigned long N, bool window_attr, vector<unsigned long> compute_bufs, vector<unsigned long> panel_bufs) = 0;
     virtual void BeginCompute() = 0;
     virtual void EndCompute() = 0;
 public:

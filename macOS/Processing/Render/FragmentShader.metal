@@ -7,9 +7,13 @@
 
 #include <metal_stdlib>
 using namespace metal;
-#include "util.h"
+#include "../MetalUtil.h"
 
 
+struct VertexOut {
+    vector_float4 pos [[position]];
+    vector_float4 color;
+};
 // fragment shader - return interpolated color exactly
 fragment vector_float4 FragmentShader(
     VertexOut interpolated [[stage_in]]

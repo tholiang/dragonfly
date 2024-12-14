@@ -71,6 +71,7 @@ void ComputePipeline::Compute(Window *w) {
     RunKernel(
         CPT_TRANSFORMS_KRN_IDX,
         num_nodes,
+        false,
         {},
         { PNL_NODE_OUTBUF_IDX, PNL_NODEMODELID_OUTBUF_IDX, PNL_MODELTRANS_OUTBUF_IDX }
     );
@@ -80,6 +81,7 @@ void ComputePipeline::Compute(Window *w) {
     RunKernel(
         CPT_VERTEX_KRN_IDX,
         num_vertices,
+        false,
         { CPT_COMPMODELVERTEX_OUTBUF_IDX },
         { PNL_NODEVERTEXLNK_OUTBUF_IDX, PNL_NODE_OUTBUF_IDX }
     );

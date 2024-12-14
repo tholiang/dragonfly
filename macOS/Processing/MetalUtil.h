@@ -1,149 +1,13 @@
 //
-//  util.metal
+//  MetalUtil.h
 //  dragonfly
 //
 //  Created by Thomas Liang on 12/14/24.
 //
 
-#include <metal_stdlib>
-using namespace metal;
-
-constant float pi = 3.14159265358979;
-constant float render_dist = 50;
-
-struct vec_float2 {
-    float x;
-    float y;
-};
-
-struct vec_float3 {
-    float x;
-    float y;
-    float z;
-};
-
-struct vec_float4 {
-    float x;
-    float y;
-    float z;
-    float w;
-};
-
-struct vec_int2 {
-    int x;
-    int y;
-};
-
-struct vec_int3 {
-    int x;
-    int y;
-    int z;
-};
-
-struct vec_int4 {
-    int x;
-    int y;
-    int z;
-    int w;
-};
-
-typedef vec_float3 Vertex;
-typedef vec_int3 UIVertex;
-typedef vec_float2 Dot;
-
-struct WindowAttributes {
-    unsigned int width = 1280;
-    unsigned int height = 720;
-};
-
-struct CompiledBufferKeyIndices {
-    unsigned int compiled_vertex_size = 0;
-    unsigned int compiled_vertex_scene_start = 0;
-    unsigned int compiled_vertex_control_start = 0;
-    unsigned int compiled_vertex_dot_start = 0;
-    unsigned int compiled_vertex_node_circle_start = 0;
-    unsigned int compiled_vertex_vertex_square_start = 0;
-    unsigned int compiled_vertex_dot_square_start = 0;
-    unsigned int compiled_vertex_slice_plate_start = 0;
-    unsigned int compiled_vertex_ui_start = 0;
-    
-    unsigned int compiled_face_size = 0;
-    unsigned int compiled_face_scene_start = 0;
-    unsigned int compiled_face_control_start = 0;
-    unsigned int compiled_face_node_circle_start = 0;
-    unsigned int compiled_face_vertex_square_start = 0;
-    unsigned int compiled_face_dot_square_start = 0;
-    unsigned int compiled_face_slice_plate_start = 0;
-    unsigned int compiled_face_ui_start = 0;
-    
-    unsigned int compiled_edge_size = 0;
-    unsigned int compiled_edge_scene_start = 0;
-    unsigned int compiled_edge_line_start = 0;
-};
-
-struct Basis {
-    vec_float3 pos;
-    // angles
-    vec_float3 x;
-    vec_float3 y;
-    vec_float3 z;
-};
-
-struct Camera {
-    vec_float3 pos;
-    vec_float3 vector;
-    vec_float3 upVector;
-    vec_float2 FOV;
-};
-
-struct Face {
-    unsigned int vertices[3];
-    vec_float4 color;
-    
-    unsigned int normal_reversed;
-    vec_float3 lighting_offset; // if there were a light source directly in front of the face, this is the rotation to get to its brightest orientation
-    float shading_multiplier;
-};
-
-struct UIElementTransform {
-    vec_int3 position;
-    vec_float3 up;
-    vec_float3 right;
-};
-
-struct Node {
-    int locked_to;
-    Basis b;
-};
-
-struct NodeVertexLink {
-    int nid;
-    vec_float3 vector;
-    float weight;
-};
-
-struct VertexOut {
-    vector_float4 pos [[position]];
-    vector_float4 color;
-};
-
-struct ModelTransform {
-    vec_float3 rotate_origin;
-    Basis b;
-};
-
-struct SliceAttributes {
-    float width;
-    float height;
-};
-
-struct SimpleLight {
-    Basis b;
-    float max_intensity;
-    vec_float4 color;
-    vec_float3 distance_falloff;
-    vec_float3 angle_falloff;
-};
+#ifndef MetalUtil_h
+#define MetalUtil_h
+#include "MetalDatatypes.h"
 
 // ---HELPER FUNCTIONS---
 // vec
@@ -407,7 +271,7 @@ vec_float3 TranslatePointToBasis(Basis b, vec_float3 point) {
     ret.z = projection(tobasis, b.z);
     
     return ret;
-};
+}
 
 // rotate point from given basis to standard basis (ignore basis translation offset)
 vec_float3 RotatePointToStandard(Basis b, vec_float3 point) {
@@ -427,3 +291,5 @@ vec_float3 RotatePointToStandard(Basis b, vec_float3 point) {
     
     return ret;
 }
+
+#endif /* MetalUtil_h */

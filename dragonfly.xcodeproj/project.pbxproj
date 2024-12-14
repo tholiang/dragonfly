@@ -20,7 +20,7 @@
 		D2A0D4372D06604D00FEE0D9 /* Window.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D4322D06604D00FEE0D9 /* Window.cpp */; };
 		D2A0D4382D06604D00FEE0D9 /* ViewPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D4332D06604D00FEE0D9 /* ViewPanel.cpp */; };
 		D2A0D43E2D0A013300FEE0D9 /* SceneUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D43C2D0A013300FEE0D9 /* SceneUtils.cpp */; };
-		D2A0D4412D0E1F0200FEE0D9 /* util.metal in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D4402D0E1F0200FEE0D9 /* util.metal */; };
+		D2A0D4412D0E1F0200FEE0D9 /* MetalUtil.h in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D4402D0E1F0200FEE0D9 /* MetalUtil.h */; };
 		D2A0D4452D0E1F7000FEE0D9 /* CalculateModelNodeTransforms.metal in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D4442D0E1F7000FEE0D9 /* CalculateModelNodeTransforms.metal */; };
 		D2A0D4472D0E1FBC00FEE0D9 /* CalculateVertices.metal in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D4462D0E1FBC00FEE0D9 /* CalculateVertices.metal */; };
 		D2A0D4492D0E1FE200FEE0D9 /* CalculateProjectedVertices.metal in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D4482D0E1FE200FEE0D9 /* CalculateProjectedVertices.metal */; };
@@ -35,6 +35,7 @@
 		D2A0D45B2D0E213300FEE0D9 /* DefaultFaceShader.metal in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D45A2D0E213300FEE0D9 /* DefaultFaceShader.metal */; };
 		D2A0D45D2D0E214D00FEE0D9 /* SuperDefaultEdgeShader.metal in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D45C2D0E214D00FEE0D9 /* SuperDefaultEdgeShader.metal */; };
 		D2A0D45F2D0E216200FEE0D9 /* FragmentShader.metal in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D45E2D0E216200FEE0D9 /* FragmentShader.metal */; };
+		D2A0D4612D0E21AD00FEE0D9 /* MetalDatatypes.h in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D4602D0E21AD00FEE0D9 /* MetalDatatypes.h */; };
 		D2C6865C2CF3CE750056A760 /* Panel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2C6865A2CF3CE750056A760 /* Panel.cpp */; };
 		D2D841202B9D0F44007224D3 /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2D840FD2B9D0F43007224D3 /* imgui_widgets.cpp */; };
 		D2D841212B9D0F44007224D3 /* imgui_impl_metal.mm in Sources */ = {isa = PBXBuildFile; fileRef = D2D841052B9D0F43007224D3 /* imgui_impl_metal.mm */; };
@@ -153,7 +154,7 @@
 		D2A0D43B2D0663E000FEE0D9 /* Constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 		D2A0D43C2D0A013300FEE0D9 /* SceneUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SceneUtils.cpp; sourceTree = "<group>"; };
 		D2A0D43D2D0A013300FEE0D9 /* SceneUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SceneUtils.h; sourceTree = "<group>"; };
-		D2A0D4402D0E1F0200FEE0D9 /* util.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = util.metal; sourceTree = "<group>"; };
+		D2A0D4402D0E1F0200FEE0D9 /* MetalUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MetalUtil.h; sourceTree = "<group>"; };
 		D2A0D4442D0E1F7000FEE0D9 /* CalculateModelNodeTransforms.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = CalculateModelNodeTransforms.metal; sourceTree = "<group>"; };
 		D2A0D4462D0E1FBC00FEE0D9 /* CalculateVertices.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = CalculateVertices.metal; sourceTree = "<group>"; };
 		D2A0D4482D0E1FE200FEE0D9 /* CalculateProjectedVertices.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = CalculateProjectedVertices.metal; sourceTree = "<group>"; };
@@ -168,6 +169,21 @@
 		D2A0D45A2D0E213300FEE0D9 /* DefaultFaceShader.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = DefaultFaceShader.metal; sourceTree = "<group>"; };
 		D2A0D45C2D0E214D00FEE0D9 /* SuperDefaultEdgeShader.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = SuperDefaultEdgeShader.metal; sourceTree = "<group>"; };
 		D2A0D45E2D0E216200FEE0D9 /* FragmentShader.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = FragmentShader.metal; sourceTree = "<group>"; };
+		D2A0D4602D0E21AD00FEE0D9 /* MetalDatatypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MetalDatatypes.h; sourceTree = "<group>"; };
+		D2A0D4642D0E26E300FEE0D9 /* MetalConstants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MetalConstants.h; sourceTree = "<group>"; };
+		D2A0D4652D0E2D7000FEE0D9 /* MetalBufferUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MetalBufferUtil.h; sourceTree = "<group>"; };
+		D2A0D4692D0E462E00FEE0D9 /* gettingstarted.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = gettingstarted.md; sourceTree = "<group>"; };
+		D2A0D46A2D0E462E00FEE0D9 /* installation.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = installation.md; sourceTree = "<group>"; };
+		D2A0D46D2D0E462E00FEE0D9 /* panels.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = panels.md; sourceTree = "<group>"; };
+		D2A0D46F2D0E462E00FEE0D9 /* scenes.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = scenes.md; sourceTree = "<group>"; };
+		D2A0D4702D0E462E00FEE0D9 /* basicdatatypes.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = basicdatatypes.md; sourceTree = "<group>"; };
+		D2A0D4712D0E462E00FEE0D9 /* lights.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = lights.md; sourceTree = "<group>"; };
+		D2A0D4722D0E462E00FEE0D9 /* models.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = models.md; sourceTree = "<group>"; };
+		D2A0D4732D0E462E00FEE0D9 /* spaces.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = spaces.md; sourceTree = "<group>"; };
+		D2A0D4752D0E462E00FEE0D9 /* slices.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = slices.md; sourceTree = "<group>"; };
+		D2A0D4762D0E462E00FEE0D9 /* forcefields.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = forcefields.md; sourceTree = "<group>"; };
+		D2A0D4782D0E462E00FEE0D9 /* buffers.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = buffers.md; sourceTree = "<group>"; };
+		D2A0D4792D0E462E00FEE0D9 /* gpu.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = gpu.md; sourceTree = "<group>"; };
 		D2C6865A2CF3CE750056A760 /* Panel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Panel.cpp; sourceTree = "<group>"; };
 		D2C6865B2CF3CE750056A760 /* Panel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Panel.h; sourceTree = "<group>"; };
 		D2D840FA2B9D0F43007224D3 /* imgui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imgui.h; sourceTree = "<group>"; };
@@ -403,7 +419,10 @@
 			children = (
 				D2A0D4422D0E1F2C00FEE0D9 /* Compute */,
 				D2A0D4432D0E1F3600FEE0D9 /* Render */,
-				D2A0D4402D0E1F0200FEE0D9 /* util.metal */,
+				D2A0D4402D0E1F0200FEE0D9 /* MetalUtil.h */,
+				D2A0D4602D0E21AD00FEE0D9 /* MetalDatatypes.h */,
+				D2A0D4642D0E26E300FEE0D9 /* MetalConstants.h */,
+				D2A0D4652D0E2D7000FEE0D9 /* MetalBufferUtil.h */,
 			);
 			path = Processing;
 			sourceTree = "<group>";
@@ -434,6 +453,81 @@
 				D2A0D45E2D0E216200FEE0D9 /* FragmentShader.metal */,
 			);
 			path = Render;
+			sourceTree = "<group>";
+		};
+		D2A0D4662D0E462E00FEE0D9 /* docs */ = {
+			isa = PBXGroup;
+			children = (
+				D2A0D4672D0E462E00FEE0D9 /* usage */,
+				D2A0D46B2D0E462E00FEE0D9 /* implementation */,
+			);
+			path = docs;
+			sourceTree = "<group>";
+		};
+		D2A0D4672D0E462E00FEE0D9 /* usage */ = {
+			isa = PBXGroup;
+			children = (
+				D2A0D4682D0E462E00FEE0D9 /* tutorials */,
+				D2A0D46A2D0E462E00FEE0D9 /* installation.md */,
+			);
+			path = usage;
+			sourceTree = "<group>";
+		};
+		D2A0D4682D0E462E00FEE0D9 /* tutorials */ = {
+			isa = PBXGroup;
+			children = (
+				D2A0D4692D0E462E00FEE0D9 /* gettingstarted.md */,
+			);
+			path = tutorials;
+			sourceTree = "<group>";
+		};
+		D2A0D46B2D0E462E00FEE0D9 /* implementation */ = {
+			isa = PBXGroup;
+			children = (
+				D2A0D46C2D0E462E00FEE0D9 /* interface */,
+				D2A0D46E2D0E462E00FEE0D9 /* datatypes */,
+				D2A0D4742D0E462E00FEE0D9 /* modelgen */,
+				D2A0D4772D0E462E00FEE0D9 /* rendering */,
+			);
+			path = implementation;
+			sourceTree = "<group>";
+		};
+		D2A0D46C2D0E462E00FEE0D9 /* interface */ = {
+			isa = PBXGroup;
+			children = (
+				D2A0D46D2D0E462E00FEE0D9 /* panels.md */,
+			);
+			path = interface;
+			sourceTree = "<group>";
+		};
+		D2A0D46E2D0E462E00FEE0D9 /* datatypes */ = {
+			isa = PBXGroup;
+			children = (
+				D2A0D46F2D0E462E00FEE0D9 /* scenes.md */,
+				D2A0D4702D0E462E00FEE0D9 /* basicdatatypes.md */,
+				D2A0D4712D0E462E00FEE0D9 /* lights.md */,
+				D2A0D4722D0E462E00FEE0D9 /* models.md */,
+				D2A0D4732D0E462E00FEE0D9 /* spaces.md */,
+			);
+			path = datatypes;
+			sourceTree = "<group>";
+		};
+		D2A0D4742D0E462E00FEE0D9 /* modelgen */ = {
+			isa = PBXGroup;
+			children = (
+				D2A0D4752D0E462E00FEE0D9 /* slices.md */,
+				D2A0D4762D0E462E00FEE0D9 /* forcefields.md */,
+			);
+			path = modelgen;
+			sourceTree = "<group>";
+		};
+		D2A0D4772D0E462E00FEE0D9 /* rendering */ = {
+			isa = PBXGroup;
+			children = (
+				D2A0D4782D0E462E00FEE0D9 /* buffers.md */,
+				D2A0D4792D0E462E00FEE0D9 /* gpu.md */,
+			);
+			path = rendering;
 			sourceTree = "<group>";
 		};
 		D2C686592CF3CE750056A760 /* Panels */ = {
@@ -651,6 +745,7 @@
 				D2D841932B9D0F61007224D3 /* macOS */,
 				D24904892CA74B1500DEA0F6 /* windows */,
 				D2EAF92227914191002DE553 /* Frameworks */,
+				D2A0D4662D0E462E00FEE0D9 /* docs */,
 				D2A0D42D2D065FBD00FEE0D9 /* todo.md */,
 				D2A0D42F2D065FE000FEE0D9 /* README.md */,
 			);
@@ -780,6 +875,7 @@
 				D2D8417D2B9D0F4F007224D3 /* EngineMetalSDL.mm in Sources */,
 				D2D841782B9D0F4F007224D3 /* Scheme.cpp in Sources */,
 				D24904BA2CA7500F00DEA0F6 /* Light.cpp in Sources */,
+				D2A0D4612D0E21AD00FEE0D9 /* MetalDatatypes.h in Sources */,
 				D2D841862B9D0F4F007224D3 /* Model.cpp in Sources */,
 				D2A0D45F2D0E216200FEE0D9 /* FragmentShader.metal in Sources */,
 				D2A0D43E2D0A013300FEE0D9 /* SceneUtils.cpp in Sources */,
@@ -804,7 +900,7 @@
 				D2D8417E2B9D0F4F007224D3 /* RenderPipelineMetalSDL.mm in Sources */,
 				D2D841832B9D0F4F007224D3 /* Basis.cpp in Sources */,
 				D2A0D4382D06604D00FEE0D9 /* ViewPanel.cpp in Sources */,
-				D2A0D4412D0E1F0200FEE0D9 /* util.metal in Sources */,
+				D2A0D4412D0E1F0200FEE0D9 /* MetalUtil.h in Sources */,
 				D2A0D45D2D0E214D00FEE0D9 /* SuperDefaultEdgeShader.metal in Sources */,
 				D2A0D4552D0E20C500FEE0D9 /* CalculateSlicePlates.metal in Sources */,
 				D2D8417A2B9D0F4F007224D3 /* EditScheme.cpp in Sources */,

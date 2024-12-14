@@ -7,7 +7,7 @@
 
 #include <metal_stdlib>
 using namespace metal;
-#include "util.h"
+#include "../MetalUtil.h"
 
 
 // operate per ui vertex

@@ -7,8 +7,13 @@
 
 #include <metal_stdlib>
 using namespace metal;
-#include "util.h"
+#include "../MetalUtil.h"
 
+
+struct VertexOut {
+    vector_float4 pos [[position]];
+    vector_float4 color;
+};
 
 // default vertex shader for faces
 // operates per each vertex index given in every face

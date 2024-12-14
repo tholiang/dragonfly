@@ -10,24 +10,24 @@
 #include "Vec.h"
 
 namespace DragonflyUtils {
-struct Buffer {
-    unsigned long capacity = 0;
-    unsigned long size = 0; // in bytes
+struct BufferHeader {
+    uint64_t capacity = 0;
+    uint64_t size = 0; // in bytes
     // include all the data here - malloc (bad c++ practice whatever)
     // all data elements should be of the same type (and size)
 };
 
 // return a pointer to an element in a Buffer object, given an index and the size of each element in the buffer
-void *GetBufferElement(Buffer *buf, unsigned long idx, unsigned int obj_size) {
+void *GetBufferElement(BufferHeader *buf, unsigned long idx, unsigned int obj_size) {
     assert(idx < buf->size);
 
-    char *data = ((char *) buf) + 2*sizeof(unsigned long);
+    char *data = ((char *) buf) + sizeof(BufferHeader);
     return data + (idx * obj_size);
 }
 
 // get total size of a buffer object (including attributes)
-unsigned long TotalBufferSize(Buffer *buf) {
-    return sizeof(Buffer) + buf->capacity;
+unsigned long TotalBufferSize(BufferHeader *buf) {
+    return sizeof(BufferHeader) + buf->capacity;
 }
 
 struct CompiledBufferKeyIndices {
@@ -57,8 +57,8 @@ struct CompiledBufferKeyIndices {
 
 struct PanelInfoBuffer {
     vec_float4 borders;
-    unsigned long panel_buffer_starts[PNL_NUM_OUTBUFS]; // byte start
-    unsigned long compute_buffer_starts[CPT_NUM_OUTBUFS]; // byte start
+    uint64_t panel_buffer_starts[PNL_NUM_OUTBUFS]; // byte start
+    uint64_t compute_buffer_starts[CPT_NUM_OUTBUFS]; // byte start
     CompiledBufferKeyIndices compiled_key_indices;
 };
 

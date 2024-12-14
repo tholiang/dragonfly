@@ -7,8 +7,13 @@
 
 #include <metal_stdlib>
 using namespace metal;
-#include "util.h"
+#include "../MetalUtil.h"
 
+
+struct VertexOut {
+    vector_float4 pos [[position]];
+    vector_float4 color;
+};
 
 // vertex shader with set color (white)
 // takes 3D vertex and outputs location exactly

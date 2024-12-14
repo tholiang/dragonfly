@@ -99,16 +99,20 @@ void ComputePipelineMetalSDL::EndCompute() {
     [compute_command_buffer waitUntilCompleted];
 }
 
-void ComputePipelineMetalSDL::RunKernel(unsigned long kernel, unsigned long N, vector<unsigned long> compute_bufs, vector<unsigned long> panel_bufs) {
+void ComputePipelineMetalSDL::RunKernel(unsigned long kernel, unsigned long N, bool window_attr, vector<unsigned long> compute_bufs, vector<unsigned long> panel_bufs) {
     MTLSize gridsize;
     NSUInteger numthreads;
     MTLSize threadgroupsize;
     
     [compute_encoder setComputePipelineState: kernels[kernel]];
     // set buffers
-    [compute_encoder setBuffer: window_attributes_buffer offset:0 atIndex:0];
+    int cur_buf_idx = 0;
+    if (window_attr) {
+        [compute_encoder setBuffer: window_attributes_buffer offset:0 atIndex:0];
+        cur_buf_idx++;
+    }
     [compute_encoder setBuffer: panel_info_buffer offset:0 atIndex:1];
-    int cur_buf_idx = 2;
+    cur_buf_idx++;
     for (int i = 0; i < compute_bufs.size(); i++) {
         [compute_encoder setBuffer: compute_buffers[compute_bufs[i]] offset:0 atIndex:cur_buf_idx];
         cur_buf_idx++;

@@ -7,7 +7,7 @@
 
 #include <metal_stdlib>
 using namespace metal;
-#include "util.h"
+#include "../MetalUtil.h"
 
 
 // calculate vertex squares from scene model projected vertices
