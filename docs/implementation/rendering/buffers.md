@@ -6,12 +6,12 @@ the following buffers are used to share data between the cpu and gpu
 
 ```
 
-## static vs dynamic buffers
+## compiled compute buffers
 
-dynamic buffer's contents are expected to change often cpu side (per frame), while static buffers change infrequently
+the primary outputs of the compute are three buffers - containing the vertex, face, and edge data, respectively, for everything to be rendered on screen
 
-## sizing and updates
+these buffers are split by panel order, but packed tightly
 
-neither static nor dynamic buffers' sizes are expected to change often, but they will change relatively frequently given that this is a 3D modeling software
+for face and edge buffers, vertex indices are directly addressing the compiled vertex buffer
 
-to prevent the need to recreate a buffer every time a vertex is added, we implement a dynamic resize similar to `std::vector`
+relative indices for vertex sub-buffers can be computed from PanelInfoBuffer information
