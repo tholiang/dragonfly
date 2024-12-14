@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 
+#include "Utils/Constants.h"
 #include "Utils/Vec.h"
 
 #include "imgui.h"
@@ -34,18 +35,14 @@ private:
     // depth variables for renderer
     
     // ---BUFFERS FOR SCENE RENDER---
-    unsigned int VBO, VAO;
-    GLuint vertex_buffer;
-    GLuint face_buffer;
-    GLuint edge_buffer;
-
-    int num_render_vertices;
+    unsigned long compute_buffer_capacities[CPT_NUM_OUTBUFS];
+    GLuint compute_buffers[CPT_NUM_OUTBUFS];
 public:
     RenderPipelineGLFW();
     ~RenderPipelineGLFW();
     
     int init();
-    void SetBuffers(GLuint vb, GLuint fb, GLuint eb, unsigned long nf, unsigned long ne);
+    void SetBuffer(unsigned long idx, GLuint buf, unsigned long cap);
     
     void SetPipeline();
     

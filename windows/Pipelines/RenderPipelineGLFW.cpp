@@ -9,8 +9,6 @@ RenderPipelineGLFW::~RenderPipelineGLFW() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glfwTerminate();
-    
-    delete test_shader;
 }
 
 int RenderPipelineGLFW::init () {
@@ -69,13 +67,9 @@ void RenderPipelineGLFW::SetPipeline() {
     edge_shader = new Shader("Processing/Render/SuperDefaultEdgeShader.vert", "Processing/Render/FragmentShader.frag", "Processing/util.glsl");
 }
 
-void RenderPipelineGLFW::SetBuffers(GLuint vb, GLuint fb, GLuint eb, unsigned long nf, unsigned long ne) {
-    num_faces = nf;
-    num_edges = ne;
-    
-    vertex_buffer = vb;
-    face_buffer = fb;
-    edge_buffer = eb;
+void RenderPipelineGLFW::SetBuffer(unsigned long idx, GLuint buf, unsigned long cap) {
+    compute_buffers[idx] = buf;
+    compute_buffer_capacities[idx] = cap;
 }
 
 void RenderPipelineGLFW::Render() {
@@ -89,29 +83,30 @@ void RenderPipelineGLFW::Render() {
     if (num_faces > 0) {
         face_shader->use();
         glBindVertexArray(VAO);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, face_buffer);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vertex_buffer);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, compute_buffers[CPT_COMPCOMPFACE_OUTBUF_IDX]);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, compute_buffers[CPT_COMPCOMPVERTEX_OUTBUF_IDX]);
         glDrawArrays(GL_TRIANGLES, 0, num_faces*3);
     }
     
+    // TODO: edges
     // if there are edges to render, render
-    if (num_edges > 0) {
-        edge_shader->use();
-        glBindVertexArray(VAO);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, edge_buffer);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vertex_buffer);
-        glDrawArrays(GL_LINES, 0, num_edges*2);
-    }
+    // if (num_edges > 0) {
+    //     edge_shader->use();
+    //     glBindVertexArray(VAO);
+    //     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, edge_buffer);
+    //     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, vertex_buffer);
+    //     glDrawArrays(GL_LINES, 0, num_edges*2);
+    // }
 
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     
-    scheme_controller->BuildUI();
+    // scheme_controller->BuildUI();
     
-    scheme = scheme_controller->GetScheme();
-    scheme->BuildUI();
+    // scheme = scheme_controller->GetScheme();
+    // scheme->BuildUI();
 
     ImGui::Render();
     int display_w, display_h;
