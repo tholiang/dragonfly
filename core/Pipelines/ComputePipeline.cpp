@@ -20,8 +20,8 @@ void ComputePipeline::SetBuffers(Window *w) {
     
     if (w->IsPanelInfoBufferDirty()) {
         Buffer *panel_info_buffer = w->GetPanelInfoBuffer();
-        if (gpu_panel_info_buffer_capacity != TotalBufferSize(panel_info_buffer)) {
-            gpu_panel_info_buffer_capacity = TotalBufferSize(panel_info_buffer);
+        if (gpu_panel_info_buffer_allotment != TotalBufferSize(panel_info_buffer)) {
+            gpu_panel_info_buffer_allotment = TotalBufferSize(panel_info_buffer);
             ResizePanelInfoBuffer();
         }
         
@@ -31,29 +31,27 @@ void ComputePipeline::SetBuffers(Window *w) {
     
     
     /* compiled panel buffers */
-    unsigned long *window_buf_caps = w->GetCompiledPanelBufferCapacities();
-    char **window_bufs = w->GetCompiledPanelBuffers();
+    Buffer **window_bufs = w->GetCompiledPanelBuffers();
     
     for (int i = 0; i < PNL_NUM_OUTBUFS; i++) {
         if (!w->IsCompiledPanelBufferDirty(i)) { continue; }
         
-        if (gpu_compiled_panel_buffer_capacities[i] != window_buf_caps[i]) {
-            gpu_compiled_panel_buffer_capacities[i] = window_buf_caps[i];
+        if (gpu_compiled_panel_buffer_allotments[i] != TotalBufferSize(window_bufs[i])) {
+            gpu_compiled_panel_buffer_allotments[i] = TotalBufferSize(window_bufs[i]);
             ResizePanelBuffer(i);
         }
         
-        ModifyPanelBuffer(i, window_bufs[i], 0, gpu_compiled_panel_buffer_capacities[i]);
+        ModifyPanelBuffer(i, window_bufs[i], 0, gpu_compiled_panel_buffer_allotments[i]);
         w->CleanCompiledPanelBuffer(i);
     }
     
     
     /* compute (output) buffers */
-    unsigned long *compute_buf_caps = w->GetComputeBufferCapacities();
-    char **compute_bufs = w->GetComputeBuffers();
+    Buffer **compute_bufs = w->GetComputeBuffers();
     
     for (int i = 0; i < CPT_NUM_OUTBUFS; i++) {
-        if (gpu_compute_buffer_capacities[i] != compute_buf_caps[i]) {
-            gpu_compute_buffer_capacities[i] = compute_buf_caps[i];
+        if (gpu_compute_buffer_capacities[i] != TotalBufferSize(compute_bufs[i])) {
+            gpu_compute_buffer_capacities[i] = TotalBufferSize(compute_bufs[i]);
             ResizeComputeBuffer(i);
         }
     }
@@ -63,11 +61,11 @@ void ComputePipeline::Compute(Window *w) {
     BeginCompute();
     
     /* call kernels */
-    unsigned long *window_buf_sizes = w->GetCompiledPanelBufferSizes();
+    Buffer **panel_bufs = w->GetCompiledPanelBuffers();
     
     /* model rendering kernels */
     // calculate nodes (scene and control) in world space from model space
-    unsigned long num_nodes = window_buf_sizes[PNL_NODE_OUTBUF_IDX];
+    unsigned long num_nodes = panel_bufs[PNL_NODE_OUTBUF_IDX]->size;
     RunKernel(
         CPT_TRANSFORMS_KRN_IDX,
         num_nodes,
@@ -77,7 +75,7 @@ void ComputePipeline::Compute(Window *w) {
     );
     
     // calculate vertices (scene and control) in world space from node-ish space
-    unsigned long num_vertices = window_buf_sizes[PNL_NODEVERTEXLNK_OUTBUF_IDX] / 2;
+    unsigned long num_vertices = panel_bufs[PNL_NODEVERTEXLNK_OUTBUF_IDX]->size / 2;
     RunKernel(
         CPT_VERTEX_KRN_IDX,
         num_vertices,
@@ -120,7 +118,7 @@ void ComputePipeline::Compute(Window *w) {
     // TODO: edit slice "scheme"
     
     // project dots
-    unsigned long num_dots = window_buf_sizes[PNL_SLICEDOT_OUTBUF_IDX];
+    unsigned long num_dots = panel_bufs[PNL_SLICEDOT_OUTBUF_IDX]->size;
     RunKernel(
         CPT_PROJ_DOT_KRN_IDX,
         num_dots,
@@ -129,7 +127,7 @@ void ComputePipeline::Compute(Window *w) {
     );
     
     // make slice plates
-    unsigned long num_slices = window_buf_sizes[PNL_SLICETRANS_OUTBUF_IDX];
+    unsigned long num_slices = panel_bufs[PNL_SLICETRANS_OUTBUF_IDX]->size;
     RunKernel(
         CPT_SLICE_PLATE_KRN_IDX,
         num_slices,
@@ -140,7 +138,7 @@ void ComputePipeline::Compute(Window *w) {
     
     /* ui rendering kernels */
     // "project" ui vertices
-    unsigned long num_ui_vertices = window_buf_sizes[PNL_UIVERTEX_OUTBUF_IDX];
+    unsigned long num_ui_vertices = panel_bufs[PNL_UIVERTEX_OUTBUF_IDX]->size;
     RunKernel(
         CPT_UI_VERTEX_KRN_IDX,
         num_ui_vertices,

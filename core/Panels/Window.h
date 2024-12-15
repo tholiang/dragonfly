@@ -28,13 +28,11 @@ private:
     // compiled buffers across all panels
     // dirtiness per compiled panel buffer - can be made more effecient later
     bool dirty_compiled_panel_buffers_[PNL_NUM_OUTBUFS];
-    unsigned long compiled_panel_buffer_sizes_[PNL_NUM_OUTBUFS]; // actual total number of elements in each compiled buffer
-    unsigned long compiled_panel_buffer_capacities_[PNL_NUM_OUTBUFS]; // in-memory size (in bytes) of each compiled buffer
-    char *compiled_panel_buffers_[PNL_NUM_OUTBUFS]; // [[Buffer, Buffer, Buffer], [Buffer, Buffer, Buffer], ...]
+    // note: buffer header size is total number of bytes of actual data in each compiled buffer
+    Buffer *compiled_panel_buffers_[PNL_NUM_OUTBUFS]; // each elem: [BufferHeader [panel1 data] [panel2 data] ...]
 
     /* in buffers */
-    unsigned long compute_buffer_capacities_[CPT_NUM_OUTBUFS];
-    char *compute_buffers_[CPT_NUM_OUTBUFS]; // similar format as compiled_panel_buffers_
+    Buffer *compute_buffers_[CPT_NUM_OUTBUFS]; // similar format as compiled_panel_buffers_
 
     // call per-frame
     // - update panel_info_buffer_
@@ -67,11 +65,8 @@ public:
     Buffer *GetPanelInfoBuffer();
     bool IsCompiledPanelBufferDirty(unsigned long buf);
     void CleanCompiledPanelBuffer(unsigned long buf);
-    unsigned long *GetCompiledPanelBufferSizes();
-    unsigned long *GetCompiledPanelBufferCapacities();
-    char **GetCompiledPanelBuffers();
-    unsigned long *GetComputeBufferCapacities();
-    char **GetComputeBuffers();
+    Buffer **GetCompiledPanelBuffers();
+    Buffer **GetComputeBuffers();
 };
 
 #endif /* Window_h */

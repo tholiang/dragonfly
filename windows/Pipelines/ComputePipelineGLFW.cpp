@@ -39,11 +39,11 @@ void ComputePipelineGLFW::SetWindowAttributeBuffer(WindowAttributes w) {
 
 void ComputePipelineGLFW::ResizePanelInfoBuffer() {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, panel_info_buffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, gpu_panel_info_buffer_capacity, NULL, GL_STATIC_DRAW);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, gpu_panel_info_buffer_allotment, NULL, GL_STATIC_DRAW);
 }
 
 void ComputePipelineGLFW::ModifyPanelInfoBuffer(Buffer *data) {
-    glNamedBufferSubData (panel_info_buffer, 0, gpu_panel_info_buffer_capacity, data);
+    glNamedBufferSubData (panel_info_buffer, 0, gpu_panel_info_buffer_allotment, data);
 }
 
 void ComputePipelineGLFW::ResizePanelBuffer(unsigned long buf, BufferStorageMode storage_mode) {
@@ -51,7 +51,7 @@ void ComputePipelineGLFW::ResizePanelBuffer(unsigned long buf, BufferStorageMode
     if (storage_mode == Shared) { options = GL_DYNAMIC_DRAW; }
     else if (storage_mode == Managed) { options = GL_STATIC_DRAW; }
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, panel_buffers[buf]);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, gpu_compiled_panel_buffer_capacities[buf], NULL, options);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, gpu_compiled_panel_buffer_allotments[buf], NULL, options);
 }
 
 void ComputePipelineGLFW::ModifyPanelBuffer(unsigned long buf, char *data, unsigned long start, unsigned long len) {
@@ -63,7 +63,7 @@ void ComputePipelineGLFW::ResizeComputeBuffer(unsigned long buf, BufferStorageMo
     if (storage_mode == Shared) { options = GL_DYNAMIC_READ; }
     else if (storage_mode == Managed) { options = GL_STATIC_READ; }
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, compute_buffers[buf]);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, gpu_compute_buffer_capacities[buf], NULL, options);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, gpu_compiled_panel_buffer_allotments[buf], NULL, options);
 }
 
 void ComputePipelineGLFW::BeginCompute() {

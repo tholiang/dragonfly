@@ -34,7 +34,9 @@ panels also generate empty buffers for information they want to receive from the
 
 windows compile data across panels into buffers for each data source, so that the buffer for a single data source contains data from every panel
 
-the actual compiled buffers look something like: `BufferHeader[[panel1 data][panel2 data][panel3 data]]`. note that the data for a panel contains **all** of a panel buffers data, including padding, so that `[panel1 data]` contains `capacity` bytes. also note that the `capacity` and `size` attributes of the `BufferHeader` are equal in these buffers
+the actual compiled buffers look something like: `BufferHeader[[panel1 data][panel2 data][panel3 data]]`. note that the data for a panel contains **all** of a panel buffers data, including padding, so that `[panel1 data]` contains `capacity` bytes. 
+
+for the `BufferHeader`s of these, `capacity` is the total allocated space (in bytes) for the data, and `size` is the total number of bytes of actual data. that is, `size` is the sum across the `size`s for each panel's buffer
 
 we don't include the `BufferHeader`s of each panels data directly in the compiled buffers. instead, windows also maintain an array of `PanelInfo`s, each containing some metadata about a specific panel:
 
@@ -63,7 +65,9 @@ the cpu side of the compute only needs to copy the window's buffers into gpu acc
 
 the primary outputs of the compute are three buffers - containing the vertex, face, and edge data, respectively, for everything to be rendered on screen
 
-similar to compiled panel outbufs, these buffers are split by panel order, and packed tightly, so there there is no padding between panels. additionally, for face and edge buffers, vertex indices are directly addressing the compiled vertex buffer. this makes render functions simpler as they don't have to calculate anything per panel. there does exist padding at the very end of the buffers
+similar to compiled panel outbufs, these buffers are split by panel order, and packed tightly, so there there is no padding between panels. additionally, for face and edge buffers, vertex indices are directly addressing the compiled vertex buffer. this makes render functions simpler as they don't have to calculate anything per panel.
+
+there does exist padding at the very end of the buffers
 
 
 ### 2. window

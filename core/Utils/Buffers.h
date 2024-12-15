@@ -17,8 +17,10 @@ struct BufferHeader {
     // all data elements should be of the same type (and size)
 };
 
+typedef BufferHeader Buffer;
+
 // return a pointer to an element in a Buffer object, given an index and the size of each element in the buffer
-void *GetBufferElement(BufferHeader *buf, unsigned long idx, unsigned int obj_size) {
+void *GetBufferElement(Buffer *buf, unsigned long idx, unsigned int obj_size) {
     assert(idx < buf->size);
 
     char *data = ((char *) buf) + sizeof(BufferHeader);
@@ -26,7 +28,7 @@ void *GetBufferElement(BufferHeader *buf, unsigned long idx, unsigned int obj_si
 }
 
 // get total size of a buffer object (including attributes)
-unsigned long TotalBufferSize(BufferHeader *buf) {
+unsigned long TotalBufferSize(Buffer *buf) {
     return sizeof(BufferHeader) + buf->capacity;
 }
 
@@ -58,7 +60,9 @@ struct CompiledBufferKeyIndices {
 struct PanelInfoBuffer {
     vec_float4 borders;
     uint64_t panel_buffer_starts[PNL_NUM_OUTBUFS]; // byte start
+    BufferHeader panel_buffer_headers[PNL_NUM_OUTBUFS];
     uint64_t compute_buffer_starts[CPT_NUM_OUTBUFS]; // byte start
+    BufferHeader compute_buffer_headers[CPT_NUM_OUTBUFS];
     CompiledBufferKeyIndices compiled_key_indices;
 };
 

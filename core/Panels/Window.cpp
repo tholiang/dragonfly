@@ -3,13 +3,10 @@
 Window::Window(WindowAttributes attr) : attr_(attr) {
     for (int i = 0; i < PNL_NUM_OUTBUFS; i++) {
         dirty_compiled_panel_buffers_[i] = false;
-        compiled_panel_buffer_sizes_[i] = 0;
-        compiled_panel_buffer_capacities_[i] = 0;
         compiled_panel_buffers_[i] = NULL;
     }
 
     for (int i = 0; i < CPT_NUM_OUTBUFS; i++) {
-        compute_buffer_capacities_[i] = 0;
         compute_buffers_[i] = NULL;
     }
 }
@@ -113,7 +110,10 @@ void Window::PrepareBuffers() {
     bool regen_all = panel_info_buffer_ == NULL || panel_info_buffer_->size != panels_.size();
     if (regen_all) {
         if (panel_info_buffer_ != NULL) { free(panel_info_buffer_); }
-        panel_info_buffer_ = (Buffer *) calloc(sizeof(Buffer) + (panels_.size() * sizeof(PanelInfoBuffer)), 1);
+        unsigned long data_size = panels_.size() * sizeof(PanelInfoBuffer);
+        panel_info_buffer_ = (Buffer *) calloc(sizeof(BufferHeader) + data_size, 1);
+        panel_info_buffer_->size = data_size;
+        panel_info_buffer_->capacity = data_size;
         dirty_panel_info_buffer_ = true;
     }
 
@@ -143,26 +143,28 @@ void Window::PrepareBuffers() {
                 reorg = true;
             }
 
-            total_size += panel_out_buffers[j][i]->size;
-            total_capacity += TotalBufferSize(panel_out_buffers[j][i]);
+            BufferHeader header = *((BufferHeader *) panel_out_buffers[j][i]);
+            total_size += header.size;
+            total_capacity += header.capacity;
+            info_buf->panel_buffer_headers[i] = header;
         }
-        compiled_panel_buffer_sizes_[i] = total_size;
 
         // regenerate compiled buffer if needed
-        bool regen = regen_all || total_capacity != compiled_panel_buffer_capacities_[i];
+        bool regen = regen_all || compiled_panel_buffers_[i] == NULL || total_capacity != compiled_panel_buffers_[i]->capacity;
         if (regen) {
             if (compiled_panel_buffers_[i] != NULL) { free(compiled_panel_buffers_[i]); }
-            compiled_panel_buffers_[i] = (char *) malloc(total_capacity);
-            compiled_panel_buffer_capacities_[i] = total_capacity;
+            compiled_panel_buffers_[i] = (Buffer *) malloc(sizeof(BufferHeader) + total_capacity);
+            compiled_panel_buffers_[i]->capacity = total_capacity;
         }
+        compiled_panel_buffers_[i]->size = total_size;
 
         // fix data
         for (int j = 0; j < panels_.size(); j++) {
             PanelInfoBuffer *info_buf = (PanelInfoBuffer *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelInfoBuffer));
             if (reorg || regen || panels_[j].IsBufferDirty(i)) {
                 void *panel_buffer_start = compiled_panel_buffers_[i]+info_buf->panel_buffer_starts[i];
-                Buffer *panel_out_buffer = panel_out_buffers[j][i];
-                memcpy(panel_buffer_start, (void *) panel_out_buffer, TotalBufferSize(panel_out_buffer));
+                char *panel_out_buffer_data = ((char *) panel_out_buffers[j][i]) + sizeof(BufferHeader);
+                memcpy(panel_buffer_start, (void *) panel_out_buffer_data, panel_out_buffers[j][i]->capacity);
 
                 panels_[j].CleanBuffer(i);
                 dirty_compiled_panel_buffers_[j] = true;
@@ -179,28 +181,25 @@ void Window::PrepareBuffers() {
     // compile the compute (out) buffers
     for (int i = 0; i < CPT_NUM_OUTBUFS; i++) {
         // similar to above except we just always set the contained data since we don't change that much
+        unsigned long total_size = 0;
         unsigned long total_capacity = 0;
         for (int j = 0; j < panels_.size(); j++) {
             PanelInfoBuffer *info_buf = (PanelInfoBuffer *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelInfoBuffer));
-            info_buf->compute_buffer_starts[j] = total_capacity;
-            total_capacity += TotalBufferSize(panel_in_buffers[j][i]);
+            info_buf->compute_buffer_starts[j] = total_size;
+
+            BufferHeader header = *((BufferHeader *) panel_in_buffers[j][i]);
+            total_size += header.size;
+            total_capacity += header.capacity;
+            info_buf->compute_buffer_headers[i] = header;
         }
 
         // regenerate compiled buffer if needed
-        if (regen_all || total_capacity != compute_buffer_capacities_[i]) {
+        if (regen_all || compute_buffers_[i] == NULL || total_capacity != compute_buffers_[i]->capacity) {
             if (compute_buffers_[i] != NULL) { free(compute_buffers_[i]); }
-            compute_buffers_[i] = (char *) malloc(total_capacity);
-            compute_buffer_capacities_[i] = total_capacity;
+            compute_buffers_[i] = (Buffer *) malloc(sizeof(BufferHeader) + total_capacity);
+            compute_buffers_[i]->capacity = total_capacity;
         }
-
-        // populate buffer headers
-        for (int j = 0; j < panels_.size(); j++) {
-            PanelInfoBuffer *info_buf = (PanelInfoBuffer *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelInfoBuffer));
-            Buffer *panel_in_buffer = panel_in_buffers[j][i];
-            Buffer *compute_panel_buffer = (Buffer *) (compute_buffers_[i]+info_buf->compute_buffer_starts[i]);
-            // copy header over
-            *compute_panel_buffer = *panel_in_buffer;
-        }
+        compute_buffers_[i]->size = total_size;
     }
 }
 
@@ -234,7 +233,7 @@ unsigned long *Window::GetCompiledPanelBufferCapacities() {
     return compiled_panel_buffer_capacities_;
 }
 
-char **Window::GetCompiledPanelBuffers() {
+Buffer **Window::GetCompiledPanelBuffers() {
     return compiled_panel_buffers_;
 }
 
@@ -242,6 +241,6 @@ unsigned long *Window::GetComputeBufferCapacities() {
     return compute_buffer_capacities_;
 }
 
-char **Window::GetComputeBuffers() {
+Buffer **Window::GetComputeBuffers() {
     return compute_buffers_;
 }
