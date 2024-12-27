@@ -1,3 +1,5 @@
+// TODO: updating slices
+/*
 //
 //  CalculateScaledDots.metal
 //  dragonfly
@@ -8,10 +10,20 @@
 #include <metal_stdlib>
 using namespace metal;
 #include "../MetalUtil.h"
+#include "../MetalBufferUtil.h"
 
 
-// operate per dot
-// output both scaled dot value and corner values to compiled vertex
+/
+ output both scaled dot value and corner values to compiled vertex
+ operate per dot
+ args:
+ 1. panel_info_buffer - single Buffer object containing PanelBufferInfo objects
+ 2. window_attributes - WindowAttributes object
+ 3. comp_vertices - Buffer of packed per-panel vertices to render
+ 4. comp_faces - Buffer of packed per-panel faces to render
+ 5. dots - Buffer of packed per-panel data of dots
+ 6. slice_attrs - Buffer of packed per-panel data of slice attributes
+ /
 kernel void CalculateScaledDots(
     device Vertex *compiled_vertices [[buffer(0)]],
     device Face *compiled_faces [[buffer(1)]],
@@ -19,7 +31,6 @@ kernel void CalculateScaledDots(
     const constant SliceAttributes *attr[[buffer(3)]],
     const constant WindowAttributes *window_attr[[buffer(4)]],
     const constant vec_float4 *edit_window [[buffer(5)]],
-    const constant CompiledBufferKeyIndices *key_indices[[buffer(6)]],
     unsigned int did [[thread_position_in_grid]]
 ) {
     float scale = attr->height / 2;
@@ -73,3 +84,4 @@ kernel void CalculateScaledDots(
     
     // TODO: SET SPECIAL COLOR FOR SELECTED DOTS
 }
+*/

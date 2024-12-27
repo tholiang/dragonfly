@@ -35,8 +35,8 @@ kernel void CalculateProjectedVertices(
     constant Camera *c = (constant Camera *) GetConstantPanelBufElementFromRelIdx(panel_info_buffer, cameras, PNL_CAMERA_OUTBUF_IDX, pid, 0, sizeof(Camera)); // overkill, but need clean code!!
     
     // calculate projected vertices and place into compiled buffer
-    unsigned long crvid = TranslateSourceToPanelIndex(panel_info_buffer, pid, CBKI_V_SCENE_START_IDX, rvid);
-    device Vertex *outv = (device Vertex *) GetDeviceComputeBufElementFromRelIdx(panel_info_buffer, compiled_vertices, CPT_COMPCOMPVERTEX_OUTBUF_IDX, pid, crvid, sizeof(Vertex));
+    unsigned long orvid = SourceToPanelCompiledIndex(panel_info_buffer, pid, CBKI_V_SCENE_START_IDX, rvid);
+    device Vertex *outv = (device Vertex *) GetDeviceComputeBufElementFromRelIdx(panel_info_buffer, compiled_vertices, CPT_COMPCOMPVERTEX_OUTBUF_IDX, pid, orvid, sizeof(Vertex));
     *outv = PointToPixel(*v, c);
     outv->z += 0.05;
     

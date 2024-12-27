@@ -76,28 +76,28 @@ const BufferStorageMode CPT_OUTBUF_STORAGE_MODES[CPT_NUM_OUTBUFS] = {
 
 // compiled buffer key indices
 const unsigned long CBKI_NUM_KEYS = 20;
-const unsigned long CBKI_V_SIZE_IDX = 0;
-const unsigned long CBKI_V_SCENE_START_IDX = 1;
-const unsigned long CBKI_V_CONTROL_START_IDX = 2;
-const unsigned long CBKI_V_DOT_START_IDX = 3;
-const unsigned long CBKI_V_NCIRCLE_START_IDX = 4;
-const unsigned long CBKI_V_VSQUARE_START_IDX = 5;
-const unsigned long CBKI_V_DSQUARE_START_IDX = 6;
-const unsigned long CBKI_V_SPLATE_START_IDX = 7;
-const unsigned long CBKI_V_UI_START_IDX = 8;
+const unsigned long CBKI_V_SCENE_START_IDX = 0;
+const unsigned long CBKI_V_CONTROL_START_IDX = 1;
+const unsigned long CBKI_V_DOT_START_IDX = 2;
+const unsigned long CBKI_V_NCIRCLE_START_IDX = 3;
+const unsigned long CBKI_V_VSQUARE_START_IDX = 4;
+const unsigned long CBKI_V_DSQUARE_START_IDX = 5;
+const unsigned long CBKI_V_SPLATE_START_IDX = 6;
+const unsigned long CBKI_V_UI_START_IDX = 7;
+const unsigned long CBKI_V_SIZE_IDX = 8;
 
-const unsigned long CBKI_F_SIZE_IDX = 9;
-const unsigned long CBKI_F_SCENE_START_IDX = 10;
-const unsigned long CBKI_F_CONTROL_START_IDX = 11;
-const unsigned long CBKI_F_NCIRCLE_START_IDX = 12;
-const unsigned long CBKI_F_VSQUARE_START_IDX = 13;
-const unsigned long CBKI_F_DSQUARE_START_IDX = 14;
-const unsigned long CBKI_F_SPLATE_START_IDX = 15;
-const unsigned long CBKI_F_UI_START_IDX = 16;
+const unsigned long CBKI_F_SCENE_START_IDX = 9;
+const unsigned long CBKI_F_CONTROL_START_IDX = 10;
+const unsigned long CBKI_F_NCIRCLE_START_IDX = 11;
+const unsigned long CBKI_F_VSQUARE_START_IDX = 12;
+const unsigned long CBKI_F_DSQUARE_START_IDX = 13;
+const unsigned long CBKI_F_SPLATE_START_IDX = 14;
+const unsigned long CBKI_F_UI_START_IDX = 15;
+const unsigned long CBKI_F_SIZE_IDX = 16;
 
-const unsigned long CBKI_E_SIZE_IDX = 17;
-const unsigned long CBKI_E_SCENE_START_IDX = 18;
-const unsigned long CBKI_E_LINE_START_IDX = 19;
+const unsigned long CBKI_E_SCENE_START_IDX = 17;
+const unsigned long CBKI_E_LINE_START_IDX = 18;
+const unsigned long CBKI_E_SIZE_IDX = 19;
 
 
 /* RENDERING VALUES */

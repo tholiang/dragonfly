@@ -136,20 +136,20 @@ float angle_between (vec_float3 v1, vec_float3 v2) {
 
 // TODO: make this not shit pls
 // convert a 3d point to a pixel (vertex) value
-vec_float3 PointToPixel (vec_float3 point, constant Camera &camera)  {
+vec_float3 PointToPixel (vec_float3 point, constant Camera *camera)  {
     //vector from camera position to object position
     vec_float4 toObject;
-    toObject.x = (point.x-camera.pos.x);
-    toObject.y = (point.y-camera.pos.y);
-    toObject.z = (point.z-camera.pos.z);
+    toObject.x = (point.x-camera->pos.x);
+    toObject.y = (point.y-camera->pos.y);
+    toObject.z = (point.z-camera->pos.z);
     toObject.w = (sqrt(pow(toObject.x, 2)+pow(toObject.y, 2)+pow(toObject.z, 2)));
     
     //project camera vector onto object vector
-    float dotProduct = (toObject.x*camera.vector.x)+(toObject.y*camera.vector.y)+(toObject.z*camera.vector.z);
+    float dotProduct = (toObject.x*camera->vector.x)+(toObject.y*camera->vector.y)+(toObject.z*camera->vector.z);
     vec_float4 proj;
-    proj.x = dotProduct*camera.vector.x;
-    proj.y = dotProduct*camera.vector.y;
-    proj.z = dotProduct*camera.vector.z;
+    proj.x = dotProduct*camera->vector.x;
+    proj.y = dotProduct*camera->vector.y;
+    proj.z = dotProduct*camera->vector.z;
     proj.w = sqrt(pow(proj.x, 2)+pow(proj.y, 2)+pow(proj.z, 2));
     
     //subtract projected vector from the object vector to get the "on screen" vector
@@ -164,16 +164,16 @@ vec_float3 PointToPixel (vec_float3 point, constant Camera &camera)  {
     //some method to find the angle between 2 vectors in 2pi radians
     //https://stackoverflow.com/questions/14066933/direct-way-of-computing-clockwise-angle-between-2-vectors/16544330#16544330
     
-    float dotProductDistToAndCamUp = (distTo.x*camera.upVector.x)+(distTo.y*camera.upVector.y)+(distTo.z*camera.upVector.z);
-    float det = (camera.upVector.x*distTo.y*camera.vector.z) + (distTo.x*camera.vector.y*camera.upVector.z) + (camera.vector.x*camera.upVector.y*distTo.z) - (camera.upVector.z*distTo.y*camera.vector.x) - (distTo.z*camera.vector.y*camera.upVector.x) - (camera.vector.z*camera.upVector.y*distTo.x);
+    float dotProductDistToAndCamUp = (distTo.x*camera->upVector.x)+(distTo.y*camera->upVector.y)+(distTo.z*camera->upVector.z);
+    float det = (camera->upVector.x*distTo.y*camera->vector.z) + (distTo.x*camera->vector.y*camera->upVector.z) + (camera->vector.x*camera->upVector.y*distTo.z) - (camera->upVector.z*distTo.y*camera->vector.x) - (distTo.z*camera->vector.y*camera->upVector.x) - (camera->vector.z*camera->upVector.y*distTo.x);
     float angleBetween = atan2(det, dotProductDistToAndCamUp);
     //TODO: add twist
     angleBetween = angleBetween/*-camera.vector.z*/;
     
     //find dimensions of the "screen rectangle" at the location of the object
     //FOV is the angle of the field of view - the whole screen
-    float halfWidth = abs(proj.w*tan(camera.FOV.x/2));
-    float halfHeight = abs(proj.w*tan(camera.FOV.y/2));
+    float halfWidth = abs(proj.w*tan(camera->FOV.x/2));
+    float halfHeight = abs(proj.w*tan(camera->FOV.y/2));
     
     //screen location of object
     float xLoc = -distTo.w*sin(angleBetween);

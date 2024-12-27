@@ -26,7 +26,7 @@ kernel void CalculateVertices(
     const constant Buffer *cpt_nodes [[buffer(3)]],
     unsigned int vid [[thread_position_in_grid]]
 ) {
-    vec_int2 pid_rvid = GlobalToPanelBufIdx(panel_info_buffer, PNL_NODE_OUTBUF_IDX, vid, sizeof(Node));
+    vec_int2 pid_rvid = GlobalToComputeBufIdx(panel_info_buffer, CPT_COMPMODELVERTEX_OUTBUF_IDX, vid, sizeof(Vertex));
     int pid = pid_rvid.x;
     int rvid = pid_rvid.y;
     

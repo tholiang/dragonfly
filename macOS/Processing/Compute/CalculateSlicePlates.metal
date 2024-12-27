@@ -1,3 +1,5 @@
+// TODO: update slices
+/*
 //
 //  CalculateSlicePlates.metal
 //  dragonfly
@@ -70,3 +72,4 @@ kernel void CalculateSlicePlates (
     f2.vertices[2] = cvb_slice_plate_idx+3;
     compiled_faces[cfb_slice_plate_idx+1] = f2;
 }
+*/
