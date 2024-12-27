@@ -51,11 +51,11 @@ void ComputePipelineMetalSDL::SetWindowAttributeBuffer(WindowAttributes w) {
     [window_attributes_buffer didModifyRange: NSMakeRange(0, sizeof(WindowAttributes))]; // alert gpu about what was modified
 }
 
-void ComputePipelineMetalSDL::ResizePanelInfoBuffer() {
+void ComputePipelineMetalSDL::ResizePanelBufferInfo() {
     panel_info_buffer = [device newBufferWithLength:gpu_panel_info_buffer_capacity options:MTLResourceStorageModeManaged];
 }
 
-void ComputePipelineMetalSDL::ModifyPanelInfoBuffer(Buffer *data) {
+void ComputePipelineMetalSDL::ModifyPanelBufferInfo(Buffer *data) {
     memcpy(panel_info_buffer.contents, (void *) data, gpu_panel_info_buffer_capacity);
     [panel_info_buffer didModifyRange: NSMakeRange(0, gpu_panel_info_buffer_capacity)]; // alert gpu about what was modified
 }

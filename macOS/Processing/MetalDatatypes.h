@@ -53,43 +53,20 @@ struct WindowAttributes {
     unsigned int height = 720;
 };
 
-struct Buffer {
+struct BufferHeader {
     unsigned long capacity = 0;
     unsigned long size = 0; // in bytes
-    // include all the data here - malloc (bad c++ practice whatever)
-    // all data elements should be of the same type (and size)
 };
 
-struct CompiledBufferKeyIndices {
-    unsigned int compiled_vertex_size = 0;
-    unsigned int compiled_vertex_scene_start = 0;
-    unsigned int compiled_vertex_control_start = 0;
-    unsigned int compiled_vertex_dot_start = 0;
-    unsigned int compiled_vertex_node_circle_start = 0;
-    unsigned int compiled_vertex_vertex_square_start = 0;
-    unsigned int compiled_vertex_dot_square_start = 0;
-    unsigned int compiled_vertex_slice_plate_start = 0;
-    unsigned int compiled_vertex_ui_start = 0;
-    
-    unsigned int compiled_face_size = 0;
-    unsigned int compiled_face_scene_start = 0;
-    unsigned int compiled_face_control_start = 0;
-    unsigned int compiled_face_node_circle_start = 0;
-    unsigned int compiled_face_vertex_square_start = 0;
-    unsigned int compiled_face_dot_square_start = 0;
-    unsigned int compiled_face_slice_plate_start = 0;
-    unsigned int compiled_face_ui_start = 0;
-    
-    unsigned int compiled_edge_size = 0;
-    unsigned int compiled_edge_scene_start = 0;
-    unsigned int compiled_edge_line_start = 0;
-};
+typedef BufferHeader Buffer;
 
-struct PanelInfoBuffer {
+struct PanelBufferInfo {
     vec_float4 borders;
     unsigned long panel_buffer_starts[PNL_NUM_OUTBUFS]; // byte start
+    BufferHeader panel_buffer_headers[PNL_NUM_OUTBUFS];
     unsigned long compute_buffer_starts[CPT_NUM_OUTBUFS]; // byte start
-    CompiledBufferKeyIndices compiled_key_indices;
+    BufferHeader compute_buffer_headers[CPT_NUM_OUTBUFS];
+    unsigned long compiled_buffer_key_indices[CBKI_NUM_KEYS];
 };
 
 struct Basis {

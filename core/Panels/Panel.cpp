@@ -32,7 +32,7 @@ Buffer **Panel::GetOutBuffers() {
     PrepareOutBuffers();
     return out_buffers_;
 }
-CompiledBufferKeyIndices Panel::GetCompiledBufferKeyIndices() {
+uint64_t *Panel::GetCompiledBufferKeyIndices() {
     PrepareCompiledBufferKeyIndices();
     return compiled_buffer_key_indices_;
 }
@@ -58,8 +58,8 @@ void Panel::PrepareInBuffers() {
 
     // resize in buffers if needed
     unsigned long inbuf_sizes[CPT_NUM_OUTBUFS];
-    inbuf_sizes[CPT_COMPCOMPVERTEX_OUTBUF_IDX] = sizeof(Vertex) * (compiled_buffer_key_indices_.compiled_vertex_size);
-    inbuf_sizes[CPT_COMPCOMPFACE_OUTBUF_IDX] = sizeof(Face) * (compiled_buffer_key_indices_.compiled_face_size);
+    inbuf_sizes[CPT_COMPCOMPVERTEX_OUTBUF_IDX] = sizeof(Vertex) * (compiled_buffer_key_indices_[CBKI_V_SIZE_IDX]);
+    inbuf_sizes[CPT_COMPCOMPFACE_OUTBUF_IDX] = sizeof(Face) * (compiled_buffer_key_indices_[CBKI_F_SIZE_IDX]);
     inbuf_sizes[CPT_COMPMODELVERTEX_OUTBUF_IDX] = sizeof(Vertex) * NumSceneVertices(scene_); // TODO: + controls vertices
     inbuf_sizes[CPT_COMPMODELNODE_OUTBUF_IDX] = sizeof(Vertex) * NumSceneNodes(scene_);
 
@@ -78,48 +78,48 @@ void Panel::PrepareInBuffers() {
 void Panel::PrepareCompiledBufferKeyIndices() {
     // vertices
     uint32_t vertex_size = 0;
-    compiled_buffer_key_indices_.compiled_vertex_scene_start = vertex_size;
+    compiled_buffer_key_indices_[CBKI_V_SCENE_START_IDX] = vertex_size;
     if (elements_.scene && scene_ != NULL ) { vertex_size += NumSceneVertices(scene_); }
-    compiled_buffer_key_indices_.compiled_vertex_control_start = vertex_size; // default no controls
-    compiled_buffer_key_indices_.compiled_vertex_dot_start = vertex_size;
+    compiled_buffer_key_indices_[CBKI_V_CONTROL_START_IDX] = vertex_size; // default no controls
+    compiled_buffer_key_indices_[CBKI_V_DOT_START_IDX] = vertex_size;
     if (elements_.slices && scene_ != NULL) { vertex_size += NumSceneDots(scene_); }
-    compiled_buffer_key_indices_.compiled_vertex_node_circle_start = vertex_size;
+    compiled_buffer_key_indices_[CBKI_V_NCIRCLE_START_IDX] = vertex_size;
     if (elements_.nodes && scene_ != NULL) { vertex_size += NumSceneNodes(scene_)*NUM_NODE_CIRLCE_VERTICES; }
-    compiled_buffer_key_indices_.compiled_vertex_vertex_square_start = vertex_size;
+    compiled_buffer_key_indices_[CBKI_V_VSQUARE_START_IDX] = vertex_size;
     if (elements_.vertices && scene_ != NULL) { vertex_size += NumSceneVertices(scene_)*NUM_VERTEX_SQUARE_VERTICES; }
-    compiled_buffer_key_indices_.compiled_vertex_dot_square_start = vertex_size;
+    compiled_buffer_key_indices_[CBKI_V_DSQUARE_START_IDX] = vertex_size;
     if (elements_.slices && scene_ != NULL) { vertex_size += NumSceneDots(scene_)*NUM_VERTEX_SQUARE_VERTICES; }
-    compiled_buffer_key_indices_.compiled_vertex_slice_plate_start = vertex_size;
+    compiled_buffer_key_indices_[CBKI_V_SPLATE_START_IDX] = vertex_size;
     if (elements_.slices && scene_ != NULL) { vertex_size += scene_->NumSlices()*NUM_SLICE_PLATE_VERTICES; }
-    compiled_buffer_key_indices_.compiled_vertex_ui_start = vertex_size; // default no ui
+    compiled_buffer_key_indices_[CBKI_V_UI_START_IDX] = vertex_size; // default no ui
 
-    compiled_buffer_key_indices_.compiled_vertex_size = vertex_size;
+    compiled_buffer_key_indices_[CBKI_V_SIZE_IDX] = vertex_size;
 
 
     // faces
     uint32_t face_size = 0;
-    compiled_buffer_key_indices_.compiled_face_scene_start = face_size;
+    compiled_buffer_key_indices_[CBKI_F_SCENE_START_IDX] = face_size;
     if (elements_.faces && scene_ != NULL ) { face_size += NumSceneFaces(scene_); }
-    compiled_buffer_key_indices_.compiled_face_scene_start = face_size; // default no controls
-    compiled_buffer_key_indices_.compiled_face_node_circle_start = face_size;
+    compiled_buffer_key_indices_[CBKI_F_CONTROL_START_IDX] = face_size; // default no controls
+    compiled_buffer_key_indices_[CBKI_F_NCIRCLE_START_IDX] = face_size;
     if (elements_.nodes && scene_ != NULL) { face_size += NumSceneNodes(scene_)*NUM_NODE_CIRLCE_FACES; }
-    compiled_buffer_key_indices_.compiled_face_vertex_square_start = face_size;
+    compiled_buffer_key_indices_[CBKI_F_VSQUARE_START_IDX] = face_size;
     if (elements_.vertices && scene_ != NULL) { face_size += NumSceneVertices(scene_)*NUM_VERTEX_SQUARE_FACES; }
-    compiled_buffer_key_indices_.compiled_face_dot_square_start = face_size;
+    compiled_buffer_key_indices_[CBKI_F_DSQUARE_START_IDX] = face_size;
     if (elements_.slices && scene_ != NULL) { face_size += NumSceneDots(scene_)*NUM_VERTEX_SQUARE_FACES; }
-    compiled_buffer_key_indices_.compiled_face_slice_plate_start = face_size;
+    compiled_buffer_key_indices_[CBKI_F_SPLATE_START_IDX] = face_size;
     if (elements_.slices && scene_ != NULL) { face_size += scene_->NumSlices()*NUM_SLICE_PLATE_FACES; }
-    compiled_buffer_key_indices_.compiled_face_ui_start = face_size; // default no ui
+    compiled_buffer_key_indices_[CBKI_F_UI_START_IDX] = face_size; // default no ui
 
-    compiled_buffer_key_indices_.compiled_face_size = face_size;
+    compiled_buffer_key_indices_[CBKI_F_SIZE_IDX] = face_size;
 
 
     // edges
     uint32_t edge_size = 0;
-    compiled_buffer_key_indices_.compiled_edge_scene_start = edge_size;
+    compiled_buffer_key_indices_[CBKI_E_SCENE_START_IDX] = edge_size;
     if (elements_.edges && scene_ != NULL) { edge_size += NumSceneFaces(scene_)*3; }
-    compiled_buffer_key_indices_.compiled_edge_line_start = edge_size;
+    compiled_buffer_key_indices_[CBKI_E_LINE_START_IDX] = edge_size;
     if (elements_.slices && scene_ != NULL) { edge_size += NumSceneLines(scene_); }
 
-    compiled_buffer_key_indices_.compiled_edge_size = edge_size;
+    compiled_buffer_key_indices_[CBKI_E_SIZE_IDX] = edge_size;
 }

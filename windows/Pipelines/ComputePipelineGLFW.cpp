@@ -37,12 +37,12 @@ void ComputePipelineGLFW::SetWindowAttributeBuffer(WindowAttributes w) {
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(WindowAttributes), &w, GL_STATIC_DRAW);
 }
 
-void ComputePipelineGLFW::ResizePanelInfoBuffer() {
+void ComputePipelineGLFW::ResizePanelBufferInfo() {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, panel_info_buffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, gpu_panel_info_buffer_allotment, NULL, GL_STATIC_DRAW);
 }
 
-void ComputePipelineGLFW::ModifyPanelInfoBuffer(Buffer *data) {
+void ComputePipelineGLFW::ModifyPanelBufferInfo(Buffer *data) {
     glNamedBufferSubData (panel_info_buffer, 0, gpu_panel_info_buffer_allotment, data);
 }
 

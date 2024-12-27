@@ -11,74 +11,118 @@
 
 // buffers
 /*
+ Shouldn't be used directly
  Get element from (constant) Buffer object at a given index
  args:
  1. buffer - Buffer object
- 2. index - to query
- 3. elem_size - size of each element
+ 2. offset - byte offset
+ 3. index - to query
+ 4. elem_size - size of each element
  */
-constant void *GetConstantBufferElement(constant Buffer *buf, unsigned long idx, unsigned int obj_size) {
-    constant char *data = ((constant char *) buf) + sizeof(Buffer);
-    return data + (idx * obj_size);
+constant void *_GetConstantBufferElement(constant Buffer *buf, unsigned long offset, unsigned long idx, unsigned int obj_size) {
+    constant char *data = ((constant char *) buf) + sizeof(BufferHeader);
+    return data + offset + (idx * obj_size);
 }
 
 /*
  Same thing as above but for device data
  */
-device void *GetDeviceBufferElement(device Buffer *buf, unsigned long idx, unsigned int obj_size) {
-    device char *data = ((device char *) buf) + sizeof(Buffer);
-    return data + (idx * obj_size);
+device void *_GetDeviceBufferElement(device Buffer *buf, unsigned long offset, unsigned long idx, unsigned int obj_size) {
+    device char *data = ((device char *) buf) + sizeof(BufferHeader);
+    return data + offset + (idx * obj_size);
 }
 
 /*
  Get a pointer to element in combined panel buffer given a relative panel index
  args:
- 1. panel_info_buffer - single Buffer object containing PanelInfoBuffer objects
- 2. data - packing of per-panel Buffers of data
+ 1. panel_info_buffer - single Buffer object containing PanelBufferInfo objects
+ 2. data_buffer - buffer containing packing of per-panel data
  3. outbuf_idx - panel outbuf idx for value type
  4. pid - panel id
  5. rvid - relative index of element
  6. obj_size - object size per value element
  */
-constant void *GetConstantElementFromRelativeIndex(const constant Buffer *panel_info_buffer, const constant char *data, unsigned long outbuf_idx, unsigned long pid, unsigned int rvid, unsigned int obj_size) {
-    constant PanelInfoBuffer *panel_info = (constant PanelInfoBuffer *) GetConstantBufferElement(panel_info_buffer, pid, sizeof(PanelInfoBuffer));
+constant void *GetConstantPanelBufElementFromRelIdx(const constant Buffer *panel_info_buffer, const constant Buffer *data_buffer, unsigned long outbuf_idx, unsigned long pid, unsigned int rvid, unsigned int obj_size) {
+    constant PanelBufferInfo *panel_info = (constant PanelBufferInfo *) _GetConstantBufferElement(panel_info_buffer, 0, pid, sizeof(PanelBufferInfo));
     unsigned long panel_val_start = panel_info->panel_buffer_starts[outbuf_idx];
-    constant Buffer *buf = (constant Buffer *) (data + panel_val_start);
-    return GetConstantBufferElement(buf, rvid, obj_size);
+    return _GetConstantBufferElement(data_buffer, panel_val_start, rvid, obj_size);
 }
 
 /*
  Same thing as above but for device data
  */
-device void *GetDeviceElementFromRelativeIndex(const constant Buffer *panel_info_buffer, device char *data, unsigned long outbuf_idx, unsigned long pid, unsigned int rvid, unsigned int obj_size) {
-   constant PanelInfoBuffer *panel_info = (constant PanelInfoBuffer *) GetConstantBufferElement(panel_info_buffer, pid, sizeof(PanelInfoBuffer));
-   unsigned long panel_val_start = panel_info->panel_buffer_starts[outbuf_idx];
-   device Buffer *buf = (device Buffer *) (data + panel_val_start);
-   return GetDeviceBufferElement(buf, rvid, obj_size);
+device void *GetDevicePanelBufElementFromRelIdx(const constant Buffer *panel_info_buffer, device Buffer *data_buffer, unsigned long outbuf_idx, unsigned long pid, unsigned int rvid, unsigned int obj_size) {
+    constant PanelBufferInfo *panel_info = (constant PanelBufferInfo *) _GetConstantBufferElement(panel_info_buffer, pid, sizeof(PanelBufferInfo));
+    unsigned long panel_val_start = panel_info->panel_buffer_starts[outbuf_idx];
+    return _GetDeviceBufferElement(data_buffer, panel_val_start, rvid, obj_size);
+}
+
+
+/*
+ Same thing as above but for compute buffer data
+ */
+device void *GetDeviceComputeBufElementFromRelIdx(const constant Buffer *panel_info_buffer, device Buffer *data_buffer, unsigned long outbuf_idx, unsigned long pid, unsigned int rvid, unsigned int obj_size) {
+    constant PanelBufferInfo *panel_info = (constant PanelBufferInfo *) _GetConstantBufferElement(panel_info_buffer, pid, sizeof(PanelBufferInfo));
+    unsigned long panel_val_start = panel_info->compute_buffer_starts[outbuf_idx];
+    return _GetDeviceBufferElement(data_buffer, panel_val_start, rvid, obj_size);
 }
 
 /*
- return (panel id, panel-relative index) from a given global index
+ return (panel id, panel-relative index) for a panel output buffer from a given global index
  args:
- 1. panel_info_buffer - single Buffer object containing PanelInfoBuffer objects
- 2. data - packing of per-panel Buffers of data
- 3. outbuf_idx - panel outbuf idx for value type
- 4. value_idx - to find panel for
- 5. obj_size - object size per value element
+ 1. panel_info_buffer - single Buffer object containing PanelBufferInfo objects
+ 2. outbuf_idx - panel outbuf idx for value type
+ 3. value_idx - to find panel for. note that this is not directly translatable to the data buffer index, which contains some garbage in between panel data
+ 4. obj_size - object size per value element
  */
-vec_int2 GetPanelFromIndex(const constant Buffer *panel_info_buffer, const constant char *data, unsigned long outbuf_idx, unsigned int value_idx, unsigned int obj_size) {
+vec_int2 GlobalToPanelBufIdx(const constant Buffer *panel_info_buffer, unsigned long outbuf_idx, unsigned int value_idx, unsigned int obj_size) {
     unsigned int cur_total_idx = 0;
-    for (int pid = 0; pid < panel_info_buffer->size; pid++) {
-        constant PanelInfoBuffer *panel_info = (constant PanelInfoBuffer *) GetConstantBufferElement(panel_info_buffer, pid, sizeof(PanelInfoBuffer));
+    for (unsigned long pid = 0; pid < panel_info_buffer->size; pid++) {
+        constant PanelBufferInfo *panel_info = (constant PanelBufferInfo *) _GetConstantBufferElement(panel_info_buffer, pid, sizeof(PanelBufferInfo));
         unsigned long panel_val_start = panel_info->panel_buffer_starts[outbuf_idx];
-        constant Buffer *buf = (constant Buffer *) (data + panel_val_start);
-        unsigned long num_elems = buf->size / obj_size;
+        BufferHeader panel_buffer_header = panel_info->panel_buffer_headers[outbuf_idx];
+        unsigned long num_elems = panel_buffer_header.size / obj_size;
         if (cur_total_idx + num_elems > value_idx) {
             return vec_make_int2(pid, value_idx - cur_total_idx);
         }
         cur_total_idx += num_elems;
     }
     return vec_make_int2(-1, -1);
+}
+
+/*
+ return (panel id, panel-relative index) for a compute output buffer from a given global index
+ args:
+ 1. panel_info_buffer - single Buffer object containing PanelBufferInfo objects
+ 2. outbuf_idx - panel outbuf idx for value type
+ 3. value_idx - to find panel for. note that this is not directly translatable to the data buffer index, which contains some garbage in between panel data
+ 4. obj_size - object size per value element
+ */
+vec_int2 GlobalToComputeBufIdx(const constant Buffer *panel_info_buffer, unsigned long outbuf_idx, unsigned int value_idx, unsigned int obj_size) {
+    unsigned int cur_total_idx = 0;
+    for (unsigned long pid = 0; pid < panel_info_buffer->size; pid++) {
+        constant PanelBufferInfo *panel_info = (constant PanelBufferInfo *) _GetConstantBufferElement(panel_info_buffer, pid, sizeof(PanelBufferInfo));
+        unsigned long panel_val_start = panel_info->compute_buffer_starts[outbuf_idx];
+        BufferHeader panel_buffer_header = panel_info->compute_buffer_headers[outbuf_idx];
+        unsigned long num_elems = panel_buffer_header.size / obj_size;
+        if (cur_total_idx + num_elems > value_idx) {
+            return vec_make_int2(pid, value_idx - cur_total_idx);
+        }
+        cur_total_idx += num_elems;
+    }
+    return vec_make_int2(-1, -1);
+}
+
+/*
+ return compiled buffer index from source-relative index (still relatve to panel)
+ 1. panel_info_buffer - single Buffer object containing PanelBufferInfo objects
+ 2. pid - panel index
+ 3. cbki_idx - index of compiled buffer key index to search for
+ 4. rvid - relative vid to panel and output type
+ */
+unsigned long TranslateSourceToPanelIndex(const constant Buffer *panel_info_buffer, unsigned long pid, unsigned long cbki_idx, unsigned long rvid) {
+    constant PanelBufferInfo *panel_info = (constant PanelBufferInfo *) _GetConstantBufferElement(panel_info_buffer, pid, sizeof(PanelBufferInfo));
+    return panel_info->compiled_buffer_key_indices[cbki_idx] + rvid;
 }
 
 #endif /* MetalBufferUtil_h */

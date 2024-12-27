@@ -45,8 +45,8 @@ private:
     id <MTLBuffer> compute_buffers[CPT_NUM_OUTBUFS];
     
     void SetWindowAttributeBuffer(WindowAttributes w);
-    void ResizePanelInfoBuffer(); // to gpu_panel_info_buffer_capacity
-    void ModifyPanelInfoBuffer(Buffer *buf);
+    void ResizePanelBufferInfo(); // to gpu_panel_info_buffer_capacity
+    void ModifyPanelBufferInfo(Buffer *buf);
     void ResizePanelBuffer(unsigned long buf, BufferStorageMode storage_mode); // to gpu_compiled_panel_buffer_capacities
     void ModifyPanelBuffer(unsigned long buf, char *data, unsigned long start, unsigned long len);
     void ResizeComputeBuffer(unsigned long buf, BufferStorageMode storage_mode); // to gpu_compute_buffer_capacities

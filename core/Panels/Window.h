@@ -20,7 +20,7 @@ private:
     vec_float2 TranslatePixel(vec_float2 p);
 
     /* ---BUFFERS--- */
-    // buffer of array of PanelInfoBuffer objects
+    // buffer of array of PanelBufferInfo objects
     bool dirty_panel_info_buffer_ = false;
     Buffer *panel_info_buffer_ = NULL;
 
@@ -60,9 +60,9 @@ public:
     std::vector<Panel> *GetPanels();
     Panel *GetPanel(unsigned int i);
     
-    bool IsPanelInfoBufferDirty();
-    void CleanPanelInfoBuffer();
-    Buffer *GetPanelInfoBuffer();
+    bool IsPanelBufferInfoDirty();
+    void CleanPanelBufferInfo();
+    Buffer *GetPanelBufferInfo();
     bool IsCompiledPanelBufferDirty(unsigned long buf);
     void CleanCompiledPanelBuffer(unsigned long buf);
     Buffer **GetCompiledPanelBuffers();

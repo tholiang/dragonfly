@@ -18,15 +18,15 @@ void ComputePipeline::SetBuffers(Window *w) {
     WindowAttributes window_attr = w->GetAttributes();
     SetWindowAttributeBuffer(window_attr);
     
-    if (w->IsPanelInfoBufferDirty()) {
-        Buffer *panel_info_buffer = w->GetPanelInfoBuffer();
+    if (w->IsPanelBufferInfoDirty()) {
+        Buffer *panel_info_buffer = w->GetPanelBufferInfo();
         if (gpu_panel_info_buffer_allotment != TotalBufferSize(panel_info_buffer)) {
             gpu_panel_info_buffer_allotment = TotalBufferSize(panel_info_buffer);
-            ResizePanelInfoBuffer();
+            ResizePanelBufferInfo();
         }
         
-        ModifyPanelInfoBuffer(w->GetPanelInfoBuffer());
-        w->CleanPanelInfoBuffer();
+        ModifyPanelBufferInfo(w->GetPanelBufferInfo());
+        w->CleanPanelBufferInfo();
     }
     
     
@@ -38,7 +38,7 @@ void ComputePipeline::SetBuffers(Window *w) {
         
         if (gpu_compiled_panel_buffer_allotments[i] != TotalBufferSize(window_bufs[i])) {
             gpu_compiled_panel_buffer_allotments[i] = TotalBufferSize(window_bufs[i]);
-            ResizePanelBuffer(i);
+            ResizePanelBuffer(i, PNL_OUTBUF_STORAGE_MODES[i]);
         }
         
         ModifyPanelBuffer(i, window_bufs[i], 0, gpu_compiled_panel_buffer_allotments[i]);
@@ -50,9 +50,9 @@ void ComputePipeline::SetBuffers(Window *w) {
     Buffer **compute_bufs = w->GetComputeBuffers();
     
     for (int i = 0; i < CPT_NUM_OUTBUFS; i++) {
-        if (gpu_compute_buffer_capacities[i] != TotalBufferSize(compute_bufs[i])) {
-            gpu_compute_buffer_capacities[i] = TotalBufferSize(compute_bufs[i]);
-            ResizeComputeBuffer(i);
+        if (gpu_compiled_panel_buffer_allotments[i] != TotalBufferSize(compute_bufs[i])) {
+            gpu_compiled_panel_buffer_allotments[i] = TotalBufferSize(compute_bufs[i]);
+            ResizeComputeBuffer(i, CPT_OUTBUF_STORAGE_MODES[i]);
         }
     }
 }
@@ -88,6 +88,7 @@ void ComputePipeline::Compute(Window *w) {
     RunKernel(
         CPT_PROJ_VERTEX_KRN_IDX,
         num_vertices,
+        true,
         { CPT_COMPCOMPVERTEX_OUTBUF_IDX, CPT_COMPMODELVERTEX_OUTBUF_IDX },
         { PNL_CAMERA_OUTBUF_IDX }
     );
@@ -97,6 +98,7 @@ void ComputePipeline::Compute(Window *w) {
     RunKernel(
         CPT_VERTEX_SQR_KRN_IDX,
         num_vertices,
+        true,
         { CPT_COMPCOMPVERTEX_OUTBUF_IDX, CPT_COMPCOMPFACE_OUTBUF_IDX },
         {}
     );
@@ -106,6 +108,7 @@ void ComputePipeline::Compute(Window *w) {
     RunKernel(
         CPT_PROJ_NODE_KRN_IDX,
         num_nodes,
+        true,
         { CPT_COMPCOMPVERTEX_OUTBUF_IDX, CPT_COMPMODELVERTEX_OUTBUF_IDX },
         { PNL_NODE_OUTBUF_IDX, PNL_CAMERA_OUTBUF_IDX }
     );
@@ -122,6 +125,7 @@ void ComputePipeline::Compute(Window *w) {
     RunKernel(
         CPT_PROJ_DOT_KRN_IDX,
         num_dots,
+        true,
         { CPT_COMPCOMPVERTEX_OUTBUF_IDX, CPT_COMPCOMPFACE_OUTBUF_IDX },
         { PNL_SLICEDOT_OUTBUF_IDX, PNL_SLICETRANS_OUTBUF_IDX, PNL_CAMERA_OUTBUF_IDX, PNL_DOTSLICEID_OUTBUF_IDX }
     );
@@ -131,6 +135,7 @@ void ComputePipeline::Compute(Window *w) {
     RunKernel(
         CPT_SLICE_PLATE_KRN_IDX,
         num_slices,
+        false,
         { CPT_COMPCOMPVERTEX_OUTBUF_IDX, CPT_COMPCOMPFACE_OUTBUF_IDX },
         { PNL_SLICETRANS_OUTBUF_IDX, PNL_SLICEATTR_OUTBUF_IDX, PNL_CAMERA_OUTBUF_IDX }
     );
@@ -142,6 +147,7 @@ void ComputePipeline::Compute(Window *w) {
     RunKernel(
         CPT_UI_VERTEX_KRN_IDX,
         num_ui_vertices,
+        true,
         { CPT_COMPCOMPVERTEX_OUTBUF_IDX },
         { PNL_UIVERTEX_OUTBUF_IDX, PNL_UIELEMID_OUTBUF_IDX, PNL_UITRANS_OUTBUF_IDX }
     );

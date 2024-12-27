@@ -110,7 +110,7 @@ void Window::PrepareBuffers() {
     bool regen_all = panel_info_buffer_ == NULL || panel_info_buffer_->size != panels_.size();
     if (regen_all) {
         if (panel_info_buffer_ != NULL) { free(panel_info_buffer_); }
-        unsigned long data_size = panels_.size() * sizeof(PanelInfoBuffer);
+        unsigned long data_size = panels_.size() * sizeof(PanelBufferInfo);
         panel_info_buffer_ = (Buffer *) calloc(sizeof(BufferHeader) + data_size, 1);
         panel_info_buffer_->size = data_size;
         panel_info_buffer_->capacity = data_size;
@@ -119,9 +119,9 @@ void Window::PrepareBuffers() {
 
     // set some info buffer stuff
     for (int j = 0; j < panels_.size(); j++) {
-        PanelInfoBuffer *info_buf = (PanelInfoBuffer *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelInfoBuffer));
+        PanelBufferInfo *info_buf = (PanelBufferInfo *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelBufferInfo));
         info_buf->borders = panels_[j].GetBorders();
-        info_buf->compiled_key_indices = panels_[j].GetCompiledBufferKeyIndices();
+        memcpy(&info_buf->compiled_buffer_key_indices, panels_[j].GetCompiledBufferKeyIndices(), sizeof(uint64_t)*CBKI_NUM_KEYS);
     }
 
 
@@ -137,7 +137,7 @@ void Window::PrepareBuffers() {
         bool reorg = false;
         for (int j = 0; j < panels_.size(); j++) {
             // set panel info start idx (to what it will be)
-            PanelInfoBuffer *info_buf = (PanelInfoBuffer *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelInfoBuffer));
+            PanelBufferInfo *info_buf = (PanelBufferInfo *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelBufferInfo));
             if (info_buf->panel_buffer_starts[i] != total_capacity) { // if start it off - then some buffer capacities were changed
                 info_buf->panel_buffer_starts[i] = total_capacity;
                 reorg = true;
@@ -160,7 +160,7 @@ void Window::PrepareBuffers() {
 
         // fix data
         for (int j = 0; j < panels_.size(); j++) {
-            PanelInfoBuffer *info_buf = (PanelInfoBuffer *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelInfoBuffer));
+            PanelBufferInfo *info_buf = (PanelBufferInfo *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelBufferInfo));
             if (reorg || regen || panels_[j].IsBufferDirty(i)) {
                 void *panel_buffer_start = compiled_panel_buffers_[i]+info_buf->panel_buffer_starts[i];
                 char *panel_out_buffer_data = ((char *) panel_out_buffers[j][i]) + sizeof(BufferHeader);
@@ -184,7 +184,7 @@ void Window::PrepareBuffers() {
         unsigned long total_size = 0;
         unsigned long total_capacity = 0;
         for (int j = 0; j < panels_.size(); j++) {
-            PanelInfoBuffer *info_buf = (PanelInfoBuffer *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelInfoBuffer));
+            PanelBufferInfo *info_buf = (PanelBufferInfo *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelBufferInfo));
             info_buf->compute_buffer_starts[j] = total_size;
 
             BufferHeader header = *((BufferHeader *) panel_in_buffers[j][i]);
@@ -203,15 +203,15 @@ void Window::PrepareBuffers() {
     }
 }
 
-bool Window::IsPanelInfoBufferDirty() {
+bool Window::IsPanelBufferInfoDirty() {
     return dirty_panel_info_buffer_;
 }
 
-void Window::CleanPanelInfoBuffer() {
+void Window::CleanPanelBufferInfo() {
     dirty_panel_info_buffer_ = false;
 }
 
-Buffer *Window::GetPanelInfoBuffer() {
+Buffer *Window::GetPanelBufferInfo() {
     return panel_info_buffer_;
 }
 
@@ -225,20 +225,8 @@ void Window::CleanCompiledPanelBuffer(unsigned long buf) {
     dirty_compiled_panel_buffers_[buf] = false;
 }
 
-unsigned long *Window::GetCompiledPanelBufferSizes() {
-    return compiled_panel_buffer_sizes_;
-}
-
-unsigned long *Window::GetCompiledPanelBufferCapacities() {
-    return compiled_panel_buffer_capacities_;
-}
-
 Buffer **Window::GetCompiledPanelBuffers() {
     return compiled_panel_buffers_;
-}
-
-unsigned long *Window::GetComputeBufferCapacities() {
-    return compute_buffer_capacities_;
 }
 
 Buffer **Window::GetComputeBuffers() {

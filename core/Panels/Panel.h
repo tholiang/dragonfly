@@ -49,7 +49,7 @@ protected:
     bool dirty_buffers_[PNL_NUM_OUTBUFS];
     // all possible buffers to send to the gpu pipeline
     Buffer *out_buffers_[PNL_NUM_OUTBUFS];
-    CompiledBufferKeyIndices compiled_buffer_key_indices_;
+    uint64_t compiled_buffer_key_indices_[CBKI_NUM_KEYS];
     // what buffers are wanted from the gpu pipeline
     bool wanted_buffers_[CPT_NUM_OUTBUFS];
     // all possible buffers to take in from the gpu pipeline
@@ -82,7 +82,7 @@ public:
     bool IsBufferDirty(unsigned int buf);
     void CleanBuffer(unsigned int buf);
     Buffer **GetOutBuffers();
-    CompiledBufferKeyIndices GetCompiledBufferKeyIndices();
+    uint64_t *GetCompiledBufferKeyIndices();
     bool IsBufferWanted(unsigned int buf);
     Buffer ** GetInBuffers(bool realloc);
 
