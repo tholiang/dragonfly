@@ -32,6 +32,7 @@ private:
     Buffer *compiled_panel_buffers_[PNL_NUM_OUTBUFS]; // each elem: [BufferHeader [panel1 data] [panel2 data] ...]
 
     /* in buffers */
+    bool dirty_compute_buffers_[CPT_NUM_OUTBUFS];
     Buffer *compute_buffers_[CPT_NUM_OUTBUFS]; // similar format as compiled_panel_buffers_
 
     // call per-frame
@@ -39,6 +40,11 @@ private:
     // for out buffers - combine all (dirty) panel buffers into panel_buffers_ and also update dirty_buffers_
     // for in buffers - allocate correctly sized compiled buffers for in buffers across panels
     void PrepareBuffers();
+    
+    // call (from PrepareBuffers) when panel faces and edges have changed
+    // copies scene, control, and ui faces + scene edges into the compute compiled face buffer
+    // sets offsets for vertex references
+    void UpdateComputeCompiledBuffers();
 public:
     Window() = delete;
     Window(WindowAttributes attr);
@@ -66,6 +72,8 @@ public:
     bool IsCompiledPanelBufferDirty(unsigned long buf);
     void CleanCompiledPanelBuffer(unsigned long buf);
     Buffer **GetCompiledPanelBuffers();
+    bool IsComputeBufferDirty(unsigned long buf);
+    void CleanComputeBuffer(unsigned long buf);
     Buffer **GetComputeBuffers();
 };
 

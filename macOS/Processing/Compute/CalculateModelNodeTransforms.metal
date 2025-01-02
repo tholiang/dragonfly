@@ -28,9 +28,9 @@ kernel void CalculateModelNodeTransforms(
     const constant Buffer *model_transforms [[buffer(4)]],
     unsigned int nid [[thread_position_in_grid]]
 ) {
-    vec_int2 pid_rnid = GlobalToPanelBufIdx(panel_info_buffer, PNL_NODE_OUTBUF_IDX, nid, sizeof(Node));
+    vec_int2 pid_rnid = GlobalToComputeBufIdx(panel_info_buffer, CPT_COMPMODELNODE_OUTBUF_IDX, nid, sizeof(Node));
     int pid = pid_rnid.x;
-    int rnid = pid_rnid.y;
+    int rnid = pid_rnid.y; // 1 to 1 for pnl node outbuf
     
     constant Node *pnl_node = (constant Node *) GetConstantPanelBufElementFromRelIdx(panel_info_buffer, pnl_nodes, PNL_NODE_OUTBUF_IDX, pid, rnid, sizeof(Node));
     device Node *cpt_node = (device Node *) GetDeviceComputeBufElementFromRelIdx(panel_info_buffer, cpt_nodes, CPT_COMPMODELNODE_OUTBUF_IDX, pid, rnid, sizeof(Node));

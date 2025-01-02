@@ -30,7 +30,7 @@ kernel void CalculateUIVertices (
     const constant Buffer *element_transforms[[buffer(5)]],
     unsigned int vid [[thread_position_in_grid]]
 ) {
-    vec_int2 pid_rvid = GlobalToPanelBufIdx(panel_info_buffer, PNL_UIVERTEX_OUTBUF_IDX, vid, sizeof(UIVertex));
+    vec_int2 pid_rvid = GlobalToCompiledBufIdx(panel_info_buffer, CPT_COMPCOMPVERTEX_OUTBUF_IDX, CBKI_V_UI_START_IDX, vid, sizeof(Vertex));
     int pid = pid_rvid.x;
     int rvid = pid_rvid.y;
     

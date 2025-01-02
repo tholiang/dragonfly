@@ -17,9 +17,6 @@ using namespace Vec;
 
 #include "imgui.h"
 
-#include "../Schemes/Scheme.h"
-#include "../Schemes/SchemeController.h"
-
 class RenderPipeline {
 protected:
     int window_width;

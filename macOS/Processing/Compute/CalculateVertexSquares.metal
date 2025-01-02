@@ -27,13 +27,13 @@ kernel void CalculateVertexSquares(
     device Buffer *compiled_faces [[buffer(3)]],
     unsigned int vid [[thread_position_in_grid]]
 ) {
-    vec_int2 pid_svid = GlobalToCompiledBufIdx(panel_info_buffer, CPT_COMPCOMPVERTEX_OUTBUF_IDX, CBKI_V_SCENE_START_IDX, vid, sizeof(Buffer));
+    vec_int2 pid_svid = GlobalToCompiledBufIdx(panel_info_buffer, CPT_COMPCOMPVERTEX_OUTBUF_IDX, CBKI_V_VSQUARE_START_IDX, vid*4, sizeof(Buffer));
     int pid = pid_svid.x;
-    int svid = pid_svid.y;
-    unsigned long rvid = SourceToPanelCompiledIndex(panel_info_buffer, pid, CBKI_V_SCENE_START_IDX, svid);
+    int svid = pid_svid.y/4;
+    unsigned long rpvid = SourceToPanelCompiledIndex(panel_info_buffer, pid, CBKI_V_SCENE_START_IDX, svid); // vid for projected vertex
     
     // get current projected vertex
-    device Vertex *currentVertex = (device Vertex *) GetDeviceComputeBufElementFromRelIdx(panel_info_buffer, compiled_vertices, CPT_COMPCOMPFACE_OUTBUF_IDX, pid, rvid, sizeof(Vertex));
+    device Vertex *currentVertex = (device Vertex *) GetDeviceComputeBufElementFromRelIdx(panel_info_buffer, compiled_vertices, CPT_COMPCOMPFACE_OUTBUF_IDX, pid, rpvid, sizeof(Vertex));
     
     // find index of the start of the 4 corner indices
     float screen_ratio = (float) window_attributes->height / window_attributes->width;

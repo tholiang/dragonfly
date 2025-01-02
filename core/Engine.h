@@ -24,13 +24,6 @@
 using namespace Vec;
 #include "imfilebrowser.h"
 
-#include "Schemes/SchemeController.h"
-
-#include "Schemes/Scheme.h"
-#include "Schemes/EditModelScheme.h"
-#include "Schemes/EditFEVScheme.h"
-#include "Schemes/EditNodeScheme.h"
-
 #include "Panels/Window.h"
 #include "Panels/Panel.h"
 

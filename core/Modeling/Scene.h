@@ -37,13 +37,13 @@ struct ModelTransform {
 
 class Scene {
 private:
-    std::vector<Model *> models;
+    std::vector<Model> models;
     std::vector<ModelTransform> model_uniforms;
     
-    std::vector<Slice *> slices;
+    std::vector<Slice> slices;
     std::vector<ModelTransform> slice_uniforms;
 
-    std::vector<Light *> lights;
+    std::vector<Light> lights;
     std::vector<Basis> light_bases;
     
     std::string name_;
@@ -89,11 +89,11 @@ public:
     void CreateNewModel();
     void NewModelFromFile(std::string path);
     void NewModelFromPointData(std::string path);
-    void AddModel(Model *m, ModelTransform mu);
+    void AddModel(Model m, ModelTransform mu);
     
-    void AddSlice(Slice *s);
+    void AddSlice(Slice s);
 
-    void AddLight(Light *l, Basis b);
+    void AddLight(Light l, Basis b);
     
     void RemoveModel(unsigned long mid);
     
@@ -105,14 +105,15 @@ public:
     unsigned long NumSlices();
     unsigned long NumLights();
     
-    std::vector<Model *> *GetModels();
+    std::vector<Model> *GetModels();
     std::vector<ModelTransform> *GetAllModelUniforms();
     
-    std::vector<Slice *> *GetSlices();
+    std::vector<Slice> *GetSlices();
     //std::vector<SliceAttributes> GetAllSliceAttributes();
     std::vector<ModelTransform> *GetAllSliceUniforms();
 
-    std::vector<Light *> *GetLights();
+    std::vector<Light> *GetLights();
+    std::vector<SimpleLight> GetSimpleLights();
     std::vector<Basis> *GetLightBases();
     
     std::string GetName();

@@ -25,8 +25,6 @@ using namespace Vec;
 #include <SDL.h>
 
 #include "RenderPipeline.h"
-#include "../Schemes/Scheme.h"
-#include "../Schemes/SchemeController.h"
 
 class RenderPipelineMetalSDL : public RenderPipeline {
 private:

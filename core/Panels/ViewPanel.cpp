@@ -3,7 +3,9 @@
 ViewPanel::ViewPanel(vec_float4 borders, Scene *scene) : Panel(borders, scene) {
     type_ = PanelType::View;
 
-    cmaera_ = new Camera();
+    camera_ = new Camera();
+    elements_.faces = true;
+    elements_.light = true;
 }
 
 ViewPanel::~ViewPanel() {
@@ -18,12 +20,64 @@ void ViewPanel::HandleInput() {
     HandleCameraMovement();
 }
 
-void ViewPanel::PrepareOutBuffers() {
-    out_buffers_.camera->size = sizeof(Camera);
-    out_buffers_.camera->data = camera_;
+void ViewPanel::InitOutBuffers() {
+    Panel::InitOutBuffers();
+    
+    // camera
+    if (out_buffers_[PNL_CAMERA_OUTBUF_IDX] == NULL || out_buffers_[PNL_CAMERA_OUTBUF_IDX]->capacity < sizeof(Camera)) {
+        if (out_buffers_[PNL_CAMERA_OUTBUF_IDX] != NULL) { free(out_buffers_[PNL_CAMERA_OUTBUF_IDX]); }
+        out_buffers_[PNL_CAMERA_OUTBUF_IDX] = CreateBuffer(sizeof(Camera));
+    }
+    out_buffers_[PNL_CAMERA_OUTBUF_IDX]->size = sizeof(Camera);
+    SetBufferElement(out_buffers_[PNL_CAMERA_OUTBUF_IDX], 0, sizeof(Camera), (char *) camera_);
 
-    out_buffers_.scene_lights->size = scene_->NumLights() * sizeof(Light);
-    out_buffers_.scene_lights->data = scene_->
+    // lights
+    std::vector<SimpleLight> lights = scene_->GetSimpleLights();
+    if (out_buffers_[PNL_LIGHT_OUTBUF_IDX] == NULL) { out_buffers_[PNL_LIGHT_OUTBUF_IDX] = CreateBuffer(sizeof(SimpleLight)); }
+    SetDynamicBufferData(&out_buffers_[PNL_LIGHT_OUTBUF_IDX], (char *) lights.data(), scene_->NumLights()*sizeof(SimpleLight));
+    
+    // prelit face
+    std::vector<Face> faces = GetSceneFaces(scene_);
+    if (out_buffers_[PNL_PRELIT_FACE_OUTBUF_IDX] == NULL) { out_buffers_[PNL_PRELIT_FACE_OUTBUF_IDX] = CreateBuffer(sizeof(Face)); }
+    SetDynamicBufferData(&out_buffers_[PNL_PRELIT_FACE_OUTBUF_IDX], (char *) faces.data(), faces.size()*sizeof(Face));
+    
+    // nodes
+    std::vector<Node> nodes = GetSceneNodes(scene_);
+    if (out_buffers_[PNL_NODE_OUTBUF_IDX] == NULL) { out_buffers_[PNL_NODE_OUTBUF_IDX] = CreateBuffer(sizeof(Node)); }
+    SetDynamicBufferData(&out_buffers_[PNL_NODE_OUTBUF_IDX], (char *) nodes.data(), nodes.size()*sizeof(Node));
+    
+    // node model ids
+    std::vector<uint32_t> nodemodelids = GetSceneNodeModelIDs(scene_);
+    if (out_buffers_[PNL_NODEMODELID_OUTBUF_IDX] == NULL) { out_buffers_[PNL_NODEMODELID_OUTBUF_IDX] = CreateBuffer(sizeof(uint32_t)); }
+    SetDynamicBufferData(&out_buffers_[PNL_NODEMODELID_OUTBUF_IDX], (char *) nodemodelids.data(), nodemodelids.size()*sizeof(uint32_t));
+    
+    // node vertex links
+    std::vector<NodeVertexLink> nvlinks = GetSceneNVLinks(scene_);
+    if (out_buffers_[PNL_NODEVERTEXLNK_OUTBUF_IDX] == NULL) { out_buffers_[PNL_NODEVERTEXLNK_OUTBUF_IDX] = CreateBuffer(sizeof(NodeVertexLink)); }
+    SetDynamicBufferData(&out_buffers_[PNL_NODEVERTEXLNK_OUTBUF_IDX], (char *) nvlinks.data(), nvlinks.size()*sizeof(NodeVertexLink));
+    
+    // model transforms
+    std::vector<ModelTransform> modeltrans = GetSceneModelTransforms(scene_);
+    if (out_buffers_[PNL_MODELTRANS_OUTBUF_IDX] == NULL) { out_buffers_[PNL_MODELTRANS_OUTBUF_IDX] = CreateBuffer(sizeof(ModelTransform)); }
+    SetDynamicBufferData(&out_buffers_[PNL_MODELTRANS_OUTBUF_IDX], (char *) modeltrans.data(), modeltrans.size()*sizeof(ModelTransform));
+    
+    // TODO: slice
+}
+
+void ViewPanel::InitExtraBuffers() {
+    Panel::InitExtraBuffers();
+    
+    // scene faces
+    std::vector<Face> scfaces = GetSceneFaces(scene_);
+    if (extra_buffers_[PNL_SCFACE_XBUF] == NULL) { extra_buffers_[PNL_SCFACE_XBUF] = CreateBuffer(sizeof(Face)); }
+    SetDynamicBufferData(&extra_buffers_[PNL_SCFACE_XBUF], (char *) scfaces.data(), scfaces.size()*sizeof(Face));
+    
+    // TODO: control face
+    
+    // scene edges
+    std::vector<vec_int2> scedges = GetSceneEdges(scene_);
+    if (extra_buffers_[PNL_SCEDGE_XBUF] == NULL) { extra_buffers_[PNL_SCEDGE_XBUF] = CreateBuffer(sizeof(vec_int2)); }
+    SetDynamicBufferData(&extra_buffers_[PNL_SCEDGE_XBUF], (char *) scedges.data(), scedges.size()*sizeof(vec_int2));
 }
 
 void ViewPanel::SetCamera(Camera *c) {

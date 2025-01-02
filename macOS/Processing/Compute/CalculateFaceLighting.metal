@@ -29,12 +29,12 @@ kernel void CalculateFaceLighting(
     const constant Buffer *lights [[buffer(4)]],
    unsigned int fid[[thread_position_in_grid]]
 ) {
-    vec_int2 pid_rfid = GlobalToPanelBufIdx(panel_info_buffer, PNL_FACE_OUTBUF_IDX, fid, sizeof(Face));
+    vec_int2 pid_rfid = GlobalToPanelBufIdx(panel_info_buffer, PNL_PRELIT_FACE_OUTBUF_IDX, fid, sizeof(Face));
     int pid = pid_rfid.x;
     int rfid = pid_rfid.y;
     
     // get scene face and calculate normal
-    constant Face *f = (constant Face *) GetConstantPanelBufElementFromRelIdx(panel_info_buffer, scene_faces, PNL_FACE_OUTBUF_IDX, pid, rfid, sizeof(Face));
+    constant Face *f = (constant Face *) GetConstantPanelBufElementFromRelIdx(panel_info_buffer, scene_faces, PNL_PRELIT_FACE_OUTBUF_IDX, pid, rfid, sizeof(Face));
     unsigned long fv_offset = ComputeBufOffset(panel_info_buffer, CPT_COMPMODELVERTEX_OUTBUF_IDX, pid); // panel vertex start
     device Vertex *v0 = (device Vertex *) GetDeviceComputeBufElementFromRelIdx(panel_info_buffer, cpt_vertices, CPT_COMPMODELVERTEX_OUTBUF_IDX, pid, f->vertices[0]+fv_offset, sizeof(Vertex));
     device Vertex *v1 = (device Vertex *) GetDeviceComputeBufElementFromRelIdx(panel_info_buffer, cpt_vertices, CPT_COMPMODELVERTEX_OUTBUF_IDX, pid, f->vertices[0]+fv_offset, sizeof(Vertex));

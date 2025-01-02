@@ -21,7 +21,10 @@ Engine::~Engine() {
 int Engine::init() {
     srand(time(NULL));
     
-    window = new Window(vec_make_int2(window_width, window_height));
+    WindowAttributes win_attr;
+    win_attr.screen_height = window_height;
+    win_attr.screen_width = window_width;
+    window = new Window(win_attr);
     window->MakeViewWindow(scene);
 
     if (SetPipelines()) {

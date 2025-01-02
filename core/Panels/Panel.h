@@ -16,6 +16,7 @@
 #include "../Utils/Vec.h"
 #include "../Utils/SceneUtils.h"
 #include "../Modeling/Scene.h"
+#include "../UI/UIElement.h"
 
 using namespace DragonflyUtils;
 using namespace Vec;
@@ -28,13 +29,13 @@ enum PanelType {
 // what to render - faces, vertices, ui...
 struct PanelElements {
     bool scene = false;
-    bool faces = false; // * if faces, edges, vertices, nodes, or slices are true, then scene must also be true
+    bool faces = false;
     bool edges = false;
-    bool vertices = false;
-    bool nodes = false;
+    bool vertices = false; // squares
+    bool nodes = false; // circles
     bool slices = false;
-    bool controls = false;
     bool ui = false; // not including imgui
+    bool light = false;
 };
 
 class Panel {
@@ -54,14 +55,19 @@ protected:
     bool wanted_buffers_[CPT_NUM_OUTBUFS];
     // all possible buffers to take in from the gpu pipeline
     Buffer *in_buffers_[CPT_NUM_OUTBUFS];
+    // extra buffers to store some face data
+    bool dirty_extra_buffers_[PNL_NUM_XBUFS];
+    Buffer *extra_buffers_[PNL_NUM_XBUFS];
 
     // input
     Mouse mouse_;
     Keys keys_;
 
-    virtual void HandleInput() = 0;
-    // should only write data if needed
-    virtual void PrepareOutBuffers() = 0;
+    virtual void HandleInput();
+    // create needed out buffers and set initial data - should only call on init and scene change
+    virtual void InitOutBuffers();
+    // create needed extra buffers and set initial data - usage same as above
+    virtual void InitExtraBuffers();
     // populate compiled_buffer_key_indices_
     virtual void PrepareCompiledBufferKeyIndices();
     // resize/reallocate if needed
@@ -84,7 +90,10 @@ public:
     Buffer **GetOutBuffers();
     uint64_t *GetCompiledBufferKeyIndices();
     bool IsBufferWanted(unsigned int buf);
-    Buffer ** GetInBuffers(bool realloc);
+    Buffer **GetInBuffers(bool realloc);
+    bool IsXBufferDirty(unsigned int buf);
+    void CleanXBuffer(unsigned int buf);
+    Buffer **GetXBuffers();
 
     void SetInputData(Mouse m, Keys k);
 };

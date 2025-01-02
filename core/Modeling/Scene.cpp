@@ -28,18 +28,18 @@ float flat_line(float x) {
 Scene::Scene() {
     // CreateNewModel();
     
-    PointLight *pl = new PointLight();
+    PointLight pl;
     Basis lightb;
     lightb.pos.x = -5;
     lightb.pos.z = 5;
-    pl->SetColor(vec_make_float4(1,0,0,1));
+    pl.SetColor(vec_make_float4(1,0,0,1));
     AddLight(pl, lightb);
     
-    PointLight *pl2 = new PointLight();
+    PointLight pl2;
     Basis lightb2;
     lightb2.pos.x = 5;
     lightb2.pos.z = 5;
-    pl2->SetColor(vec_make_float4(0,1,0,1));
+    pl2.SetColor(vec_make_float4(0,1,0,1));
     AddLight(pl2, lightb2);
 
     BeanForce *bf = new BeanForce();
@@ -55,7 +55,7 @@ Scene::Scene() {
 
     using std::placeholders::_1;
     std::function<bool(vec_float3)> in_ff = std::bind(&ForceField::Contains, ff, _1);
-    Model *m = Wrap(0, 0, 0.5, 0.05, 0.4, false, in_ff);
+    Model m = *Wrap(0, 0, 0.5, 0.05, 0.4, false, in_ff);
     ModelTransform new_uniform;
     new_uniform.b = Basis();
     new_uniform.rotate_origin = vec_make_float3(0, 0, 0);
@@ -63,18 +63,10 @@ Scene::Scene() {
 }
 
 Scene::~Scene() {
-    for (int i = 0; i < models.size(); i++) {
-        delete models[i];
-    }
-    
-    for (int i = 0; i < slices.size(); i++) {
-        delete slices[i];
-    }
 }
 
 void Scene::GetFromFolder(std::string path) {
     for (int i = models.size()-1; i >= 0; i--) {
-        delete models.at(i);
         models.erase(models.begin()+i);
     }
     
@@ -108,8 +100,8 @@ void Scene::GetFromFolder(std::string path) {
             
             model_uniforms.push_back(mu);
             
-            Model *m = new Model();
-            m->FromFile(path+"/Models/"+model_file);
+            Model m;
+            m.FromFile(path+"/Models/"+model_file);
             models.push_back(m);
             
             mid++;
@@ -124,7 +116,7 @@ Model * Scene::GetModel(unsigned long mid) {
         return NULL;
     }
     
-    return models[mid];
+    return &models[mid];
 }
 
 ModelTransform * Scene::GetModelUniforms(unsigned long mid) {
@@ -140,7 +132,7 @@ Slice * Scene::GetSlice(unsigned long sid) {
         return NULL;
     }
     
-    return slices[sid];
+    return &slices[sid];
 }
 
 ModelTransform * Scene::GetSliceUniforms(unsigned long sid) {
@@ -156,7 +148,7 @@ Light *Scene::GetLight(unsigned long lid) {
         return NULL;
     }
     
-    return lights[lid];
+    return &lights[lid];
 }
 
 Basis *Scene::GetLightBasis(unsigned long lid) {
@@ -382,8 +374,8 @@ void Scene::MoveLightTo(unsigned int lid, float x, float y, float z) {
 }
 
 void Scene::CreateNewModel() {
-    Model *m = new Model();
-    m->MakeCube();
+    Model m;
+    m.MakeCube();
     models.push_back(m);
     ModelTransform new_uniform;
     new_uniform.b = Basis();
@@ -393,8 +385,8 @@ void Scene::CreateNewModel() {
 }
 
 void Scene::NewModelFromFile(std::string path) {
-    Model *m = new Model();
-    m->FromFile(path);
+    Model m;
+    m.FromFile(path);
     models.push_back(m);
     ModelTransform new_uniform;
     new_uniform.b = Basis();
@@ -405,7 +397,7 @@ void Scene::NewModelFromFile(std::string path) {
 
 void Scene::NewModelFromPointData(std::string path) {
     PointData *pd = PointDataFromFile(path);
-    Model *m = ModelFromPointData(pd);
+    Model m = *ModelFromPointData(pd);
     delete pd;
     models.push_back(m);
     ModelTransform new_uniform;
@@ -415,12 +407,12 @@ void Scene::NewModelFromPointData(std::string path) {
     model_uniforms.push_back(new_uniform);
 }
 
-void Scene::AddModel(Model *m, ModelTransform mu) {
+void Scene::AddModel(Model m, ModelTransform mu) {
     models.push_back(m);
     model_uniforms.push_back(mu);
 }
 
-void Scene::AddSlice(Slice *s) {
+void Scene::AddSlice(Slice s) {
     slices.push_back(s);
     
     ModelTransform new_uniform;
@@ -430,14 +422,13 @@ void Scene::AddSlice(Slice *s) {
     slice_uniforms.push_back(new_uniform);
 }
 
-void Scene::AddLight(Light *l, Basis b) {
+void Scene::AddLight(Light l, Basis b) {
     lights.push_back(l);
     light_bases.push_back(b);
 }
 
 void Scene::RemoveModel(unsigned long mid) {
     if (mid < models.size()) {
-        delete models[mid];
         models.erase(models.begin() + mid);
         model_uniforms.erase(model_uniforms.begin() + mid);
     }
@@ -445,7 +436,6 @@ void Scene::RemoveModel(unsigned long mid) {
 
 void Scene::RemoveSlice(unsigned long sid) {
     if (sid < slices.size()) {
-        delete slices[sid];
         slices.erase(slices.begin() + sid);
         slice_uniforms.erase(slice_uniforms.begin() + sid);
     }
@@ -453,7 +443,6 @@ void Scene::RemoveSlice(unsigned long sid) {
 
 void Scene::RemoveLight(unsigned long lid) {
     if (lid < lights.size()) {
-        delete lights[lid];
         lights.erase(lights.begin() + lid);
         light_bases.erase(light_bases.begin() + lid);
     }
@@ -471,14 +460,14 @@ unsigned long Scene::NumLights() {
     return lights.size();
 }
 
-std::vector<Model *> * Scene::GetModels() {
+std::vector<Model> * Scene::GetModels() {
     return &models;
 }
 std::vector<ModelTransform> * Scene::GetAllModelUniforms() {
     return &model_uniforms;
 }
 
-std::vector<Slice *> * Scene::GetSlices() {
+std::vector<Slice> * Scene::GetSlices() {
     return &slices;
 }
 std::vector<ModelTransform> * Scene::GetAllSliceUniforms() {
@@ -492,8 +481,17 @@ std::vector<ModelTransform> * Scene::GetAllSliceUniforms() {
     return attr;
 }*/
 
-std::vector<Light *> *Scene::GetLights() {
+std::vector<Light> *Scene::GetLights() {
     return &lights;
+}
+
+std::vector<SimpleLight> Scene::GetSimpleLights() {
+    std::vector<SimpleLight> ret;
+    for (int i = 0; i < lights.size(); i++) {
+        ret.push_back(lights[i].ToSimpleLight(light_bases[i]));
+    }
+    
+    return ret;
 }
 
 std::vector<Basis> *Scene::GetLightBases() {
@@ -536,10 +534,10 @@ void Scene::SaveToFolder(std::string path) {
     myfile.open ((path+"/uniforms.lair").c_str());
     
     for (int i = 3; i < model_uniforms.size(); i++) {
-        models.at(i)->SaveToFile(path+"/Models/");
+        models.at(i).SaveToFile(path+"/Models/");
         
         ModelTransform mu = model_uniforms.at(i);
-        myfile << models.at(i)->GetName() << ".drgn ";
+        myfile << models.at(i).GetName() << ".drgn ";
 //        myfile << mu.position.x << " " << mu.position.y << " " << mu.position.z << " ";
 //        myfile << mu.rotate_origin.x << " " << mu.rotate_origin.y << " " << mu.rotate_origin.z << " ";
 //        myfile << mu.angle.x << " " << mu.angle.y << " " << mu.angle.z << std::endl;

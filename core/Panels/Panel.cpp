@@ -1,13 +1,32 @@
 #include "Panel.h"
 
 Panel::Panel(vec_float4 borders, Scene *scene) : borders_(borders), scene_(scene) {
-    for (int i = 0; i < PNL_NUM_OUTBUFS; i++) {
-        dirty_buffers_[i] = true;
-        out_buffers_[i] = NULL;
-    }
     for (int i = 0; i < CPT_NUM_OUTBUFS; i++) {
         wanted_buffers_[i] = false;
         in_buffers_[i] = NULL;
+    }
+    
+    InitOutBuffers();
+    InitExtraBuffers();
+}
+
+void Panel::HandleInput() {
+    
+}
+
+void Panel::InitOutBuffers() {
+    for (int i = 0; i < PNL_NUM_OUTBUFS; i++) {
+        dirty_buffers_[i] = false;
+        if (out_buffers_[i] != NULL) { free(out_buffers_); }
+        out_buffers_[i] = NULL;
+    }
+}
+
+void Panel::InitExtraBuffers() {
+    for (int i = 0; i < PNL_NUM_XBUFS; i++) {
+        dirty_extra_buffers_[i] = false;
+        if (extra_buffers_[i] != NULL) { free(extra_buffers_); }
+        extra_buffers_[i] = NULL;
     }
 }
 
@@ -29,7 +48,6 @@ PanelElements Panel::GetElements() { return elements_; }
 bool Panel::IsBufferDirty(unsigned int buf) { return dirty_buffers_[buf]; }
 void Panel::CleanBuffer(unsigned int buf) { dirty_buffers_[buf] = false; }
 Buffer **Panel::GetOutBuffers() {
-    PrepareOutBuffers();
     return out_buffers_;
 }
 uint64_t *Panel::GetCompiledBufferKeyIndices() {
@@ -41,6 +59,9 @@ Buffer **Panel::GetInBuffers(bool realloc) {
     if (realloc) { PrepareInBuffers(); }
     return in_buffers_;
 }
+bool Panel::IsXBufferDirty(unsigned int buf) { return dirty_extra_buffers_[buf]; }
+void Panel::CleanXBuffer(unsigned int buf) { dirty_extra_buffers_[buf] = false; }
+Buffer **Panel::GetXBuffers() { return extra_buffers_; }
 
 void Panel::SetInputData(Mouse m, Keys k) {
     keys_ = k;
@@ -60,6 +81,7 @@ void Panel::PrepareInBuffers() {
     unsigned long inbuf_sizes[CPT_NUM_OUTBUFS];
     inbuf_sizes[CPT_COMPCOMPVERTEX_OUTBUF_IDX] = sizeof(Vertex) * (compiled_buffer_key_indices_[CBKI_V_SIZE_IDX]);
     inbuf_sizes[CPT_COMPCOMPFACE_OUTBUF_IDX] = sizeof(Face) * (compiled_buffer_key_indices_[CBKI_F_SIZE_IDX]);
+    inbuf_sizes[CPT_COMPCOMPEDGE_OUTBUF_IDX] = sizeof(vec_int2) * (compiled_buffer_key_indices_[CBKI_E_SIZE_IDX]);
     inbuf_sizes[CPT_COMPMODELVERTEX_OUTBUF_IDX] = sizeof(Vertex) * NumSceneVertices(scene_); // TODO: + controls vertices
     inbuf_sizes[CPT_COMPMODELNODE_OUTBUF_IDX] = sizeof(Vertex) * NumSceneNodes(scene_);
 
@@ -79,7 +101,7 @@ void Panel::PrepareCompiledBufferKeyIndices() {
     // vertices
     uint32_t vertex_size = 0;
     compiled_buffer_key_indices_[CBKI_V_SCENE_START_IDX] = vertex_size;
-    if (elements_.scene && scene_ != NULL ) { vertex_size += NumSceneVertices(scene_); }
+    if (elements_.scene) { vertex_size += NumSceneVertices(scene_); }
     compiled_buffer_key_indices_[CBKI_V_CONTROL_START_IDX] = vertex_size; // default no controls
     compiled_buffer_key_indices_[CBKI_V_DOT_START_IDX] = vertex_size;
     if (elements_.slices && scene_ != NULL) { vertex_size += NumSceneDots(scene_); }

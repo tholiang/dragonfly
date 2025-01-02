@@ -27,7 +27,7 @@ kernel void CalculateProjectedVertices(
     const constant Buffer *cameras [[buffer(3)]],
     unsigned int vid [[thread_position_in_grid]]
 ) {
-    vec_int2 pid_rvid = GlobalToComputeBufIdx(panel_info_buffer, CPT_COMPMODELVERTEX_OUTBUF_IDX, vid, sizeof(Vertex));
+    vec_int2 pid_rvid = GlobalToCompiledBufIdx(panel_info_buffer, CPT_COMPCOMPVERTEX_OUTBUF_IDX, CBKI_V_SCENE_START_IDX, CBKI_V_CONTROL_START_IDX, vid, sizeof(Vertex));
     int pid = pid_rvid.x;
     int rvid = pid_rvid.y;
     
@@ -39,6 +39,4 @@ kernel void CalculateProjectedVertices(
     device Vertex *outv = (device Vertex *) GetDeviceComputeBufElementFromRelIdx(panel_info_buffer, compiled_vertices, CPT_COMPCOMPVERTEX_OUTBUF_IDX, pid, orvid, sizeof(Vertex));
     *outv = PointToPixel(*v, c);
     outv->z += 0.05;
-    
-    // TODO: using CBKI_V_SCENE_START_IDX but this also sets control projections - works for now because these are stored contiguously
 }

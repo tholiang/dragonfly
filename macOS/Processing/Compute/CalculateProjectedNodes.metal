@@ -30,9 +30,9 @@ kernel void CalculateProjectedNodes(
     const constant Buffer *cameras [[buffer(5)]],
     unsigned int nid [[thread_position_in_grid]]
 ) {
-    vec_int2 pid_rnid = GlobalToPanelBufIdx(panel_info_buffer, PNL_NODE_OUTBUF_IDX, nid, sizeof(Node));
+    vec_int2 pid_rnid = GlobalToCompiledBufIdx(panel_info_buffer, CPT_COMPMODELNODE_OUTBUF_IDX, CBKI_V_NCIRCLE_START_IDX, nid*9, sizeof(Vertex));
     int pid = pid_rnid.x;
-    int rnid = pid_rnid.y;
+    int rnid = pid_rnid.y/9;
     
     // get projected node vertex
     device Node *node = (device Node *) GetDeviceComputeBufElementFromRelIdx(panel_info_buffer, nodes, CPT_COMPMODELNODE_OUTBUF_IDX, pid, rnid, sizeof(Node));

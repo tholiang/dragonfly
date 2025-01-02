@@ -119,9 +119,9 @@ void Window::PrepareBuffers() {
 
     // set some info buffer stuff
     for (int j = 0; j < panels_.size(); j++) {
-        PanelBufferInfo *info_buf = (PanelBufferInfo *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelBufferInfo));
-        info_buf->borders = panels_[j].GetBorders();
-        memcpy(&info_buf->compiled_buffer_key_indices, panels_[j].GetCompiledBufferKeyIndices(), sizeof(uint64_t)*CBKI_NUM_KEYS);
+        PanelBufferInfo *info = (PanelBufferInfo *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelBufferInfo));
+        info->borders = panels_[j].GetBorders();
+        memcpy(&info->compiled_buffer_key_indices, panels_[j].GetCompiledBufferKeyIndices(), sizeof(uint64_t)*CBKI_NUM_KEYS);
     }
 
 
@@ -137,16 +137,22 @@ void Window::PrepareBuffers() {
         bool reorg = false;
         for (int j = 0; j < panels_.size(); j++) {
             // set panel info start idx (to what it will be)
-            PanelBufferInfo *info_buf = (PanelBufferInfo *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelBufferInfo));
-            if (info_buf->panel_buffer_starts[i] != total_capacity) { // if start it off - then some buffer capacities were changed
-                info_buf->panel_buffer_starts[i] = total_capacity;
+            PanelBufferInfo *info = (PanelBufferInfo *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelBufferInfo));
+            if (info->panel_buffer_starts[i] != total_capacity) { // if start it off - then some buffer capacities were changed
+                info->panel_buffer_starts[i] = total_capacity;
                 reorg = true;
             }
-
+            
+            if (panel_out_buffers[j][i] == NULL) {
+                info->panel_buffer_headers[i].size = 0;
+                info->panel_buffer_headers[i].capacity = 0;
+                continue;
+            }
+            
             BufferHeader header = *((BufferHeader *) panel_out_buffers[j][i]);
             total_size += header.size;
             total_capacity += header.capacity;
-            info_buf->panel_buffer_headers[i] = header;
+            info->panel_buffer_headers[i] = header;
         }
 
         // regenerate compiled buffer if needed
@@ -160,6 +166,7 @@ void Window::PrepareBuffers() {
 
         // fix data
         for (int j = 0; j < panels_.size(); j++) {
+            if (panel_out_buffers[j][i] == NULL) { continue; }
             PanelBufferInfo *info_buf = (PanelBufferInfo *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelBufferInfo));
             if (reorg || regen || panels_[j].IsBufferDirty(i)) {
                 void *panel_buffer_start = compiled_panel_buffers_[i]+info_buf->panel_buffer_starts[i];
@@ -184,13 +191,13 @@ void Window::PrepareBuffers() {
         unsigned long total_size = 0;
         unsigned long total_capacity = 0;
         for (int j = 0; j < panels_.size(); j++) {
-            PanelBufferInfo *info_buf = (PanelBufferInfo *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelBufferInfo));
-            info_buf->compute_buffer_starts[j] = total_size;
+            PanelBufferInfo *info = (PanelBufferInfo *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelBufferInfo));
+            info->compute_buffer_starts[j] = total_size;
 
             BufferHeader header = *((BufferHeader *) panel_in_buffers[j][i]);
             total_size += header.size;
             total_capacity += header.capacity;
-            info_buf->compute_buffer_headers[i] = header;
+            info->compute_buffer_headers[i] = header;
         }
 
         // regenerate compiled buffer if needed
@@ -198,8 +205,88 @@ void Window::PrepareBuffers() {
             if (compute_buffers_[i] != NULL) { free(compute_buffers_[i]); }
             compute_buffers_[i] = (Buffer *) malloc(sizeof(BufferHeader) + total_capacity);
             compute_buffers_[i]->capacity = total_capacity;
+            dirty_compute_buffers_[i] = true;
         }
         compute_buffers_[i]->size = total_size;
+    }
+    
+    UpdateComputeCompiledBuffers();
+}
+
+void Window::UpdateComputeCompiledBuffers() {
+    unsigned long total_comp_vertex_count = 0;
+    for (int j = 0; j < panels_.size(); j++) {
+        PanelBufferInfo *info = (PanelBufferInfo *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelBufferInfo));
+        Buffer **panel_extra_buffers = panels_[j].GetXBuffers();
+        
+        // scene faces
+        if (panel_extra_buffers[PNL_SCFACE_XBUF] != NULL && panels_[j].IsXBufferDirty(PNL_SCFACE_XBUF)) {
+            unsigned long v_offset = total_comp_vertex_count + info->compiled_buffer_key_indices[CBKI_V_SCENE_START_IDX];
+            unsigned long rf_offset = info->compiled_buffer_key_indices[CBKI_F_SCENE_START_IDX];
+            Buffer *panel_sc_faces = panel_extra_buffers[PNL_SCFACE_XBUF];
+            for (int k = 0; k < panel_sc_faces->size; k++) {
+                Face *pf = (Face *) GetBufferElement(panel_sc_faces, k, sizeof(Face));
+                Face *cf = (Face *) GetBufferElement(compute_buffers_[CPT_COMPCOMPFACE_OUTBUF_IDX], k+rf_offset, sizeof(Face), info->compute_buffer_starts[CPT_COMPCOMPFACE_OUTBUF_IDX]);
+                *cf = *pf;
+                cf->vertices[0] += v_offset;
+                cf->vertices[1] += v_offset;
+                cf->vertices[2] += v_offset;
+            }
+            panels_[j].CleanXBuffer(PNL_SCFACE_XBUF);
+            dirty_compute_buffers_[CPT_COMPCOMPFACE_OUTBUF_IDX] = true;
+        }
+        
+        // control faces
+        if (panel_extra_buffers[PNL_CTFACE_XBUF] != NULL && panels_[j].IsXBufferDirty(PNL_CTFACE_XBUF)) {
+            unsigned long v_offset = total_comp_vertex_count + info->compiled_buffer_key_indices[CBKI_V_CONTROL_START_IDX];
+            unsigned long rf_offset = info->compiled_buffer_key_indices[CBKI_F_SCENE_START_IDX];
+            Buffer *panel_ct_faces = panel_extra_buffers[PNL_CTFACE_XBUF];
+            for (int k = 0; k < panel_ct_faces->size; k++) {
+                Face *pf = (Face *) GetBufferElement(panel_ct_faces, k, sizeof(Face));
+                Face *cf = (Face *) GetBufferElement(compute_buffers_[CPT_COMPCOMPFACE_OUTBUF_IDX], k+rf_offset, sizeof(Face), info->compute_buffer_starts[CPT_COMPCOMPFACE_OUTBUF_IDX]);
+                *cf = *pf;
+                cf->vertices[0] += v_offset;
+                cf->vertices[1] += v_offset;
+                cf->vertices[2] += v_offset;
+            }
+            panels_[j].CleanXBuffer(PNL_CTFACE_XBUF);
+            dirty_compute_buffers_[CPT_COMPCOMPFACE_OUTBUF_IDX] = true;
+        }
+        
+        // ui faces
+        if (panel_extra_buffers[PNL_UIFACE_XBUF] != NULL && panels_[j].IsXBufferDirty(PNL_UIFACE_XBUF)) {
+            unsigned long v_offset = total_comp_vertex_count + info->compiled_buffer_key_indices[CBKI_V_UI_START_IDX];
+            unsigned long rf_offset = info->compiled_buffer_key_indices[CBKI_F_SCENE_START_IDX];
+            Buffer *panel_ui_faces = panel_extra_buffers[PNL_UIFACE_XBUF];
+            for (int k = 0; k < panel_ui_faces->size; k++) {
+                UIFace *pf = (UIFace *) GetBufferElement(panel_ui_faces, k, sizeof(Face));
+                Face *cf = (Face *) GetBufferElement(compute_buffers_[CPT_COMPCOMPFACE_OUTBUF_IDX], k+rf_offset, sizeof(Face), info->compute_buffer_starts[CPT_COMPCOMPFACE_OUTBUF_IDX]);
+                cf->color = pf->color;
+                cf->vertices[0] = pf->vertices[0] + v_offset;
+                cf->vertices[1] = pf->vertices[1] + v_offset;
+                cf->vertices[2] = pf->vertices[2] + v_offset;
+            }
+            panels_[j].CleanXBuffer(PNL_UIFACE_XBUF);
+            dirty_compute_buffers_[CPT_COMPCOMPFACE_OUTBUF_IDX] = true;
+        }
+        
+        // scene edges
+        if (panel_extra_buffers[PNL_SCEDGE_XBUF] != NULL && panels_[j].IsXBufferDirty(PNL_SCEDGE_XBUF)) {
+            unsigned long v_offset = total_comp_vertex_count + info->compiled_buffer_key_indices[CBKI_V_SCENE_START_IDX];
+            unsigned long re_offset = info->compiled_buffer_key_indices[CBKI_E_SCENE_START_IDX];
+            Buffer *panel_sc_edges = panel_extra_buffers[PNL_SCEDGE_XBUF];
+            for (int k = 0; k < panel_sc_edges->size; k++) {
+                vec_int2 *pf = (vec_int2 *) GetBufferElement(panel_sc_edges, k, sizeof(vec_int2));
+                vec_int2 *cf = (vec_int2 *) GetBufferElement(compute_buffers_[CPT_COMPCOMPEDGE_OUTBUF_IDX], k+re_offset, sizeof(vec_int2), info->compute_buffer_starts[CPT_COMPCOMPEDGE_OUTBUF_IDX]);
+                *cf = *pf;
+                cf->x += v_offset;
+                cf->y += v_offset;
+            }
+            panels_[j].CleanXBuffer(PNL_SCFACE_XBUF);
+            dirty_compute_buffers_[CPT_COMPCOMPFACE_OUTBUF_IDX] = true;
+        }
+        
+        total_comp_vertex_count += info->compiled_buffer_key_indices[CBKI_V_SIZE_IDX];
     }
 }
 
@@ -227,6 +314,17 @@ void Window::CleanCompiledPanelBuffer(unsigned long buf) {
 
 Buffer **Window::GetCompiledPanelBuffers() {
     return compiled_panel_buffers_;
+}
+
+
+bool Window::IsComputeBufferDirty(unsigned long buf) {
+    assert(buf < CPT_NUM_OUTBUFS);
+    return dirty_compute_buffers_[buf];
+}
+
+void Window::CleanComputeBuffer(unsigned long buf) {
+    assert(buf < CPT_NUM_OUTBUFS);
+    dirty_compute_buffers_[buf] = false;
 }
 
 Buffer **Window::GetComputeBuffers() {

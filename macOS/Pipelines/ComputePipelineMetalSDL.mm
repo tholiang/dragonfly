@@ -52,19 +52,19 @@ void ComputePipelineMetalSDL::SetWindowAttributeBuffer(WindowAttributes w) {
 }
 
 void ComputePipelineMetalSDL::ResizePanelBufferInfo() {
-    panel_info_buffer = [device newBufferWithLength:gpu_panel_info_buffer_capacity options:MTLResourceStorageModeManaged];
+    panel_info_buffer = [device newBufferWithLength:gpu_panel_info_buffer_allotment options:MTLResourceStorageModeManaged];
 }
 
 void ComputePipelineMetalSDL::ModifyPanelBufferInfo(Buffer *data) {
-    memcpy(panel_info_buffer.contents, (void *) data, gpu_panel_info_buffer_capacity);
-    [panel_info_buffer didModifyRange: NSMakeRange(0, gpu_panel_info_buffer_capacity)]; // alert gpu about what was modified
+    memcpy(panel_info_buffer.contents, (void *) data, gpu_panel_info_buffer_allotment);
+    [panel_info_buffer didModifyRange: NSMakeRange(0, gpu_panel_info_buffer_allotment)]; // alert gpu about what was modified
 }
 
 void ComputePipelineMetalSDL::ResizePanelBuffer(unsigned long buf, BufferStorageMode storage_mode) {
     MTLResourceOptions options;
     if (storage_mode == Shared) { options = MTLResourceStorageModeShared; }
     else if (storage_mode == Managed) { options = MTLResourceStorageModeManaged; }
-    panel_buffers[buf] = [device newBufferWithLength: gpu_compiled_panel_buffer_capacities[buf] options:options];
+    panel_buffers[buf] = [device newBufferWithLength: gpu_compiled_panel_buffer_allotments[buf] options:options];
 }
 
 void ComputePipelineMetalSDL::ModifyPanelBuffer(unsigned long buf, char *data, unsigned long start, unsigned long len) {
@@ -76,7 +76,12 @@ void ComputePipelineMetalSDL::ResizeComputeBuffer(unsigned long buf, BufferStora
     MTLResourceOptions options;
     if (storage_mode == Shared) { options = MTLResourceStorageModeShared; }
     else if (storage_mode == Managed) { options = MTLResourceStorageModeManaged; }
-    compute_buffers[buf] = [device newBufferWithLength: gpu_compute_buffer_capacities[buf] options:options];
+    compute_buffers[buf] = [device newBufferWithLength: gpu_compute_buffer_allotments[buf] options:options];
+}
+
+void ComputePipelineMetalSDL::ModifyComputeBuffer(unsigned long buf, Buffer *data, unsigned long start, unsigned long len) {
+    memcpy(compute_buffers[buf].contents, (void *) (data + start), len);
+    [compute_buffers[buf] didModifyRange: NSMakeRange(start, len)]; // alert gpu about what was modified
 }
 
 void ComputePipelineMetalSDL::BeginCompute() {
@@ -135,14 +140,14 @@ void ComputePipelineMetalSDL::SendDataToRenderer(RenderPipeline *renderer) {
     RenderPipelineMetalSDL *renderer_metalsdl = (RenderPipelineMetalSDL *) renderer;
     
     for (int i = 0; i < CPT_NUM_OUTBUFS; i++) {
-        renderer_metalsdl->SetBuffer(i, compute_buffers[i], gpu_compute_buffer_capacities[i]);
+        renderer_metalsdl->SetBuffer(i, compute_buffers[i], gpu_compute_buffer_allotments[i]);
     }
 }
 
 void ComputePipelineMetalSDL::SendDataToWindow(Window *w) {
-    char **win_compute_buffers = w->GetComputeBuffers();
+    Buffer **win_compute_buffers = w->GetComputeBuffers();
     
     for (int i = 0; i < CPT_NUM_OUTBUFS; i++) {
-        memcpy((void *) win_compute_buffers[i], compute_buffers[i].contents, gpu_compute_buffer_capacities[i]);
+        memcpy((void *) win_compute_buffers[i], compute_buffers[i].contents, gpu_compute_buffer_allotments[i]);
     }
 }

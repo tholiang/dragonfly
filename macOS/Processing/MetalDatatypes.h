@@ -128,6 +128,11 @@ struct SimpleLight {
     vec_float3 angle_falloff;
 };
 
+struct VertexOut {
+    vector_float4 pos [[position]];
+    vector_float4 color;
+};
+
 
 
 #endif /* MetalDatatypes_h */

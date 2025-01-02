@@ -39,6 +39,7 @@ protected:
     virtual void ResizePanelBuffer(unsigned long buf, BufferStorageMode storage_mode) = 0; // to gpu_compiled_panel_buffer_capacities
     virtual void ModifyPanelBuffer(unsigned long buf, Buffer *data, unsigned long start, unsigned long len) = 0;
     virtual void ResizeComputeBuffer(unsigned long buf, BufferStorageMode storage_mode) = 0; // to gpu_compute_buffer_capacities
+    virtual void ModifyComputeBuffer(unsigned long buf, Buffer *data, unsigned long start, unsigned long len) = 0;
     
     /* Kernels */
     /*

@@ -15,55 +15,60 @@ enum BufferStorageMode {
 };
 
 // panel buffer consts
-const unsigned long PNL_NUM_OUTBUFS = 17;
+const unsigned long PNL_NUM_OUTBUFS = 15;
 
 const unsigned long PNL_CAMERA_OUTBUF_IDX = 0;
 const unsigned long PNL_LIGHT_OUTBUF_IDX = 1;
-const unsigned long PNL_FACE_OUTBUF_IDX = 2;
-const unsigned long PNL_EDGE_OUTBUF_IDX = 3;
-const unsigned long PNL_NODE_OUTBUF_IDX = 4;
-const unsigned long PNL_NODEMODELID_OUTBUF_IDX = 5;
-const unsigned long PNL_NODEVERTEXLNK_OUTBUF_IDX = 6;
-const unsigned long PNL_MODELTRANS_OUTBUF_IDX = 7;
-const unsigned long PNL_SLICEDOT_OUTBUF_IDX = 8;
-const unsigned long PNL_SLICELINE_OUTBUF_IDX = 9;
-const unsigned long PNL_SLICEATTR_OUTBUF_IDX = 10;
-const unsigned long PNL_SLICETRANS_OUTBUF_IDX = 11;
-const unsigned long PNL_DOTSLICEID_OUTBUF_IDX = 12;
-const unsigned long PNL_UIFACE_OUTBUF_IDX = 13;
-const unsigned long PNL_UIVERTEX_OUTBUF_IDX = 14;
-const unsigned long PNL_UIELEMID_OUTBUF_IDX = 15;
-const unsigned long PNL_UITRANS_OUTBUF_IDX = 16;
+const unsigned long PNL_PRELIT_FACE_OUTBUF_IDX = 2;
+const unsigned long PNL_NODE_OUTBUF_IDX = 3;
+const unsigned long PNL_NODEMODELID_OUTBUF_IDX = 4;
+const unsigned long PNL_NODEVERTEXLNK_OUTBUF_IDX = 5;
+const unsigned long PNL_MODELTRANS_OUTBUF_IDX = 6;
+const unsigned long PNL_SLICEDOT_OUTBUF_IDX = 7;
+const unsigned long PNL_SLICELINE_OUTBUF_IDX = 8;
+const unsigned long PNL_SLICEATTR_OUTBUF_IDX = 9;
+const unsigned long PNL_SLICETRANS_OUTBUF_IDX = 10;
+const unsigned long PNL_DOTSLICEID_OUTBUF_IDX = 11;
+const unsigned long PNL_UIVERTEX_OUTBUF_IDX = 12;
+const unsigned long PNL_UIELEMID_OUTBUF_IDX = 13;
+const unsigned long PNL_UITRANS_OUTBUF_IDX = 14;
+
+// panel buffers used more indirectly
+const unsigned long PNL_NUM_XBUFS = 4;
+
+const unsigned long PNL_SCFACE_XBUF = 0;
+const unsigned long PNL_CTFACE_XBUF = 1;
+const unsigned long PNL_UIFACE_XBUF = 2;
+const unsigned long PNL_SCEDGE_XBUF = 3;
 
 // TODO
 const BufferStorageMode PNL_OUTBUF_STORAGE_MODES[PNL_NUM_OUTBUFS] = {
     Shared, /* camera (0) */
     Managed, /* light (1) */
-    Managed, /* face (2) */
-    Managed, /* edge (3) */
-    Managed, /* node (4) */
-    Managed, /* node model id (5) */
-    Managed, /* node vertex link (6) */
-    Managed, /* model transform (7) */
-    Managed, /* slice dot (8) */
-    Managed, /* slice line (9) */
-    Managed, /* slice attribute (10) */
-    Managed, /* slice transform (11) */
-    Managed, /* dot slice id (12) */
-    Managed, /* ui face (13) */
-    Managed, /* ui vertex (14) */
-    Managed, /* ui element id (15) */
-    Managed, /* ui transform (16) */
+    Managed, /* prelit face (2) */
+    Managed, /* node (3) */
+    Managed, /* node model id (4) */
+    Managed, /* node vertex link (5) */
+    Managed, /* model transform (6) */
+    Managed, /* slice dot (7) */
+    Managed, /* slice line (8) */
+    Managed, /* slice attribute (9) */
+    Managed, /* slice transform (10) */
+    Managed, /* dot slice id (11) */
+    Managed, /* ui vertex (12) */
+    Managed, /* ui element id (13) */
+    Managed, /* ui transform (14) */
 };
 
 
 // compute buffer consts
-const unsigned long CPT_NUM_OUTBUFS = 4;
+const unsigned long CPT_NUM_OUTBUFS = 5;
 
 const unsigned long CPT_COMPCOMPVERTEX_OUTBUF_IDX = 0;
 const unsigned long CPT_COMPCOMPFACE_OUTBUF_IDX = 1;
-const unsigned long CPT_COMPMODELVERTEX_OUTBUF_IDX = 2;
-const unsigned long CPT_COMPMODELNODE_OUTBUF_IDX = 3;
+const unsigned long CPT_COMPCOMPEDGE_OUTBUF_IDX = 2;
+const unsigned long CPT_COMPMODELVERTEX_OUTBUF_IDX = 3;
+const unsigned long CPT_COMPMODELNODE_OUTBUF_IDX = 4;
 
 // TODO
 const BufferStorageMode CPT_OUTBUF_STORAGE_MODES[CPT_NUM_OUTBUFS] = {

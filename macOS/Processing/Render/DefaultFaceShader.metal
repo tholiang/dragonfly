@@ -8,30 +8,29 @@
 #include <metal_stdlib>
 using namespace metal;
 #include "../MetalUtil.h"
+#include "../MetalBufferUtil.h"
 
 
-struct VertexOut {
-    vector_float4 pos [[position]];
-    vector_float4 color;
-};
-
-// default vertex shader for faces
-// operates per each vertex index given in every face
-// outputs vertex location exactly and with face color
+/*
+ default vertex shader for faces
+ outputs vertex location exactly and with face color
+ operates per each vertex index given in every face
+ */
 vertex VertexOut DefaultFaceShader (
-    const constant vec_float3 *vertex_array [[buffer(0)]],
-    const constant Face *face_array[[buffer(1)]],
+    const constant Buffer *vertices [[buffer(0)]],
+    const constant Buffer *faces [[buffer(1)]],
     unsigned int vid [[vertex_id]]
 ) {
     // get current face - 3 vertices per face
-    Face currentFace = face_array[vid/3];
+    constant Face *cf = (constant Face *) _GetConstantBufferElement(faces, 0, vid/3, sizeof(Face));
     // get current vertex in face
-    vec_float3 currentVertex = vertex_array[currentFace.vertices[vid%3]];
+    unsigned long cvid = cf->vertices[vid %3];
+    constant Vertex *cv = (constant Vertex *) _GetConstantBufferElement(vertices, 0, cvid, sizeof(Vertex));
     
     // make and return output vertex
     VertexOut output;
-    output.pos = vector_float4(currentVertex.x, currentVertex.y, currentVertex.z, 1);
-    output.color = vector_float4(currentFace.color.x, currentFace.color.y, currentFace.color.z, currentFace.color.w);
+    output.pos = vector_float4(cv->x, cv->y, cv->z, 1);
+    output.color = vector_float4(cf->color.x, cf->color.y, cf->color.z, cf->color.w);
     output.pos.z += 0.1;
     return output;
 }

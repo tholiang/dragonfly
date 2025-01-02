@@ -109,9 +109,17 @@ device void *GetDevicePanelBufElementFromRelIdx(const constant Buffer *panel_inf
     return _GetDeviceBufferElement(data_buffer, panel_val_start, rvid, obj_size);
 }
 
+/*
+ Same thing as above but for const compute buffer data
+ */
+constant void *GetConstantComputeBufElementFromRelIdx(const constant Buffer *panel_info_buffer, const constant Buffer *data_buffer, unsigned long outbuf_idx, unsigned long pid, unsigned int rvid, unsigned int obj_size) {
+    constant PanelBufferInfo *panel_info = (constant PanelBufferInfo *) _GetConstantBufferElement(panel_info_buffer, 0, pid, sizeof(PanelBufferInfo));
+    unsigned long panel_val_start = panel_info->compute_buffer_starts[outbuf_idx];
+    return _GetConstantBufferElement(data_buffer, panel_val_start, rvid, obj_size);
+}
 
 /*
- Same thing as above but for compute buffer data
+ Same thing as above but for device compute buffer data
  */
 device void *GetDeviceComputeBufElementFromRelIdx(const constant Buffer *panel_info_buffer, device Buffer *data_buffer, unsigned long outbuf_idx, unsigned long pid, unsigned int rvid, unsigned int obj_size) {
     constant PanelBufferInfo *panel_info = (constant PanelBufferInfo *) _GetConstantBufferElement(panel_info_buffer, 0, pid, sizeof(PanelBufferInfo));
@@ -187,6 +195,24 @@ vec_int2 GlobalToCompiledBufIdx(const constant Buffer *panel_info_buffer, unsign
     for (unsigned long pid = 0; pid < panel_info_buffer->size; pid++) {
         constant PanelBufferInfo *panel_info = (constant PanelBufferInfo *) _GetConstantBufferElement(panel_info_buffer, 0, pid, sizeof(PanelBufferInfo));
         unsigned long source_size = panel_info->compiled_buffer_key_indices[cbki_idx+1] - panel_info->compiled_buffer_key_indices[cbki_idx];
+        unsigned long num_elems = source_size / obj_size;
+        if (cur_total_idx + num_elems > value_idx) {
+            return vec_make_int2(pid, value_idx - cur_total_idx);
+        }
+        cur_total_idx += num_elems;
+    }
+    return vec_make_int2(-1, -1);
+}
+
+/*
+ above but it allows multiple contiguous cbki idxs
+ idxs are inclusive
+ */
+vec_int2 GlobalToCompiledBufIdx(const constant Buffer *panel_info_buffer, unsigned long outbuf_idx, unsigned long start_cbki_idx, unsigned long end_cbki_idx, unsigned int value_idx, unsigned int obj_size) {
+    unsigned int cur_total_idx = 0;
+    for (unsigned long pid = 0; pid < panel_info_buffer->size; pid++) {
+        constant PanelBufferInfo *panel_info = (constant PanelBufferInfo *) _GetConstantBufferElement(panel_info_buffer, 0, pid, sizeof(PanelBufferInfo));
+        unsigned long source_size = panel_info->compiled_buffer_key_indices[end_cbki_idx+1] - panel_info->compiled_buffer_key_indices[start_cbki_idx];
         unsigned long num_elems = source_size / obj_size;
         if (cur_total_idx + num_elems > value_idx) {
             return vec_make_int2(pid, value_idx - cur_total_idx);

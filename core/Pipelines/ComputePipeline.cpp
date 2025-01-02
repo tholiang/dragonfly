@@ -50,10 +50,15 @@ void ComputePipeline::SetBuffers(Window *w) {
     Buffer **compute_bufs = w->GetComputeBuffers();
     
     for (int i = 0; i < CPT_NUM_OUTBUFS; i++) {
+        if (!w->IsComputeBufferDirty(i)) { continue; }
+        
         if (gpu_compiled_panel_buffer_allotments[i] != TotalBufferSize(compute_bufs[i])) {
             gpu_compiled_panel_buffer_allotments[i] = TotalBufferSize(compute_bufs[i]);
             ResizeComputeBuffer(i, CPT_OUTBUF_STORAGE_MODES[i]);
         }
+        
+        ModifyComputeBuffer(i, compute_bufs[i], 0, gpu_compute_buffer_allotments[i]);
+        w->CleanComputeBuffer(i);
     }
 }
 
