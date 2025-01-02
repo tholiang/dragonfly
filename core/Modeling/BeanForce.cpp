@@ -5,6 +5,9 @@ using namespace DragonflyUtils;
 BeanForce::BeanForce() {
 }
 
+BeanForce::~BeanForce() {
+}
+
 void BeanForce::AddGuideline(float angle, Guideline guideline) {
     std::pair<float, Guideline> entry = std::make_pair(angle, guideline);
     

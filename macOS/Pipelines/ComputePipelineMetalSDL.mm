@@ -67,7 +67,7 @@ void ComputePipelineMetalSDL::ResizePanelBuffer(unsigned long buf, BufferStorage
     panel_buffers[buf] = [device newBufferWithLength: gpu_compiled_panel_buffer_allotments[buf] options:options];
 }
 
-void ComputePipelineMetalSDL::ModifyPanelBuffer(unsigned long buf, char *data, unsigned long start, unsigned long len) {
+void ComputePipelineMetalSDL::ModifyPanelBuffer(unsigned long buf, Buffer *data, unsigned long start, unsigned long len) {
     memcpy(panel_buffers[buf].contents, (void *) (data + start), len);
     [panel_buffers[buf] didModifyRange: NSMakeRange(start, len)]; // alert gpu about what was modified
 }

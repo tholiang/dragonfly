@@ -8,6 +8,7 @@ using namespace Vec;
 
 class Force {
 public:
+    virtual ~Force() = 0;
     virtual bool Contains(vec_float3 point) = 0;
 private:
 };

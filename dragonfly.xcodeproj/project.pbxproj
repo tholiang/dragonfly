@@ -14,6 +14,10 @@
 		D24904BE2CA7503700DEA0F6 /* BeanForce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D24904BD2CA7503700DEA0F6 /* BeanForce.cpp */; };
 		D28B7D852793B4AC00C0E47F /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D28B7D842793B4AC00C0E47F /* SDL2.framework */; };
 		D28B7D862793B4AC00C0E47F /* SDL2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D28B7D842793B4AC00C0E47F /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D293A8862D271FCD00521A2F /* MetalUtil.metal in Sources */ = {isa = PBXBuildFile; fileRef = D293A8852D271FCD00521A2F /* MetalUtil.metal */; };
+		D293A8882D27205200521A2F /* MetalBufferUtil.metal in Sources */ = {isa = PBXBuildFile; fileRef = D293A8872D27205200521A2F /* MetalBufferUtil.metal */; };
+		D293A88A2D2723CB00521A2F /* Force.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D293A8892D2723CB00521A2F /* Force.cpp */; };
+		D293A88C2D27241300521A2F /* Buffers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D293A88B2D27241300521A2F /* Buffers.cpp */; };
 		D29549682BF5779900FE1130 /* Vec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D29549662BF5779900FE1130 /* Vec.cpp */; };
 		D2A0D42E2D065FBD00FEE0D9 /* todo.md in Resources */ = {isa = PBXBuildFile; fileRef = D2A0D42D2D065FBD00FEE0D9 /* todo.md */; };
 		D2A0D4302D065FE000FEE0D9 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = D2A0D42F2D065FE000FEE0D9 /* README.md */; };
@@ -30,7 +34,6 @@
 		D2A0D4532D0E20AB00FEE0D9 /* CalculateFaceLighting.metal in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D4522D0E20AB00FEE0D9 /* CalculateFaceLighting.metal */; };
 		D2A0D4552D0E20C500FEE0D9 /* CalculateSlicePlates.metal in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D4542D0E20C500FEE0D9 /* CalculateSlicePlates.metal */; };
 		D2A0D4572D0E20E200FEE0D9 /* CalculateUIVertices.metal in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D4562D0E20E200FEE0D9 /* CalculateUIVertices.metal */; };
-		D2A0D4592D0E211800FEE0D9 /* SuperDefaultVertexShader.metal in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D4582D0E211800FEE0D9 /* SuperDefaultVertexShader.metal */; };
 		D2A0D45B2D0E213300FEE0D9 /* DefaultFaceShader.metal in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D45A2D0E213300FEE0D9 /* DefaultFaceShader.metal */; };
 		D2A0D45D2D0E214D00FEE0D9 /* SuperDefaultEdgeShader.metal in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D45C2D0E214D00FEE0D9 /* SuperDefaultEdgeShader.metal */; };
 		D2A0D45F2D0E216200FEE0D9 /* FragmentShader.metal in Sources */ = {isa = PBXBuildFile; fileRef = D2A0D45E2D0E216200FEE0D9 /* FragmentShader.metal */; };
@@ -64,7 +67,6 @@
 		D2D8418E2B9D0F4F007224D3 /* FaceAddVertexAction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2D8416D2B9D0F4F007224D3 /* FaceAddVertexAction.cpp */; };
 		D2D8418F2B9D0F4F007224D3 /* ModelMoveAction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2D841702B9D0F4F007224D3 /* ModelMoveAction.cpp */; };
 		D2D841902B9D0F4F007224D3 /* VertexMoveAction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2D841712B9D0F4F007224D3 /* VertexMoveAction.cpp */; };
-		D2D841912B9D0F4F007224D3 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = D2D841732B9D0F4F007224D3 /* Info.plist */; };
 		D2D8419E2B9D0F61007224D3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D2D841982B9D0F61007224D3 /* Assets.xcassets */; };
 		D2D841A12B9D0F61007224D3 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = D2D8419C2B9D0F61007224D3 /* AppDelegate.m */; };
 		D2D841AD2B9D1B8E007224D3 /* Engine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2D841AB2B9D1B8E007224D3 /* Engine.cpp */; };
@@ -130,6 +132,10 @@
 		D24904BC2CA7503700DEA0F6 /* BeanForce.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BeanForce.h; sourceTree = "<group>"; };
 		D24904BD2CA7503700DEA0F6 /* BeanForce.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BeanForce.cpp; sourceTree = "<group>"; };
 		D28B7D842793B4AC00C0E47F /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
+		D293A8852D271FCD00521A2F /* MetalUtil.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = MetalUtil.metal; sourceTree = "<group>"; };
+		D293A8872D27205200521A2F /* MetalBufferUtil.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = MetalBufferUtil.metal; sourceTree = "<group>"; };
+		D293A8892D2723CB00521A2F /* Force.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Force.cpp; sourceTree = "<group>"; };
+		D293A88B2D27241300521A2F /* Buffers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Buffers.cpp; sourceTree = "<group>"; };
 		D29549662BF5779900FE1130 /* Vec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Vec.cpp; sourceTree = "<group>"; };
 		D29549672BF5779900FE1130 /* Vec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Vec.h; sourceTree = "<group>"; };
 		D2A0D42D2D065FBD00FEE0D9 /* todo.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = todo.md; sourceTree = "<group>"; };
@@ -396,10 +402,12 @@
 			children = (
 				D2A0D4422D0E1F2C00FEE0D9 /* Compute */,
 				D2A0D4432D0E1F3600FEE0D9 /* Render */,
+				D2A0D4642D0E26E300FEE0D9 /* MetalConstants.h */,
 				D2A0D4602D0E21AD00FEE0D9 /* MetalDatatypes.h */,
 				D2A0D4402D0E1F0200FEE0D9 /* MetalUtil.h */,
-				D2A0D4642D0E26E300FEE0D9 /* MetalConstants.h */,
+				D293A8852D271FCD00521A2F /* MetalUtil.metal */,
 				D2A0D4652D0E2D7000FEE0D9 /* MetalBufferUtil.h */,
+				D293A8872D27205200521A2F /* MetalBufferUtil.metal */,
 			);
 			path = Processing;
 			sourceTree = "<group>";
@@ -601,8 +609,9 @@
 			isa = PBXGroup;
 			children = (
 				D2A0D43B2D0663E000FEE0D9 /* Constants.h */,
-				D2A0D43A2D0660DF00FEE0D9 /* Buffers.h */,
 				D2A0D4392D0660DF00FEE0D9 /* Misc.h */,
+				D2A0D43A2D0660DF00FEE0D9 /* Buffers.h */,
+				D293A88B2D27241300521A2F /* Buffers.cpp */,
 				D2D841512B9D0F4F007224D3 /* Utils.h */,
 				D2D841532B9D0F4F007224D3 /* Utils.cpp */,
 				D29549672BF5779900FE1130 /* Vec.h */,
@@ -641,8 +650,9 @@
 				D2092AD22BF6D8C4006F6DCC /* ForceField.h */,
 				D2092AD12BF6D8C4006F6DCC /* ForceField.cpp */,
 				D24904BB2CA7503700DEA0F6 /* Force.h */,
-				D24904BD2CA7503700DEA0F6 /* BeanForce.cpp */,
+				D293A8892D2723CB00521A2F /* Force.cpp */,
 				D24904BC2CA7503700DEA0F6 /* BeanForce.h */,
+				D24904BD2CA7503700DEA0F6 /* BeanForce.cpp */,
 			);
 			path = Modeling;
 			sourceTree = "<group>";
@@ -753,7 +763,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastUpgradeCheck = 1310;
+				LastUpgradeCheck = 1510;
 				TargetAttributes = {
 					D2EAF74D27914118002DE553 = {
 						CreatedOnToolsVersion = 13.1;
@@ -786,7 +796,6 @@
 				D2A0D4302D065FE000FEE0D9 /* README.md in Resources */,
 				D2D841312B9D0F44007224D3 /* LICENSE.txt in Resources */,
 				D2D841272B9D0F44007224D3 /* .editorconfig in Resources */,
-				D2D841912B9D0F4F007224D3 /* Info.plist in Resources */,
 				D2D8419E2B9D0F61007224D3 /* Assets.xcassets in Resources */,
 				D2A0D42E2D065FBD00FEE0D9 /* todo.md in Resources */,
 			);
@@ -800,7 +809,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				D2D841A12B9D0F61007224D3 /* AppDelegate.m in Sources */,
-				D2A0D4592D0E211800FEE0D9 /* SuperDefaultVertexShader.metal in Sources */,
 				D2D8418B2B9D0F4F007224D3 /* main.mm in Sources */,
 				D2A0D4372D06604D00FEE0D9 /* Window.cpp in Sources */,
 				D2A0D44B2D0E1FFE00FEE0D9 /* CalculateVertexSquares.metal in Sources */,
@@ -828,9 +836,12 @@
 				D2D841862B9D0F4F007224D3 /* Model.cpp in Sources */,
 				D2A0D45F2D0E216200FEE0D9 /* FragmentShader.metal in Sources */,
 				D2A0D43E2D0A013300FEE0D9 /* SceneUtils.cpp in Sources */,
+				D293A88A2D2723CB00521A2F /* Force.cpp in Sources */,
 				D2D8418D2B9D0F4F007224D3 /* EdgeAddVertexAction.cpp in Sources */,
 				D2C6865C2CF3CE750056A760 /* Panel.cpp in Sources */,
+				D293A8862D271FCD00521A2F /* MetalUtil.metal in Sources */,
 				D2D841212B9D0F44007224D3 /* imgui_impl_metal.mm in Sources */,
+				D293A88C2D27241300521A2F /* Buffers.cpp in Sources */,
 				D2D841AF2B9D1F2B007224D3 /* ComputePipeline.cpp in Sources */,
 				D2D841882B9D0F4F007224D3 /* Slice.cpp in Sources */,
 				D2A0D4492D0E1FE200FEE0D9 /* CalculateProjectedVertices.metal in Sources */,
@@ -848,6 +859,7 @@
 				D2D8417E2B9D0F4F007224D3 /* RenderPipelineMetalSDL.mm in Sources */,
 				D2D841832B9D0F4F007224D3 /* Basis.cpp in Sources */,
 				D2A0D4382D06604D00FEE0D9 /* ViewPanel.cpp in Sources */,
+				D293A8882D27205200521A2F /* MetalBufferUtil.metal in Sources */,
 				D2A0D45D2D0E214D00FEE0D9 /* SuperDefaultEdgeShader.metal in Sources */,
 				D2A0D4552D0E20C500FEE0D9 /* CalculateSlicePlates.metal in Sources */,
 				D2D841902B9D0F4F007224D3 /* VertexMoveAction.cpp in Sources */,
@@ -894,9 +906,12 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -908,6 +923,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -922,12 +938,14 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = PQU428V4N5;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(LOCAL_LIBRARY_DIR)/Frameworks",
 				);
+				GCC_NO_COMMON_BLOCKS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = (
 					/usr/local/include/SDL2/,
@@ -989,9 +1007,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1017,12 +1037,14 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = PQU428V4N5;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(LOCAL_LIBRARY_DIR)/Frameworks",
 				);
+				GCC_NO_COMMON_BLOCKS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = (
 					/usr/local/include/SDL2/,

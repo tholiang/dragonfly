@@ -16,6 +16,7 @@ typedef std::function<float(float)> Guideline;
 class BeanForce : public Force {
 public:
     BeanForce();
+    ~BeanForce();
     void AddGuideline(float angle, Guideline guideline);
 
     // assume the point is in the force's basis

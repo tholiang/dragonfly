@@ -48,7 +48,7 @@ private:
     void ResizePanelBufferInfo(); // to gpu_panel_info_buffer_capacity
     void ModifyPanelBufferInfo(Buffer *buf);
     void ResizePanelBuffer(unsigned long buf, BufferStorageMode storage_mode); // to gpu_compiled_panel_buffer_capacities
-    void ModifyPanelBuffer(unsigned long buf, char *data, unsigned long start, unsigned long len);
+    void ModifyPanelBuffer(unsigned long buf, Buffer *data, unsigned long start, unsigned long len);
     void ResizeComputeBuffer(unsigned long buf, BufferStorageMode storage_mode); // to gpu_compute_buffer_capacities
     void ModifyComputeBuffer(unsigned long buf, Buffer *data, unsigned long start, unsigned long len);
     

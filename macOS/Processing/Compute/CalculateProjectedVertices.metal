@@ -7,7 +7,6 @@
 
 #include <metal_stdlib>
 using namespace metal;
-#include "../MetalUtil.h"
 #include "../MetalBufferUtil.h"
 
 
