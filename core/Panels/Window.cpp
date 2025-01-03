@@ -91,7 +91,7 @@ void Window::HandleMouseMovement(float x, float y, float dx, float dy) {
 }
 
 void Window::MakeViewWindow(Scene *scene) {
-    ViewPanel *view_panel = new ViewPanel(vec_make_float4(0, 0, 1, 1), scene);
+    ViewPanel *view_panel = new ViewPanel(vec_make_float4(-0.25, 0, 0.5, 1), scene);
     panels_.push_back(view_panel);
 }
 
@@ -195,7 +195,7 @@ void Window::PrepareBuffers() {
         unsigned long total_capacity = 0;
         for (int j = 0; j < panels_.size(); j++) {
             PanelBufferInfo *info = (PanelBufferInfo *) GetBufferElement(panel_info_buffer_, j, sizeof(PanelBufferInfo));
-            info->compute_buffer_starts[j] = total_size;
+            info->compute_buffer_starts[i] = total_capacity;
 
             if (panel_in_buffers[j][i] == NULL) {
                 info->compute_buffer_headers[i].size = 0;
@@ -219,6 +219,7 @@ void Window::PrepareBuffers() {
         compute_buffers_[i]->size = total_size;
     }
     
+    dirty_panel_info_buffer_ = true; // TODO
     UpdateComputeCompiledBuffers();
     UpdateKernelCounts();
 }

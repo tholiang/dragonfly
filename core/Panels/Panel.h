@@ -43,7 +43,7 @@ protected:
     // data
     Scene *scene_ = NULL;
 
-    vec_float4 borders_; // panel rectangle relative to window (center, size)
+    vec_float4 borders_; // panel rectangle relative to window (offset (x,y), percent of screen (w, h))
     PanelType type_;
     PanelElements elements_;
     // which out buffers have been modified

@@ -24,7 +24,7 @@ int Engine::init() {
     WindowAttributes win_attr;
     win_attr.screen_height = window_height;
     win_attr.screen_width = window_width;
-    scene = new Scene();
+    scene = new Scene(); // TODO: shouldn't be a member variable
     window = new Window(win_attr);
     window->MakeViewWindow(scene);
 

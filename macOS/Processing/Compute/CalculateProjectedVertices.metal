@@ -38,4 +38,12 @@ kernel void CalculateProjectedVertices(
     device Vertex *outv = (device Vertex *) GetDeviceComputeBufElementFromRelIdx(panel_info_buffer, compiled_vertices, CPT_COMPCOMPVERTEX_OUTBUF_IDX, pid, orvid, sizeof(Vertex));
     *outv = PointToPixel(*v, c);
     outv->z += 0.05;
+    
+    vec_float4 panel_borders = ((constant PanelBufferInfo *) _GetConstantBufferElement(panel_info_buffer, 0, pid, sizeof(PanelBufferInfo)))->borders;
+    outv->x *= panel_borders.z;
+    outv->y *= panel_borders.w;
+    outv->x += panel_borders.x*2;
+    outv->y += panel_borders.y*2;
+    
+    // TODO: clipping
 }
