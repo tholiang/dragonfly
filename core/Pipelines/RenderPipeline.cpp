@@ -11,3 +11,8 @@
 RenderPipeline::~RenderPipeline() {
     
 }
+
+void RenderPipeline::SetCounts(unsigned long nf, unsigned long ne) {
+    num_faces = nf;
+    num_edges = ne;
+}

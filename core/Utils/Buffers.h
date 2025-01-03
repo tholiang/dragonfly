@@ -31,6 +31,9 @@ struct PanelBufferInfo {
 // create buffer
 Buffer *CreateBuffer(unsigned long capacity);
 
+// return a pointer to the start of the buffer data
+char *BufferData(Buffer *buf);
+
 // return a pointer to an element in a Buffer object, given an index and the size of each element in the buffer
 void *GetBufferElement(Buffer *buf, unsigned long idx, unsigned int obj_size);
 

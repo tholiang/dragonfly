@@ -9,20 +9,20 @@ class ViewPanel : public Panel {
 private:
     Camera *camera_;
     bool lighting_enabled_ = false;
-    float fps = 0.0;
 
-    void HandleCameraMovement();
+    void HandleCameraMovement(float fps);
 
     // inherited
-    void HandleInput();
+    void HandleInput(float fps);
     void InitOutBuffers();
+    void InitInBuffers();
     void InitExtraBuffers();
 public:
     ViewPanel() = delete;
     ViewPanel(vec_float4 borders, Scene *scene);
     ~ViewPanel();
 
-    void Update();
+    void Update(float fps);
 
     void SetCamera(Camera *c);
     void EnableLighting(bool enabled);

@@ -12,7 +12,10 @@ struct WindowAttributes {
 class Window {
 private:
     WindowAttributes attr_;
-    std::vector<Panel> panels_;
+    std::vector<Panel *> panels_;
+    
+    // panel to send input to
+    unsigned long focused_panel_ = 0;
 
     Mouse mouse_;
     Keys keys_;
@@ -34,6 +37,9 @@ private:
     /* in buffers */
     bool dirty_compute_buffers_[CPT_NUM_OUTBUFS];
     Buffer *compute_buffers_[CPT_NUM_OUTBUFS]; // similar format as compiled_panel_buffers_
+    
+    /* counts (num threads) for each kernel */
+    unsigned long kernel_counts_[CPT_NUM_KERNELS];
 
     // call per-frame
     // - update panel_info_buffer_
@@ -45,13 +51,16 @@ private:
     // copies scene, control, and ui faces + scene edges into the compute compiled face buffer
     // sets offsets for vertex references
     void UpdateComputeCompiledBuffers();
+    
+    // updates kernel_counts_ from panel
+    void UpdateKernelCounts();
 public:
     Window() = delete;
     Window(WindowAttributes attr);
     ~Window();
 
     // call at the start of every frame (before any gpu stuff)
-    void Update();
+    void Update(float fps);
 
     void UpdateAttributes(WindowAttributes attr);
     WindowAttributes GetAttributes();
@@ -63,7 +72,7 @@ public:
     void MakeViewWindow(Scene *scene);
 
     unsigned int NumPanels();
-    std::vector<Panel> *GetPanels();
+    std::vector<Panel *> *GetPanels();
     Panel *GetPanel(unsigned int i);
     
     bool IsPanelBufferInfoDirty();
@@ -75,6 +84,7 @@ public:
     bool IsComputeBufferDirty(unsigned long buf);
     void CleanComputeBuffer(unsigned long buf);
     Buffer **GetComputeBuffers();
+    unsigned long *GetKernelCounts();
 };
 
 #endif /* Window_h */

@@ -15,12 +15,15 @@
 #include <iostream>
 #include <cmath>
 
+#include "Utils/Misc.h"
 #include "Utils/Vec.h"
 using namespace Vec;
 
 #include "imgui.h"
 
 namespace DragonflyUtils {
+Camera *MakeCamera();
+// TODO: move to "MathUtils" or something
 bool InIntVector(std::vector<int> &vec, int a);
 bool isInt( std::string str );
 bool isFloat( std::string str );

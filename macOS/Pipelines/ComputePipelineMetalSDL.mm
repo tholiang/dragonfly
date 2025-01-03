@@ -33,11 +33,11 @@ void ComputePipelineMetalSDL::init() {
     kernels[CPT_VERTEX_KRN_IDX] = GetPipelineStateFromName(@"CalculateVertices");
     kernels[CPT_PROJ_VERTEX_KRN_IDX] = GetPipelineStateFromName(@"CalculateProjectedVertices");
     kernels[CPT_VERTEX_SQR_KRN_IDX] = GetPipelineStateFromName(@"CalculateVertexSquares");
-    kernels[CPT_SCALED_DOT_KRN_IDX] = GetPipelineStateFromName(@"CalculateScaledDots");
-    kernels[CPT_PROJ_DOT_KRN_IDX] = GetPipelineStateFromName(@"CalculateProjectedDots");
+    kernels[CPT_SCALED_DOT_KRN_IDX] = nil; // GetPipelineStateFromName(@"CalculateScaledDots");
+    kernels[CPT_PROJ_DOT_KRN_IDX] = nil; // GetPipelineStateFromName(@"CalculateProjectedDots");
     kernels[CPT_PROJ_NODE_KRN_IDX] = GetPipelineStateFromName(@"CalculateProjectedNodes");
     kernels[CPT_LIGHTING_KRN_IDX] = GetPipelineStateFromName(@"CalculateFaceLighting");
-    kernels[CPT_SLICE_PLATE_KRN_IDX] = GetPipelineStateFromName(@"CalculateSlicePlates");
+    kernels[CPT_SLICE_PLATE_KRN_IDX] = nil; // GetPipelineStateFromName(@"CalculateSlicePlates");
     kernels[CPT_UI_VERTEX_KRN_IDX] = GetPipelineStateFromName(@"CalculateUIVertices");
 }
 
@@ -68,7 +68,7 @@ void ComputePipelineMetalSDL::ResizePanelBuffer(unsigned long buf, BufferStorage
 }
 
 void ComputePipelineMetalSDL::ModifyPanelBuffer(unsigned long buf, Buffer *data, unsigned long start, unsigned long len) {
-    memcpy(panel_buffers[buf].contents, (void *) (data + start), len);
+    memcpy(panel_buffers[buf].contents, (void *) ((char *)data + start), len);
     [panel_buffers[buf] didModifyRange: NSMakeRange(start, len)]; // alert gpu about what was modified
 }
 
@@ -80,7 +80,7 @@ void ComputePipelineMetalSDL::ResizeComputeBuffer(unsigned long buf, BufferStora
 }
 
 void ComputePipelineMetalSDL::ModifyComputeBuffer(unsigned long buf, Buffer *data, unsigned long start, unsigned long len) {
-    memcpy(compute_buffers[buf].contents, (void *) (data + start), len);
+    memcpy(compute_buffers[buf].contents, (void *) ((char *)data + start), len);
     [compute_buffers[buf] didModifyRange: NSMakeRange(start, len)]; // alert gpu about what was modified
 }
 
@@ -105,6 +105,8 @@ void ComputePipelineMetalSDL::EndCompute() {
 }
 
 void ComputePipelineMetalSDL::RunKernel(unsigned long kernel, unsigned long N, bool window_attr, vector<unsigned long> compute_bufs, vector<unsigned long> panel_bufs) {
+    if (N == 0) { return; }
+    
     MTLSize gridsize;
     NSUInteger numthreads;
     MTLSize threadgroupsize;
@@ -112,12 +114,12 @@ void ComputePipelineMetalSDL::RunKernel(unsigned long kernel, unsigned long N, b
     [compute_encoder setComputePipelineState: kernels[kernel]];
     // set buffers
     int cur_buf_idx = 0;
+    [compute_encoder setBuffer: panel_info_buffer offset:0 atIndex:0];
+    cur_buf_idx++;
     if (window_attr) {
-        [compute_encoder setBuffer: window_attributes_buffer offset:0 atIndex:0];
+        [compute_encoder setBuffer: window_attributes_buffer offset:0 atIndex:1];
         cur_buf_idx++;
     }
-    [compute_encoder setBuffer: panel_info_buffer offset:0 atIndex:1];
-    cur_buf_idx++;
     for (int i = 0; i < compute_bufs.size(); i++) {
         [compute_encoder setBuffer: compute_buffers[compute_bufs[i]] offset:0 atIndex:cur_buf_idx];
         cur_buf_idx++;
@@ -136,9 +138,14 @@ void ComputePipelineMetalSDL::RunKernel(unsigned long kernel, unsigned long N, b
     [compute_encoder dispatchThreads:gridsize threadsPerThreadgroup:threadgroupsize];
 }
 
-void ComputePipelineMetalSDL::SendDataToRenderer(RenderPipeline *renderer) {
+void ComputePipelineMetalSDL::SendDataToRenderer(Window *w, RenderPipeline *renderer) {
     RenderPipelineMetalSDL *renderer_metalsdl = (RenderPipelineMetalSDL *) renderer;
     
+//    Face f = *((Face *) GetBufferElement((Buffer *) compute_buffers[CPT_COMPCOMPFACE_OUTBUF_IDX].contents, 0, sizeof(Face)));
+//    std::cout<<f.vertices[2]<<std::endl;
+    
+    Buffer **cpt_bufs = w->GetComputeBuffers();
+    renderer_metalsdl->SetCounts(cpt_bufs[CPT_COMPCOMPFACE_OUTBUF_IDX]->size/sizeof(Face), cpt_bufs[CPT_COMPCOMPEDGE_OUTBUF_IDX]->size/sizeof(vec_int2));
     for (int i = 0; i < CPT_NUM_OUTBUFS; i++) {
         renderer_metalsdl->SetBuffer(i, compute_buffers[i], gpu_compute_buffer_allotments[i]);
     }

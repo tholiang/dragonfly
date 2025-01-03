@@ -5,7 +5,6 @@
 #include <iostream>
 #include <cmath>
 
-#include "Utils.h"
 #include "Vec.h"
 
 using namespace Vec;

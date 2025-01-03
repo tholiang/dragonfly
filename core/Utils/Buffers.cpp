@@ -15,6 +15,10 @@ Buffer *DragonflyUtils::CreateBuffer(unsigned long capacity) {
     return buf;
 }
 
+char *DragonflyUtils::BufferData(Buffer *buf) {
+    return ((char *) buf) + sizeof(BufferHeader);
+}
+
 void *DragonflyUtils::GetBufferElement(Buffer *buf, unsigned long idx, unsigned int obj_size) {
     assert(idx < buf->size);
 

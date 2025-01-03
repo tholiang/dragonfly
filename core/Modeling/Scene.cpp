@@ -26,9 +26,9 @@ float flat_line(float x) {
 }
 
 Scene::Scene() {
-    // CreateNewModel();
+    CreateNewModel();
     
-    PointLight pl;
+    /*PointLight pl;
     Basis lightb;
     lightb.pos.x = -5;
     lightb.pos.z = 5;
@@ -59,7 +59,7 @@ Scene::Scene() {
     ModelTransform new_uniform;
     new_uniform.b = Basis();
     new_uniform.rotate_origin = vec_make_float3(0, 0, 0);
-    AddModel(m, new_uniform);
+    AddModel(m, new_uniform);*/
 }
 
 Scene::~Scene() {
@@ -375,7 +375,11 @@ void Scene::MoveLightTo(unsigned int lid, float x, float y, float z) {
 
 void Scene::CreateNewModel() {
     Model m;
-    m.MakeCube();
+//    m.MakeCube();
+    m.MakeVertex(0, 0, 0);
+    m.MakeVertex(1, 1, 0);
+    m.MakeVertex(0, 1, 1);
+    m.MakeFace(0, 1, 2, vec_make_float4(1, 0, 0, 1));
     models.push_back(m);
     ModelTransform new_uniform;
     new_uniform.b = Basis();

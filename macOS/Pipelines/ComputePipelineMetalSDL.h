@@ -70,7 +70,7 @@ public:
     void init();
     
     // pipeline
-    void SendDataToRenderer(RenderPipeline *renderer);
+    void SendDataToRenderer(Window *w, RenderPipeline *renderer);
     void SendDataToWindow(Window *w);
 };
 

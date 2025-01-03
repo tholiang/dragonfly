@@ -83,7 +83,8 @@ unsigned long RelComputeToGlobalIdx(const constant Buffer *panel_info_buffer, un
 
 vec_int2 GlobalToPanelBufIdx(const constant Buffer *panel_info_buffer, unsigned long outbuf_idx, unsigned int value_idx, unsigned int obj_size) {
     unsigned int cur_total_idx = 0;
-    for (unsigned long pid = 0; pid < panel_info_buffer->size; pid++) {
+    unsigned long num_panels = panel_info_buffer->size / sizeof(PanelBufferInfo);
+    for (unsigned long pid = 0; pid < num_panels; pid++) {
         constant PanelBufferInfo *panel_info = (constant PanelBufferInfo *) _GetConstantBufferElement(panel_info_buffer, 0, pid, sizeof(PanelBufferInfo));
         BufferHeader panel_buffer_header = panel_info->panel_buffer_headers[outbuf_idx];
         unsigned long num_elems = panel_buffer_header.size / obj_size;
@@ -97,7 +98,8 @@ vec_int2 GlobalToPanelBufIdx(const constant Buffer *panel_info_buffer, unsigned 
 
 vec_int2 GlobalToComputeBufIdx(const constant Buffer *panel_info_buffer, unsigned long outbuf_idx, unsigned int value_idx, unsigned int obj_size) {
     unsigned int cur_total_idx = 0;
-    for (unsigned long pid = 0; pid < panel_info_buffer->size; pid++) {
+    unsigned long num_panels = panel_info_buffer->size / sizeof(PanelBufferInfo);
+    for (unsigned long pid = 0; pid < num_panels; pid++) {
         constant PanelBufferInfo *panel_info = (constant PanelBufferInfo *) _GetConstantBufferElement(panel_info_buffer, 0, pid, sizeof(PanelBufferInfo));
         BufferHeader panel_buffer_header = panel_info->compute_buffer_headers[outbuf_idx];
         unsigned long num_elems = panel_buffer_header.size / obj_size;
@@ -111,7 +113,8 @@ vec_int2 GlobalToComputeBufIdx(const constant Buffer *panel_info_buffer, unsigne
 
 vec_int2 GlobalToCompiledBufIdx(const constant Buffer *panel_info_buffer, unsigned long outbuf_idx, unsigned long cbki_idx, unsigned int value_idx, unsigned int obj_size) {
     unsigned int cur_total_idx = 0;
-    for (unsigned long pid = 0; pid < panel_info_buffer->size; pid++) {
+    unsigned long num_panels = panel_info_buffer->size / sizeof(PanelBufferInfo);
+    for (unsigned long pid = 0; pid < num_panels; pid++) {
         constant PanelBufferInfo *panel_info = (constant PanelBufferInfo *) _GetConstantBufferElement(panel_info_buffer, 0, pid, sizeof(PanelBufferInfo));
         unsigned long source_size = panel_info->compiled_buffer_key_indices[cbki_idx+1] - panel_info->compiled_buffer_key_indices[cbki_idx];
         unsigned long num_elems = source_size / obj_size;
@@ -125,10 +128,10 @@ vec_int2 GlobalToCompiledBufIdx(const constant Buffer *panel_info_buffer, unsign
 
 vec_int2 GlobalToCompiledBufIdx(const constant Buffer *panel_info_buffer, unsigned long outbuf_idx, unsigned long start_cbki_idx, unsigned long end_cbki_idx, unsigned int value_idx, unsigned int obj_size) {
     unsigned int cur_total_idx = 0;
-    for (unsigned long pid = 0; pid < panel_info_buffer->size; pid++) {
+    unsigned long num_panels = panel_info_buffer->size / sizeof(PanelBufferInfo);
+    for (unsigned long pid = 0; pid < num_panels; pid++) {
         constant PanelBufferInfo *panel_info = (constant PanelBufferInfo *) _GetConstantBufferElement(panel_info_buffer, 0, pid, sizeof(PanelBufferInfo));
-        unsigned long source_size = panel_info->compiled_buffer_key_indices[end_cbki_idx+1] - panel_info->compiled_buffer_key_indices[start_cbki_idx];
-        unsigned long num_elems = source_size / obj_size;
+        unsigned long num_elems = panel_info->compiled_buffer_key_indices[end_cbki_idx+1] - panel_info->compiled_buffer_key_indices[start_cbki_idx];
         if (cur_total_idx + num_elems > value_idx) {
             return vec_make_int2(pid, value_idx - cur_total_idx);
         }

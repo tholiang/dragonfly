@@ -146,7 +146,7 @@ void RenderPipelineMetalSDL::Render() {
         [render_encoder setRenderPipelineState:default_face_render_pipeline_state];
         [render_encoder setVertexBuffer:compute_buffers[CPT_COMPCOMPVERTEX_OUTBUF_IDX] offset:0 atIndex:0];
         [render_encoder setVertexBuffer:compute_buffers[CPT_COMPCOMPFACE_OUTBUF_IDX] offset:0 atIndex:1];
-        [render_encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:compute_buffer_capacities[CPT_COMPCOMPFACE_OUTBUF_IDX]*3]; // TODO: might be wrong
+        [render_encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:num_faces*3];
     }
     
     // TODO: edges

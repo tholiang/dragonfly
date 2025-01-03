@@ -10,7 +10,7 @@ unsigned long DragonflyUtils::NumSceneVertices(Scene *s) {
 
 unsigned long DragonflyUtils::NumSceneDots(Scene *s) {
     unsigned long count = 0;
-    for (int m = 0; m < s->NumModels(); m++) {
+    for (int m = 0; m < s->NumSlices(); m++) {
         count += s->GetSlice(m)->NumDots();
     }
     return count;

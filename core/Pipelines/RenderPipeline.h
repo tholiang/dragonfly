@@ -28,6 +28,8 @@ protected:
 public:
     virtual ~RenderPipeline();
     
+    void SetCounts(unsigned long nf, unsigned long ne);
+    
     virtual int init() = 0;
     
     virtual void SetPipeline() = 0;

@@ -23,7 +23,7 @@ vertex VertexOut DefaultFaceShader (
     // get current face - 3 vertices per face
     constant Face *cf = (constant Face *) _GetConstantBufferElement(faces, 0, vid/3, sizeof(Face));
     // get current vertex in face
-    unsigned long cvid = cf->vertices[vid %3];
+    unsigned long cvid = cf->vertices[vid%3];
     constant Vertex *cv = (constant Vertex *) _GetConstantBufferElement(vertices, 0, cvid, sizeof(Vertex));
     
     // make and return output vertex

@@ -57,8 +57,8 @@ protected:
     // Camera *camera;
     // SchemeController *scheme_controller;
     // Scheme *scheme;
-    Window *window;
-    Scene *scene;
+    Window *window = NULL;
+    Scene *scene = NULL;
     
     virtual int SetPipelines() = 0; // varies for graphics implementations
     virtual int HandleInputEvents() = 0; // varies for input implementations

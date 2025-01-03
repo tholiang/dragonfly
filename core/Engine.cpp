@@ -24,6 +24,7 @@ int Engine::init() {
     WindowAttributes win_attr;
     win_attr.screen_height = window_height;
     win_attr.screen_width = window_width;
+    scene = new Scene();
     window = new Window(win_attr);
     window->MakeViewWindow(scene);
 
@@ -37,16 +38,18 @@ int Engine::init() {
 void Engine::run() {
     // Main loop
     while (true) {
+        float fps = ImGui::GetIO().Framerate;
+        
         if (HandleInputEvents()) {
             std::cout<<"input event handling failed"<<std::endl;
             break;
         }
         
-        window->Update();
+        window->Update(fps);
         
         compute_pipeline->SetBuffers(window);
         compute_pipeline->Compute(window);
-        compute_pipeline->SendDataToRenderer(render_pipeline);
+        compute_pipeline->SendDataToRenderer(window, render_pipeline);
         compute_pipeline->SendDataToWindow(window);
         
         render_pipeline->Render();

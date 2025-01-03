@@ -54,6 +54,7 @@ protected:
     virtual void BeginCompute() = 0;
     virtual void EndCompute() = 0;
 public:
+    ComputePipeline();
     virtual ~ComputePipeline();
     virtual void init() = 0;
 
@@ -62,7 +63,7 @@ public:
     
     // pipeline
     void Compute(Window *w);
-    virtual void SendDataToRenderer(RenderPipeline *renderer) = 0;
+    virtual void SendDataToRenderer(Window *w, RenderPipeline *renderer) = 0;
     virtual void SendDataToWindow(Window *w) = 0;
 };
 

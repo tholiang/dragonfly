@@ -41,7 +41,7 @@ struct PanelElements {
 class Panel {
 protected:
     // data
-    Scene *scene_;
+    Scene *scene_ = NULL;
 
     vec_float4 borders_; // panel rectangle relative to window (center, size)
     PanelType type_;
@@ -51,33 +51,36 @@ protected:
     // all possible buffers to send to the gpu pipeline
     Buffer *out_buffers_[PNL_NUM_OUTBUFS];
     uint64_t compiled_buffer_key_indices_[CBKI_NUM_KEYS];
-    // what buffers are wanted from the gpu pipeline
-    bool wanted_buffers_[CPT_NUM_OUTBUFS];
     // all possible buffers to take in from the gpu pipeline
     Buffer *in_buffers_[CPT_NUM_OUTBUFS];
     // extra buffers to store some face data
     bool dirty_extra_buffers_[PNL_NUM_XBUFS];
     Buffer *extra_buffers_[PNL_NUM_XBUFS];
+    
+    /* counts (num threads) for each kernel for this panel */
+    unsigned long panel_kernel_counts_[CPT_NUM_KERNELS];
 
     // input
     Mouse mouse_;
     Keys keys_;
 
-    virtual void HandleInput();
+    virtual void HandleInput(float fps) = 0;
     // create needed out buffers and set initial data - should only call on init and scene change
     virtual void InitOutBuffers();
+    // resize/reallocate if needed
+    virtual void InitInBuffers();
     // create needed extra buffers and set initial data - usage same as above
     virtual void InitExtraBuffers();
     // populate compiled_buffer_key_indices_
     virtual void PrepareCompiledBufferKeyIndices();
-    // resize/reallocate if needed
-    virtual void PrepareInBuffers();
+    // populate kernel counts depending on elements
+    virtual void PrepareKernelCounts();
 public:
     Panel() = delete;
     // child classes should initialize type and wanted buffers here
     Panel(vec_float4 borders, Scene *scene);
     ~Panel();
-    virtual void Update();
+    virtual void Update(float fps);
 
     void SetScene(Scene *s);
 
@@ -89,11 +92,11 @@ public:
     void CleanBuffer(unsigned int buf);
     Buffer **GetOutBuffers();
     uint64_t *GetCompiledBufferKeyIndices();
-    bool IsBufferWanted(unsigned int buf);
-    Buffer **GetInBuffers(bool realloc);
+    Buffer **GetInBuffers();
     bool IsXBufferDirty(unsigned int buf);
     void CleanXBuffer(unsigned int buf);
     Buffer **GetXBuffers();
+    unsigned long *GetKernelCounts();
 
     void SetInputData(Mouse m, Keys k);
 };

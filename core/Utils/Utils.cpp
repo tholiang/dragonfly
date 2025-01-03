@@ -6,8 +6,16 @@
 //
 
 #include "Utils.h"
+using namespace DragonflyUtils;
 
-
+Camera *DragonflyUtils::MakeCamera() {
+    Camera *c = new Camera();
+    c->pos = {-2, 0, 0};
+    c->vector = {1, 0, 0};
+    c->up_vector = {0, 0, 1};
+    c->FOV = {M_PI_2, M_PI_2};
+    return c;
+}
 
 bool DragonflyUtils::InIntVector(std::vector<int> &vec, int a) {
     for (int i = 0; i < vec.size(); i++) {

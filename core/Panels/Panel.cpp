@@ -2,30 +2,35 @@
 
 Panel::Panel(vec_float4 borders, Scene *scene) : borders_(borders), scene_(scene) {
     for (int i = 0; i < CPT_NUM_OUTBUFS; i++) {
-        wanted_buffers_[i] = false;
         in_buffers_[i] = NULL;
     }
     
-    InitOutBuffers();
-    InitExtraBuffers();
-}
-
-void Panel::HandleInput() {
+    for (int i = 0; i < CPT_NUM_KERNELS; i++) {
+        panel_kernel_counts_[i] = 0;
+    }
     
+    InitOutBuffers();
+    InitInBuffers();
+    InitExtraBuffers();
 }
 
 void Panel::InitOutBuffers() {
     for (int i = 0; i < PNL_NUM_OUTBUFS; i++) {
         dirty_buffers_[i] = false;
-        if (out_buffers_[i] != NULL) { free(out_buffers_); }
         out_buffers_[i] = NULL;
+    }
+}
+
+void Panel::InitInBuffers() {
+    PrepareCompiledBufferKeyIndices();
+    for (int i = 0; i < CPT_NUM_OUTBUFS; i++) {
+        in_buffers_[i] = NULL;
     }
 }
 
 void Panel::InitExtraBuffers() {
     for (int i = 0; i < PNL_NUM_XBUFS; i++) {
         dirty_extra_buffers_[i] = false;
-        if (extra_buffers_[i] != NULL) { free(extra_buffers_); }
         extra_buffers_[i] = NULL;
     }
 }
@@ -34,8 +39,8 @@ Panel::~Panel() {
 
 }
 
-void Panel::Update() {
-    HandleInput();
+void Panel::Update(float fps) {
+    HandleInput(fps);
 }
 
 void Panel::SetScene(Scene *s) {
@@ -51,17 +56,21 @@ Buffer **Panel::GetOutBuffers() {
     return out_buffers_;
 }
 uint64_t *Panel::GetCompiledBufferKeyIndices() {
+    // TODO: maybe don't do this everytime
     PrepareCompiledBufferKeyIndices();
     return compiled_buffer_key_indices_;
 }
-bool Panel::IsBufferWanted(unsigned int buf) { return wanted_buffers_[buf]; }
-Buffer **Panel::GetInBuffers(bool realloc) {
-    if (realloc) { PrepareInBuffers(); }
+Buffer **Panel::GetInBuffers() {
     return in_buffers_;
 }
 bool Panel::IsXBufferDirty(unsigned int buf) { return dirty_extra_buffers_[buf]; }
 void Panel::CleanXBuffer(unsigned int buf) { dirty_extra_buffers_[buf] = false; }
 Buffer **Panel::GetXBuffers() { return extra_buffers_; }
+unsigned long *Panel::GetKernelCounts() {
+    // TODO: maybe don't do this everytime
+    PrepareKernelCounts();
+    return panel_kernel_counts_;
+}
 
 void Panel::SetInputData(Mouse m, Keys k) {
     keys_ = k;
@@ -72,28 +81,6 @@ void Panel::SetInputData(Mouse m, Keys k) {
     mouse_.location.y -= borders_.y;
     mouse_.movement.x *= borders_.z;
     mouse_.movement.y *= borders_.w;
-}
-
-void Panel::PrepareInBuffers() {
-    PrepareCompiledBufferKeyIndices(); // maybe shouldn't call this every time
-
-    // resize in buffers if needed
-    unsigned long inbuf_sizes[CPT_NUM_OUTBUFS];
-    inbuf_sizes[CPT_COMPCOMPVERTEX_OUTBUF_IDX] = sizeof(Vertex) * (compiled_buffer_key_indices_[CBKI_V_SIZE_IDX]);
-    inbuf_sizes[CPT_COMPCOMPFACE_OUTBUF_IDX] = sizeof(Face) * (compiled_buffer_key_indices_[CBKI_F_SIZE_IDX]);
-    inbuf_sizes[CPT_COMPCOMPEDGE_OUTBUF_IDX] = sizeof(vec_int2) * (compiled_buffer_key_indices_[CBKI_E_SIZE_IDX]);
-    inbuf_sizes[CPT_COMPMODELVERTEX_OUTBUF_IDX] = sizeof(Vertex) * NumSceneVertices(scene_); // TODO: + controls vertices
-    inbuf_sizes[CPT_COMPMODELNODE_OUTBUF_IDX] = sizeof(Vertex) * NumSceneNodes(scene_);
-
-    for (int i = 0; i < CPT_NUM_OUTBUFS; i++) {
-        if (wanted_buffers_[i] && (in_buffers_[i] != NULL && in_buffers_[i]->capacity <= inbuf_sizes[i])) {
-            if (in_buffers_[i] != NULL) { free(in_buffers_); }
-            unsigned long new_cap = inbuf_sizes[i] * 2;
-            in_buffers_[i] = (Buffer *) malloc(sizeof(Buffer) + new_cap);
-            in_buffers_[i]->capacity = new_cap;
-            in_buffers_[i]->size = inbuf_sizes[i];
-        }
-    }
 }
 
 // default implementation
@@ -144,4 +131,41 @@ void Panel::PrepareCompiledBufferKeyIndices() {
     if (elements_.slices && scene_ != NULL) { edge_size += NumSceneLines(scene_); }
 
     compiled_buffer_key_indices_[CBKI_E_SIZE_IDX] = edge_size;
+}
+
+void Panel::PrepareKernelCounts() {
+    for (int i = 0; i < CPT_NUM_KERNELS; i++) {
+        panel_kernel_counts_[i] = 0;
+    }
+    
+    unsigned long num_scene_nodes = NumSceneNodes(scene_);
+    unsigned long num_scene_vertices = NumSceneVertices(scene_);
+    unsigned long num_scene_faces = NumSceneFaces(scene_);
+    unsigned long num_scene_slices = scene_->NumSlices();
+    unsigned long num_scene_dots = NumSceneDots(scene_);
+    
+    if (elements_.scene) {
+        panel_kernel_counts_[CPT_TRANSFORMS_KRN_IDX] = num_scene_nodes;
+        panel_kernel_counts_[CPT_VERTEX_KRN_IDX] = num_scene_vertices;
+        panel_kernel_counts_[CPT_PROJ_VERTEX_KRN_IDX] = num_scene_vertices;
+    }
+    
+    if (elements_.vertices) {
+        panel_kernel_counts_[CPT_VERTEX_SQR_KRN_IDX] = num_scene_vertices;
+    }
+    
+    if (elements_.nodes) {
+        panel_kernel_counts_[CPT_PROJ_NODE_KRN_IDX] = num_scene_nodes;
+    }
+    
+    if (elements_.faces && elements_.light) {
+        panel_kernel_counts_[CPT_LIGHTING_KRN_IDX] = num_scene_faces;
+    }
+    
+    if (elements_.slices) {
+        panel_kernel_counts_[CPT_PROJ_DOT_KRN_IDX] = num_scene_dots;
+        panel_kernel_counts_[CPT_SLICE_PLATE_KRN_IDX] = num_scene_slices;
+    }
+    
+    // everything else should be overidden by children
 }
