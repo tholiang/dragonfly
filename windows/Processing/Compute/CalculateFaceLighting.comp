@@ -72,6 +72,6 @@ void main() {
         
     // set face in compiled face buffer
     f.color = endcolor;
-    unsigned int cfb_scene_face_idx = key_indices.compiled_face_scene_start+fid;
+    uint cfb_scene_face_idx = key_indices.compiled_face_scene_start+fid;
     compiled_faces[cfb_scene_face_idx] = f;
 }

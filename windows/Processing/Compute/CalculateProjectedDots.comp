@@ -31,7 +31,7 @@ layout(std430, binding = 5) buffer bufferE
 
 layout(std430, binding = 6) buffer bufferF
 {
-    unsigned int dot_slice_ids[];
+    uint dot_slice_ids[];
 };
 
 layout(std430, binding = 7) buffer bufferG
@@ -58,11 +58,11 @@ void main() {
     dot3d.y = d.y;
     dot3d.z = 0;
     
-    unsigned int sid = dot_slice_ids[did];
+    uint sid = dot_slice_ids[did];
     dot3d = TranslatePointToStandard(slice_transforms[sid].b, dot3d);
     
     // set dot in cvb
-    unsigned int cvb_dot_idx = key_indices.compiled_vertex_dot_start + did;
+    uint cvb_dot_idx = key_indices.compiled_vertex_dot_start + did;
     vector_float3 proj_dot;
     
     proj_dot = PointToPixel(dot3d, camera);
@@ -71,14 +71,14 @@ void main() {
     
     // set (4) dot square corners in cvb
     float screen_ratio = float(window_attr.height) / window_attr.width;
-    unsigned int cvb_dot_corner_idx = key_indices.compiled_vertex_dot_square_start + did*4;
+    uint cvb_dot_corner_idx = key_indices.compiled_vertex_dot_square_start + did*4;
     compiled_vertices[cvb_dot_corner_idx+0] = vector_make_float3(proj_dot.x-0.007, proj_dot.y-0.007 * screen_ratio, proj_dot.z+0.01);
     compiled_vertices[cvb_dot_corner_idx+1] = vector_make_float3(proj_dot.x-0.007, proj_dot.y+0.007 * screen_ratio, proj_dot.z+0.01);
     compiled_vertices[cvb_dot_corner_idx+2] = vector_make_float3(proj_dot.x+0.007, proj_dot.y-0.007 * screen_ratio, proj_dot.z+0.01);
     compiled_vertices[cvb_dot_corner_idx+3] = vector_make_float3(proj_dot.x+0.007, proj_dot.y+0.007 * screen_ratio, proj_dot.z+0.01);
     
     // set (2) dot square faces in cfb
-    unsigned int cfb_dot_square_idx = key_indices.compiled_face_dot_square_start + did*2;
+    uint cfb_dot_square_idx = key_indices.compiled_face_dot_square_start + did*2;
     Face f1;
     f1.color = vector_make_float4(0, 1, 0, 1);
     f1.vertices[0] = cvb_dot_corner_idx+0;

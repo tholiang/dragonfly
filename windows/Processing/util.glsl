@@ -40,33 +40,33 @@ struct vector_int4 {
 };
 
 struct WindowAttributes {
-    unsigned int width;
-    unsigned int height;
+    uint width;
+    uint height;
 };
 
 struct CompiledBufferKeyIndices {
-    unsigned int compiled_vertex_size;
-    unsigned int compiled_vertex_scene_start;
-    unsigned int compiled_vertex_control_start;
-    unsigned int compiled_vertex_dot_start;
-    unsigned int compiled_vertex_node_circle_start;
-    unsigned int compiled_vertex_vertex_square_start;
-    unsigned int compiled_vertex_dot_square_start;
-    unsigned int compiled_vertex_slice_plate_start;
-    unsigned int compiled_vertex_ui_start;
+    uint compiled_vertex_size;
+    uint compiled_vertex_scene_start;
+    uint compiled_vertex_control_start;
+    uint compiled_vertex_dot_start;
+    uint compiled_vertex_node_circle_start;
+    uint compiled_vertex_vertex_square_start;
+    uint compiled_vertex_dot_square_start;
+    uint compiled_vertex_slice_plate_start;
+    uint compiled_vertex_ui_start;
     
-    unsigned int compiled_face_size;
-    unsigned int compiled_face_scene_start;
-    unsigned int compiled_face_control_start;
-    unsigned int compiled_face_node_circle_start;
-    unsigned int compiled_face_vertex_square_start;
-    unsigned int compiled_face_dot_square_start;
-    unsigned int compiled_face_slice_plate_start;
-    unsigned int compiled_face_ui_start;
+    uint compiled_face_size;
+    uint compiled_face_scene_start;
+    uint compiled_face_control_start;
+    uint compiled_face_node_circle_start;
+    uint compiled_face_vertex_square_start;
+    uint compiled_face_dot_square_start;
+    uint compiled_face_slice_plate_start;
+    uint compiled_face_ui_start;
     
-    unsigned int compiled_edge_size;
-    unsigned int compiled_edge_scene_start;
-    unsigned int compiled_edge_line_start;
+    uint compiled_edge_size;
+    uint compiled_edge_scene_start;
+    uint compiled_edge_line_start;
 };
 
 struct Basis {
@@ -85,10 +85,10 @@ struct Camera {
 };
 
 struct Face {
-    unsigned int vertices[3];
+    uint vertices[3];
     vector_float4 color;
     
-    unsigned int normal_reversed;
+    uint normal_reversed;
     vector_float3 lighting_offset; // if there were a light source directly in front of the face, this is the rotation to get to its brightest orientation
     float shading_multiplier;
 };

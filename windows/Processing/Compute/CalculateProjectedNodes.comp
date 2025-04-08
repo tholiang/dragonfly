@@ -47,8 +47,8 @@ void main() {
     vector_float3 proj_node_center = PointToPixel(nodes[nid].b.pos, camera);
     
     // add circle vertices to cvb abd faces to cfb
-    unsigned int cvb_node_circle_idx = key_indices.compiled_vertex_node_circle_start+nid*9;
-    unsigned int cfb_node_circle_idx = key_indices.compiled_face_node_circle_start+nid*8;
+    uint cvb_node_circle_idx = key_indices.compiled_vertex_node_circle_start+nid*9;
+    uint cfb_node_circle_idx = key_indices.compiled_face_node_circle_start+nid*8;
     
     // center
     compiled_vertices[cvb_node_circle_idx+0] = proj_node_center;
