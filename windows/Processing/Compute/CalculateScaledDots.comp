@@ -54,7 +54,7 @@ void main() {
     // set dot in cvb
     float screen_ratio = float(window_attr.height) / window_attr.width;
     float eratio = edit_window.z / edit_window.w * screen_ratio;
-    unsigned int cvb_dot_idx = key_indices.compiled_vertex_dot_start + did;
+    uint cvb_dot_idx = key_indices.compiled_vertex_dot_start + did;
     vector_float3 scaled_dot;
     if (eratio < 1) {
         scaled_dot.x = dots[did].x / scale;
@@ -73,14 +73,14 @@ void main() {
     
     
     // set (4) dot square corners in cvb
-    unsigned int cvb_dot_corner_idx = key_indices.compiled_vertex_dot_square_start + did*4;
+    uint cvb_dot_corner_idx = key_indices.compiled_vertex_dot_square_start + did*4;
     compiled_vertices[cvb_dot_corner_idx+0] = vector_make_float3(scaled_dot.x-0.007, scaled_dot.y-0.007 * screen_ratio, scaled_dot.z-0.01);
     compiled_vertices[cvb_dot_corner_idx+1] = vector_make_float3(scaled_dot.x-0.007, scaled_dot.y+0.007 * screen_ratio, scaled_dot.z-0.01);
     compiled_vertices[cvb_dot_corner_idx+2] = vector_make_float3(scaled_dot.x+0.007, scaled_dot.y-0.007 * screen_ratio, scaled_dot.z-0.01);
     compiled_vertices[cvb_dot_corner_idx+3] = vector_make_float3(scaled_dot.x+0.007, scaled_dot.y+0.007 * screen_ratio, scaled_dot.z-0.01);
     
     // set (2) dot square faces in cfb
-    unsigned int cfb_dot_square_idx = key_indices.compiled_face_dot_square_start + did*2;
+    uint cfb_dot_square_idx = key_indices.compiled_face_dot_square_start + did*2;
     Face f1;
     f1.color = vector_make_float4(0, 1, 0, 1);
     f1.vertices[0] = cvb_dot_corner_idx+0;

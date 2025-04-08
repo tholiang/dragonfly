@@ -68,14 +68,14 @@ void main() {
     v4.z += 0.1;
     
     // add vertices to cvb
-    unsigned int cvb_slice_plate_idx = key_indices.compiled_vertex_slice_plate_start+sid*4;
+    uint cvb_slice_plate_idx = key_indices.compiled_vertex_slice_plate_start+sid*4;
     compiled_vertices[cvb_slice_plate_idx+0] = v1;
     compiled_vertices[cvb_slice_plate_idx+1] = v2;
     compiled_vertices[cvb_slice_plate_idx+2] = v3;
     compiled_vertices[cvb_slice_plate_idx+3] = v4;
     
     // add faces to cfb
-    unsigned int cfb_slice_plate_idx = key_indices.compiled_face_slice_plate_start+sid*2;
+    uint cfb_slice_plate_idx = key_indices.compiled_face_slice_plate_start+sid*2;
     Face f1;
     f1.color = vector_float4(0.7, 0.7, 0.7, 1);
     f1.vertices[0] = cvb_slice_plate_idx+0;
